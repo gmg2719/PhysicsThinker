@@ -30,6 +30,9 @@
 #include <cstdlib>
 #include <cmath>
 
+#define NUMBERS_OF_LINE         8
+#define LOG_STRING_PRINT(x)     do { printf("%s\n", x); } while(0)
+
 template<typename T>
 bool debug_cmp_array(int size, T *src, T *dst, double epsilon=1E-6)
 {
@@ -56,12 +59,12 @@ void debug_print_array(const char * name, int size, T *ans)
 #else
         if (std::is_floating_point<T>::value == 1) {
             // Output the floating point numbers
-            std::cout << std::scientific << std::setprecision(5) << ans[i] << " ";
+            std::cout << std::scientific << std::setprecision(6) << ans[i] << " ";
         } else {
             std::cout << ans[i] << " ";
         }
 #endif
-        if ((i+1) % 8 == 0)  std::cout << std::endl;
+        if ((i+1) % NUMBERS_OF_LINE == 0)  std::cout << std::endl;
     }
     std::cout << std::endl;
 }
@@ -82,10 +85,13 @@ void debug_file_array(const char * filename, int size, T *ans)
             file << ans[i] << " ";
         }
 #endif
-        if ((i+1) % 8 == 0)  file << std::endl;
+        if ((i+1) % NUMBERS_OF_LINE == 0)  file << std::endl;
     }
     file << std::endl;
     file.close();
 }
+
+// Other useful interfaces
+void debug_int8_inside_logger(const char * name, int size, int8_t *data);
 
 #endif
