@@ -15,7 +15,7 @@ echo "Compile done !"
 echo "Start to do test !"
 cd ..
 cd test/
-TEST_NAME="test_logger"
+TEST_NAME="test_logger test_list test_thpool"
 for name in ${TEST_NAME}
 do
     cd ${PWD_PATH}/test/
