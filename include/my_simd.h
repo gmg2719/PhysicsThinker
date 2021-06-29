@@ -23,7 +23,7 @@
 #define _MY_SIMD_H_     1
 
 #if defined(__x86_64__) || defined(__i386__)
-    include <immintrin.h>
+    #include <immintrin.h>
 #else
     // ARM-64 neon supported.
     #include <arm_neon.h>
@@ -49,6 +49,35 @@
     // arm64 supported
     typedef float32x4_t simd_f_t;
     typedef int32x4_t   simd_i_t;
+#endif  // __aarch64__
+#endif  // __x86_64__ SSE
+#endif  // __AVX2__
+#endif  // __AVX512__
+
+//
+// Aligned memory allocator
+//
+#ifdef __AVX512__
+    static inline void* my_simd_malloc(const size_t n) { return _mm_malloc(n, 64); }
+    static inline void my_simd_free(void *p) { _mm_free(p); }
+#else
+#ifdef __AVX2__
+    static inline void* my_simd_malloc(const size_t n) { return _mm_malloc(n, 32); }
+    static inline void my_simd_free(void *p) { _mm_free(p); }
+#else
+#if defined(__x86_64__) || defined(__i386__)
+    // SSE supported
+    static inline void* my_simd_malloc(const size_t n) { return _mm_malloc(n, 16); }
+    static inline void my_simd_free(void *p) { _mm_free(p); }
+#else
+#ifdef __aarch64__
+    // arm64 supported
+    static inline void* my_simd_malloc(const size_t n) { return malloc(n); }
+    static inline void my_simd_free(void *p) { free(p); }
+#else
+    // Others
+    static inline void* my_simd_malloc(const size_t n) { return malloc(n); }
+    static inline void my_simd_free(void *p) { free(p); }
 #endif  // __aarch64__
 #endif  // __x86_64__ SSE
 #endif  // __AVX2__
