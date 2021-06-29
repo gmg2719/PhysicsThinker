@@ -19,6 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+
 #include <iostream>
 #include "common/doubly_linked_list.hpp"
 
@@ -35,9 +36,9 @@ int main(void)
     //7 6 5 78 8 54
     struct node<int> *temp = ll.getStart();
     for (; temp != NULL; temp = temp->next)
-        cout << temp->data << "\n";
-    cout << "size=" << ll.getSize() << "\n";
-    cout << "78 found at position: " << ll.search(78) << "\n";
+        std::cout << temp->data << "\n";
+    std::cout << "size=" << ll.getSize() << "\n";
+    std::cout << "78 found at position: " << ll.search(78) << "\n";
     ll.remove(78);
     ll.remove_pos(5);
     ll.remove_pos(1);
@@ -45,21 +46,21 @@ int main(void)
     //6 5 8
     temp = ll.getStart();
     for (; temp != NULL; temp = temp->next)
-        cout << temp->data << "\n";
-    cout << "size=" << ll.getSize() << "\n";
+        std::cout << temp->data << "\n";
+    std::cout << "size=" << ll.getSize() << "\n";
     ll.reverse();
     temp = ll.getStart();
     for (; temp != NULL; temp = temp->next)
-        cout << temp->data << "\n";
-    cout << "size=" << ll.getSize() << "\n";
+        std::cout << temp->data << "\n";
+    std::cout << "size=" << ll.getSize() << "\n";
     ll.insert(-1);
     ll.insert(34);
     ll.sort();
     //-1 5 6 8 34
     temp = ll.getStart();
     for (; temp != NULL; temp = temp->next)
-        cout << temp->data << "\n";
-    cout << "size=" << ll.getSize() << "\n";
+        std::cout << temp->data << "\n";
+    std::cout << "size=" << ll.getSize() << "\n";
 
     return 0;
 }
