@@ -17,6 +17,7 @@ Visual Studio Code, Anaconda::Spyder
 ## Basic functions :
 1. Debug functions
 2. Multiple modules for different functions, especially in numerical analysis and signal processing
+3. Basic light-weighted data structure that is self-developed
 
 ## License
 MIT
