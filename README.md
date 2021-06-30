@@ -12,6 +12,7 @@ Visual Studio Code, Anaconda::Spyder
 |--------------|----------|
 | python       | >=3.8.5  |
 | C++          | >=C11    |
+| GCC          | >=7.5.0  |
 | python-numpy | >=1.19.2 |
 
 ## Basic functions :
