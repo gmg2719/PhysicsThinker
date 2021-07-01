@@ -64,7 +64,7 @@ Cell::Cell(int universe, int id) {
 
   /* If the user-defined ID is in the prohibited range, return an error */
   else if (id >= 10000)
-    log_printf(ERROR, "Unable to set the ID of a cell to %d since cell IDs "
+    log_printf(ERROR_LOG, "Unable to set the ID of a cell to %d since cell IDs "
                "greater than or equal to 10000 is probibited by OpenMOC.", id);
 
   /* Use the user-defined ID */
@@ -157,7 +157,7 @@ void Cell::setUniverse(int universe) {
 void Cell::addSurface(int halfspace, Surface* surface) {
 
   if (halfspace != -1 && halfspace != +1)
-    log_printf(ERROR, "Unable to add surface %d to cell %d since the halfspace"
+    log_printf(ERROR_LOG, "Unable to add surface %d to cell %d since the halfspace"
                " %d is not -1 or 1", surface->getId(), _id, halfspace);
 
   _surfaces.insert(std::pair<Surface*, int>(surface, halfspace));
@@ -302,7 +302,7 @@ int CellBasic::getNumFSRs() {
  */
 void CellBasic::setNumRings(int num_rings) {
   if (num_rings < 0)
-    log_printf(ERROR, "Unable to give %d rings to Cell %d since this is "
+    log_printf(ERROR_LOG, "Unable to give %d rings to Cell %d since this is "
                "a negative number", num_rings, _id);
 
   _num_rings = num_rings;
@@ -315,7 +315,7 @@ void CellBasic::setNumRings(int num_rings) {
  */
 void CellBasic::setNumSectors(int num_sectors) {
   if (num_sectors < 0)
-    log_printf(ERROR, "Unable to give %d sectors to Cell %d since this is "
+    log_printf(ERROR_LOG, "Unable to give %d sectors to Cell %d since this is "
                "a negative number", num_sectors, _id);
 
   /* By default, a ring is considered to have a single sector in [0, 2*pi] */
@@ -372,7 +372,7 @@ void CellBasic::sectorize() {
   /* A container for each of the bouding planes for the sector Cells */
   std::vector<Plane*> planes;
 
-  log_printf(DEBUG, "Sectorizing Cell %d with %d sectors",_id, _num_sectors);
+  log_printf(DEBUG_LOG, "Sectorizing Cell %d with %d sectors",_id, _num_sectors);
 
   /* Create each of the bounding planes for the sector Cells */
   for (int i=0; i < _num_sectors; i++) {
@@ -386,7 +386,7 @@ void CellBasic::sectorize() {
     Plane* plane = new Plane(A, B, 0.);
     planes.push_back(plane);
 
-    log_printf(DEBUG, "Created sector Plane id = %d, angle = %f, A = %f, "
+    log_printf(DEBUG_LOG, "Created sector Plane id = %d, angle = %f, A = %f, "
                "B = %f", i, azim_angle, A, B);
   }
 
@@ -399,7 +399,7 @@ void CellBasic::sectorize() {
     sector->setNumSectors(0);
     sector->setNumRings(0);
 
-    log_printf(DEBUG, "Creating a new sector Cell with %d for Cell %d",
+    log_printf(DEBUG_LOG, "Creating a new sector Cell with %d for Cell %d",
                sector->getId(), _id);
 
     /* Add new bounding planar Surfaces to the clone */
@@ -477,33 +477,33 @@ void CellBasic::ringify() {
 
   /* Error checking */
   if (num_circles == 0)
-    log_printf(ERROR, "Unable to ringify Cell %d since it does not "
+    log_printf(ERROR_LOG, "Unable to ringify Cell %d since it does not "
               "contain any CIRCLE type Surface(s)", _id);
 
   if (num_circles > 2)
-    log_printf(NORMAL, "Unable to ringify Cell %d since it "
+    log_printf(NORMAL_LOG, "Unable to ringify Cell %d since it "
                "contains more than 2 CIRCLE Surfaces", _id);
 
   if (x1 != x2 && num_circles == 2)
-    log_printf(ERROR, "Unable to ringify Cell %d since it contains "
+    log_printf(ERROR_LOG, "Unable to ringify Cell %d since it contains "
                "Circle %d centered at x=%f and Circle %d at x=%f. "
                "Both Circles must have the same center.",
                _id, circle1->getId(), x1, circle2->getId(), x2);
 
   if (y1 != y2 && num_circles == 2)
-    log_printf(ERROR, "Unable to ringify Cell %d since it contains "
+    log_printf(ERROR_LOG, "Unable to ringify Cell %d since it contains "
                "Circle %d centered at y=%f and Circle %d at y=%f. "
                "Both Circles must have the same center.",
                _id, circle1->getId(), y1, circle2->getId(), y2);
 
   if (circle1 == NULL && circle2 != NULL)
-    log_printf(ERROR, "Unable to ringify Cell %d since it only contains "
+    log_printf(ERROR_LOG, "Unable to ringify Cell %d since it only contains "
                "the positive halfpsace of Circle %d. Rings can only be "
                "created for Cells on the interior (negative halfspace) "
                "of a CIRCLE Surface.", _id, circle2->getId());
 
   if (radius1 <= radius2)
-    log_printf(ERROR, "Unable to ringify Cell %d since it contains 2 "
+    log_printf(ERROR_LOG, "Unable to ringify Cell %d since it contains 2 "
                "disjoint CIRCLE Surfaces: halfspace %d for Circle %d "
                "and halfspace %d for Circle %d. Switch the signs of "
                "the 2 halfspaces for each Surface.", _id, halfspace1,
@@ -533,7 +533,7 @@ void CellBasic::ringify() {
     /* Create Circles for each of the sectorized Cells */
     if (_sectors.size() != 0) {
       for (iter3 = _sectors.begin(); iter3 != _sectors.end(); ++iter3) {
-        log_printf(DEBUG, "Creating a new ring in sector Cell %d",
+        log_printf(DEBUG_LOG, "Creating a new ring in sector Cell %d",
                    (*iter3)->getId());
 
         /* Create a new CellBasic clone */
@@ -559,7 +559,7 @@ void CellBasic::ringify() {
 
     /* Create Circles for this un-sectorized Cell */
     else {
-      log_printf(DEBUG, "Creating new ring in un-sectorized Cell %d",_id);
+      log_printf(DEBUG_LOG, "Creating new ring in un-sectorized Cell %d",_id);
 
       /* Create a new CellBasic clone */
       CellBasic* ring = clone();
@@ -720,5 +720,5 @@ std::string CellFill::toString() {
  *        to the console.
  */
 void CellFill::printString() {
-  log_printf(NORMAL, toString().c_str());
+  log_printf(NORMAL_LOG, toString().c_str());
 }

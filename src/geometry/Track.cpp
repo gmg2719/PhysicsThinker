@@ -98,7 +98,7 @@ void Track::addSegment(segment* segment) {
     _segments.push_back(*segment);
   }
   catch (std::exception &e) {
-      log_printf(ERROR, "Unable to add a segment to Track. Backtrace:"
+      log_printf(ERROR_LOG, "Unable to add a segment to Track. Backtrace:"
                  "\n%s", e.what());
   }
 }

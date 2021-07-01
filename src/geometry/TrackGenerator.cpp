@@ -92,7 +92,7 @@ double TrackGenerator::getTrackSpacing() {
  */
 Geometry* TrackGenerator::getGeometry() {
   if (_geometry == NULL)
-    log_printf(ERROR, "Unable to return the TrackGenerator's Geometry "
+    log_printf(ERROR_LOG, "Unable to return the TrackGenerator's Geometry "
                "since it has not yet been set");
 
   return _geometry;
@@ -106,7 +106,7 @@ Geometry* TrackGenerator::getGeometry() {
 int TrackGenerator::getNumTracks() {
 
   if (!_contains_tracks)
-    log_printf(ERROR, "Unable to return the total number of Tracks since "
+    log_printf(ERROR_LOG, "Unable to return the total number of Tracks since "
                "Tracks have not yet been generated.");
 
   return _tot_num_tracks;
@@ -118,7 +118,7 @@ int TrackGenerator::getNumTracks() {
  */
 int* TrackGenerator::getNumTracksArray() {
   if (!_contains_tracks)
-    log_printf(ERROR, "Unable to return the array of the number of Tracks per "
+    log_printf(ERROR_LOG, "Unable to return the array of the number of Tracks per "
                "azimuthal angle since Tracks have not yet been generated.");
 
   return _num_tracks;
@@ -132,7 +132,7 @@ int* TrackGenerator::getNumTracksArray() {
 int TrackGenerator::getNumSegments() {
 
   if (!_contains_tracks)
-    log_printf(ERROR, "Unable to return the total number of segments since "
+    log_printf(ERROR_LOG, "Unable to return the total number of segments since "
                "Tracks have not yet been generated.");
 
   return _tot_num_segments;
@@ -145,7 +145,7 @@ int TrackGenerator::getNumSegments() {
  */
 int* TrackGenerator::getNumSegmentsArray() {
   if (!_contains_tracks)
-    log_printf(ERROR, "Unable to return the array of the number of segments "
+    log_printf(ERROR_LOG, "Unable to return the array of the number of segments "
                "per Track since Tracks have not yet been generated.");
 
   return _num_segments;
@@ -160,7 +160,7 @@ int* TrackGenerator::getNumSegmentsArray() {
  */
 Track **TrackGenerator::getTracks() {
   if (!_contains_tracks)
-    log_printf(ERROR, "Unable to return the 2D ragged array of the Tracks "
+    log_printf(ERROR_LOG, "Unable to return the 2D ragged array of the Tracks "
                "since Tracks have not yet been generated.");
 
   return _tracks;
@@ -173,7 +173,7 @@ Track **TrackGenerator::getTracks() {
  */
 FP_PRECISION* TrackGenerator::getAzimWeights() {
   if (!_contains_tracks)
-    log_printf(ERROR, "Unable to return Track azimuthal angle quadrature "
+    log_printf(ERROR_LOG, "Unable to return Track azimuthal angle quadrature "
                "weights since Tracks have not yet been generated.");
 
   return _azim_weights;
@@ -210,7 +210,7 @@ bool TrackGenerator::containsTracks() {
 void TrackGenerator::retrieveTrackCoords(double* coords, int num_tracks) {
 
   if (num_tracks != 4*getNumTracks())
-    log_printf(ERROR, "Unable to retrieve the Track coordinates since the "
+    log_printf(ERROR_LOG, "Unable to retrieve the Track coordinates since the "
                "TrackGenerator contains %d Tracks with %d coordinates but an "
                "array of length %d was input",
                getNumTracks(), 4*getNumTracks(), num_tracks);
@@ -250,7 +250,7 @@ void TrackGenerator::retrieveTrackCoords(double* coords, int num_tracks) {
 void TrackGenerator::retrieveSegmentCoords(double* coords, int num_segments) {
 
   if (num_segments != 5*getNumSegments())
-    log_printf(ERROR, "Unable to retrieve the Track segment coordinates since "
+    log_printf(ERROR_LOG, "Unable to retrieve the Track segment coordinates since "
                "the TrackGenerator contains %d segments with %d coordinates "
                "but an array of length %d was input",
                getNumSegments(), 5*getNumSegments(), num_segments);
@@ -306,11 +306,11 @@ void TrackGenerator::retrieveSegmentCoords(double* coords, int num_segments) {
 void TrackGenerator::setNumAzim(int num_azim) {
 
   if (num_azim < 0)
-    log_printf(ERROR, "Unable to set a negative number of azimuthal angles "
+    log_printf(ERROR_LOG, "Unable to set a negative number of azimuthal angles "
                "%d for the TrackGenerator.", num_azim);
 
   if (num_azim % 4 != 0)
-    log_printf(ERROR, "Unable to set the number of azimuthal angles to %d for "
+    log_printf(ERROR_LOG, "Unable to set the number of azimuthal angles to %d for "
                "the TrackGenerator since it is not a multiple of 4", num_azim);
 
   /* Subdivide out angles in [pi,2pi] */
@@ -328,7 +328,7 @@ void TrackGenerator::setNumAzim(int num_azim) {
  */
 void TrackGenerator::setTrackSpacing(double spacing) {
   if (spacing < 0)
-    log_printf(ERROR, "Unable to set a negative track spacing %f for the "
+    log_printf(ERROR_LOG, "Unable to set a negative track spacing %f for the "
                "TrackGenerator.", spacing);
 
   _spacing = spacing;
@@ -363,7 +363,7 @@ void TrackGenerator::setGeometry(Geometry* geometry) {
 void TrackGenerator::generateTracks() {
 
   if (_geometry == NULL)
-    log_printf(ERROR, "Unable to generate Tracks since no Geometry "
+    log_printf(ERROR_LOG, "Unable to generate Tracks since no Geometry "
                "has been set for the TrackGenerator");
 
   /* Deletes Tracks arrays if Tracks have been generated */
@@ -394,13 +394,13 @@ void TrackGenerator::generateTracks() {
       _tracks = new Track*[_num_azim];
     }
     catch (std::exception &e) {
-      log_printf(ERROR, "Unable to allocate memory for TrackGenerator. "
+      log_printf(ERROR_LOG, "Unable to allocate memory for TrackGenerator. "
                  "Backtrace:\n%s", e.what());
     }
 
     /* Check to make sure that height, width of the Geometry are nonzero */
     if (_geometry->getHeight() <= 0 || _geometry->getHeight() <= 0)
-      log_printf(ERROR, "The total height and width of the Geometry must be"
+      log_printf(ERROR_LOG, "The total height and width of the Geometry must be"
                  "must be nonzero for Track generation. Create a CellFill which"
                  "is filled by the entire geometry and bounded by XPlanes"
                  "and YPlanes to enable the Geometry to determine the total"
@@ -415,7 +415,7 @@ void TrackGenerator::generateTracks() {
       dumpTracksToFile();
     }
     catch (std::exception &e) {
-      log_printf(ERROR, "Unable to allocate memory needed to generate "
+      log_printf(ERROR_LOG, "Unable to allocate memory needed to generate "
                  "Tracks. Backtrace:\n%s", e.what());
     }
   }
@@ -483,7 +483,7 @@ void TrackGenerator::initializeTrackFileDirectory() {
  */
 void TrackGenerator::initializeTracks() {
 
-  log_printf(INFO, "Computing azimuthal angles and track spacing...");
+  log_printf(INFO_LOG, "Computing azimuthal angles and track spacing...");
 
   /* Each element in arrays corresponds to an angle in phi_eff */
   /* Track spacing along x,y-axes, and perpendicular to each Track */
@@ -543,7 +543,7 @@ void TrackGenerator::initializeTracks() {
     _azim_weights[i] = (x1 + x2) / (2 * M_PI) * d_eff[i] * 2;
   }
 
-  log_printf(INFO, "Generating Track start and end points...");
+  log_printf(INFO_LOG, "Generating Track start and end points...");
 
   /* Compute Track starting and end points */
   for (int i = 0; i < _num_azim; i++) {
@@ -679,7 +679,7 @@ void TrackGenerator::computeEndPoint(Point* start, Point* end,
  */
 void TrackGenerator::initializeBoundaryConditions() {
 
-  log_printf(INFO, "Initializing Track boundary conditions...");
+  log_printf(INFO_LOG, "Initializing Track boundary conditions...");
 
   /* nxi = number of tracks starting on y-axis for angle i
    * nyi = number of tracks starting on y-axis for angle i
@@ -978,7 +978,7 @@ void TrackGenerator::initializeBoundaryConditions() {
  */
 void TrackGenerator::segmentize() {
 
-  log_printf(NORMAL, "Ray tracing for track segmentation...");
+  log_printf(NORMAL_LOG, "Ray tracing for track segmentation...");
 
   Track* track;
 
@@ -996,7 +996,7 @@ void TrackGenerator::segmentize() {
     for (int i=0; i < _num_azim; i++) {
       for (int j=0; j < _num_tracks[i]; j++){
         track = &_tracks[i][j];
-        log_printf(DEBUG, "Segmenting Track %d/%d with i = %d, j = %d",
+        log_printf(DEBUG_LOG, "Segmenting Track %d/%d with i = %d, j = %d",
         track->getUid(), _tot_num_tracks, i, j);
         _geometry->segmentize(track);
       }
@@ -1029,7 +1029,7 @@ void TrackGenerator::segmentize() {
 void TrackGenerator::dumpTracksToFile() {
 
   if (!_contains_tracks)
-    log_printf(ERROR, "Unable to dump Tracks to a file since no Tracks have "
+    log_printf(ERROR_LOG, "Unable to dump Tracks to a file since no Tracks have "
       "been generated for %d azimuthal angles and %f track spacing",
       _num_azim, _spacing);
 
@@ -1173,7 +1173,7 @@ bool TrackGenerator::readTracksFromFile() {
 
   delete [] geometry_to_string;
 
-  log_printf(NORMAL, "Importing ray tracing data from file...");
+  log_printf(NORMAL_LOG, "Importing ray tracing data from file...");
 
   /* Import ray tracing metadata from the Track file */
   ret = fread(&_num_azim, sizeof(int), 1, in);

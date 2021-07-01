@@ -84,22 +84,22 @@ FP_PRECISION CPUSolver::getFSRScalarFlux(int fsr_id, int energy_group) {
 
   /* Error checking */
   if (fsr_id >= _num_FSRs)
-    log_printf(ERROR, "Unable to return a scalar flux for FSR ID = %d in energy"
+    log_printf(ERROR_LOG, "Unable to return a scalar flux for FSR ID = %d in energy"
                " group %d since the solver only contains FSR with IDs less"
                " than or equal to %d", fsr_id, energy_group, _num_FSRs-1);
 
   if (fsr_id < 0)
-    log_printf(ERROR, "Unable to return a scalar flux for FSR ID = %d "
+    log_printf(ERROR_LOG, "Unable to return a scalar flux for FSR ID = %d "
                "in energy group %d since FSRs do not have ",
                "negative IDs", fsr_id, energy_group);
 
   if (energy_group-1 >= _num_groups)
-    log_printf(ERROR, "Unable to return a scalar flux for FSR ID = %d "
+    log_printf(ERROR_LOG, "Unable to return a scalar flux for FSR ID = %d "
                "in energy group %d since the solver only has %d energy "
                "groups", fsr_id, energy_group, _num_groups);
 
   if (energy_group <= 0)
-    log_printf(ERROR, "Unable to return a scalar flux for FSR ID = %d "
+    log_printf(ERROR_LOG, "Unable to return a scalar flux for FSR ID = %d "
                "in energy group %d since energy groups are greater than "
                "or equal to 1", fsr_id, energy_group);
 
@@ -117,22 +117,22 @@ FP_PRECISION CPUSolver::getFSRSource(int fsr_id, int energy_group) {
 
   /* Error checking */
   if (fsr_id >= _num_FSRs)
-    log_printf(ERROR, "Unable to return a source for FSR ID = %d in energy "
+    log_printf(ERROR_LOG, "Unable to return a source for FSR ID = %d in energy "
                "group %d since the solver only contains FSR with IDs less than "
                "or equal to %d", fsr_id, energy_group, _num_FSRs-1);
 
   if (fsr_id < 0)
-    log_printf(ERROR, "Unable to return a source for FSR ID = %d "
+    log_printf(ERROR_LOG, "Unable to return a source for FSR ID = %d "
                "in energy group %d since FSRs do not have negative IDs",
                fsr_id, energy_group);
 
   if (energy_group-1 >= _num_groups)
-    log_printf(ERROR, "Unable to return a source for FSR ID = %d "
+    log_printf(ERROR_LOG, "Unable to return a source for FSR ID = %d "
                "in energy group %d since the solver only has %d energy "
                "groups", fsr_id, energy_group, _num_groups);
 
   if (energy_group <= 0)
-    log_printf(ERROR, "Unable to return a source for FSR ID = %d "
+    log_printf(ERROR_LOG, "Unable to return a source for FSR ID = %d "
                "in energy group %d since energy groups are greater than "
                "or equal to 1", fsr_id, energy_group);
 
@@ -149,7 +149,7 @@ FP_PRECISION CPUSolver::getFSRSource(int fsr_id, int energy_group) {
 FP_PRECISION* CPUSolver::getFSRScalarFluxes() {
 
   if (_scalar_flux == NULL)
-    log_printf(ERROR, "Unable to returns the Solver's FSR scalar flux array "
+    log_printf(ERROR_LOG, "Unable to returns the Solver's FSR scalar flux array "
                "since it has not yet been allocated in memory");
 
   return _scalar_flux;
@@ -164,7 +164,7 @@ FP_PRECISION* CPUSolver::getFSRScalarFluxes() {
 double* CPUSolver::getSurfaceCurrents() {
 
   if (_surface_currents == NULL)
-    log_printf(ERROR, "Unable to returns the Solver's Cmfd Mesh surface "
+    log_printf(ERROR_LOG, "Unable to returns the Solver's Cmfd Mesh surface "
                "currents array since it has not yet been allocated in memory");
 
   return _surface_currents;
@@ -178,7 +178,7 @@ double* CPUSolver::getSurfaceCurrents() {
 void CPUSolver::setNumThreads(int num_threads) {
 
   if (num_threads <= 0)
-    log_printf(ERROR, "Unable to set the number of threads for the Solver "
+    log_printf(ERROR_LOG, "Unable to set the number of threads for the Solver "
                "to %d since it is less than or equal to 0", num_threads);
 
   _num_threads = num_threads;
@@ -231,7 +231,7 @@ void CPUSolver::initializeFluxArrays() {
     _thread_fsr_flux = new FP_PRECISION[size];
   }
   catch(std::exception &e) {
-    log_printf(ERROR, "Could not allocate memory for the Solver's fluxes. "
+    log_printf(ERROR_LOG, "Could not allocate memory for the Solver's fluxes. "
                "Backtrace:%s", e.what());
   }
 }
@@ -281,7 +281,7 @@ void CPUSolver::initializeSourceArrays() {
 
   }
   catch(std::exception &e) {
-    log_printf(ERROR, "Could not allocate memory for the solver's FSR "
+    log_printf(ERROR_LOG, "Could not allocate memory for the solver's FSR "
                "sources array. Backtrace:%s", e.what());
   }
 }
@@ -309,7 +309,7 @@ void CPUSolver::initializePolarQuadrature() {
  */
 void CPUSolver::buildExpInterpTable() {
 
-  log_printf(INFO, "Building exponential interpolation table...");
+  log_printf(INFO_LOG, "Building exponential interpolation table...");
 
   FP_PRECISION azim_weight;
 
@@ -333,7 +333,7 @@ void CPUSolver::buildExpInterpTable() {
   _exp_table_size = _two_times_num_polar * num_array_values;
   _exp_table_max_index = _exp_table_size - _two_times_num_polar - 1.;
 
-  log_printf(DEBUG, "Exponential interpolation table size: %i, max index: %i",
+  log_printf(DEBUG_LOG, "Exponential interpolation table size: %i, max index: %i",
              _exp_table_size, _exp_table_max_index);
 
   /* Allocate array for the table */
@@ -369,7 +369,7 @@ void CPUSolver::buildExpInterpTable() {
  */
 void CPUSolver::initializeFSRs() {
 
-  log_printf(INFO, "Initializing flat source regions...");
+  log_printf(INFO_LOG, "Initializing flat source regions...");
 
   /* Delete old FSR arrays if they exist */
   if (_FSR_volumes != NULL)
@@ -418,7 +418,7 @@ void CPUSolver::initializeFSRs() {
     material = _geometry->getMaterial(cell->getMaterial());
     _FSR_materials[r] = material;
 
-    log_printf(DEBUG, "FSR ID = %d has Cell ID = %d and Material ID = %d "
+    log_printf(DEBUG_LOG, "FSR ID = %d has Cell ID = %d and Material ID = %d "
                "and volume = %f", r, cell->getId(),
                 _FSR_materials[r]->getUid(), _FSR_volumes[r]);
   }
@@ -463,7 +463,7 @@ void CPUSolver::initializeCmfd() {
 
   }
   catch(std::exception &e) {
-    log_printf(ERROR, "Could not allocate memory for the Solver's Cmfd "
+    log_printf(ERROR_LOG, "Could not allocate memory for the Solver's Cmfd "
                "Mesh surface currents. Backtrace:%s", e.what());
   }
 
@@ -593,7 +593,7 @@ void CPUSolver::normalizeFluxes() {
   /* Normalize scalar fluxes in each FSR */
   norm_factor = 1.0 / tot_fission_source;
 
-  log_printf(DEBUG, "Tot. Fiss. Src = %f, Normalization factor = %f",
+  log_printf(DEBUG_LOG, "Tot. Fiss. Src = %f, Normalization factor = %f",
              tot_fission_source, norm_factor);
 
 #ifdef _OPENMP
@@ -785,7 +785,7 @@ void CPUSolver::computeKeff() {
 
   _k_eff = tot_fission / (tot_abs + _leakage);
 
-  log_printf(DEBUG, "abs = %f, fission = %f, leakage = %f, k_eff = %f",
+  log_printf(DEBUG_LOG, "abs = %f, fission = %f, leakage = %f, k_eff = %f",
              tot_abs, tot_fission, _leakage, _k_eff);
 
   delete [] FSR_rates;
@@ -813,7 +813,7 @@ void CPUSolver::transportSweep() {
   segment* segments;
   FP_PRECISION* track_flux;
 
-  log_printf(DEBUG, "Transport sweep with %d OpenMP threads", _num_threads);
+  log_printf(DEBUG_LOG, "Transport sweep with %d OpenMP threads", _num_threads);
 
   /* Initialize flux in each FSr to zero */
   flattenFSRFluxes(0.0);
@@ -1134,7 +1134,7 @@ void CPUSolver::addSourceToScalarFlux() {
  */
 void CPUSolver::computeFSRFissionRates(double* fission_rates, int num_FSRs) {
 
-  log_printf(INFO, "Computing FSR fission rates...");
+  log_printf(INFO_LOG, "Computing FSR fission rates...");
 
   FP_PRECISION* sigma_f;
 

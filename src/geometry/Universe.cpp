@@ -227,7 +227,7 @@ bool Universe::isFissionable() {
 int Universe::getFSR(int cell_id) {
 
   if (_cells.find(cell_id) == _cells.end())
-    log_printf(ERROR, "Tried to find FSR ID for Cell with ID = %d in "
+    log_printf(ERROR_LOG, "Tried to find FSR ID for Cell with ID = %d in "
                " Universe with ID = %d but no Cell exists", cell_id, _id);
 
   return _region_map.at(cell_id);
@@ -253,11 +253,11 @@ void Universe::addCell(Cell* cell) {
 
   try {
     _cells.insert(std::pair<int, Cell*>(cell->getId(), cell));
-    log_printf(INFO, "Added Cell with ID = %d to Universe with ID = %d",
+    log_printf(INFO_LOG, "Added Cell with ID = %d to Universe with ID = %d",
                cell->getId(), _id);
   }
   catch (std::exception &e) {
-    log_printf(ERROR, "Unable to add Cell with ID = %d to Universe with"
+    log_printf(ERROR_LOG, "Unable to add Cell with ID = %d to Universe with"
                " ID = %d. Backtrace:\n%s", cell, _id, e.what());
   }
 }
@@ -271,7 +271,7 @@ void Universe::addCell(Cell* cell) {
 Cell* Universe::getCell(int cell_id) {
 
   if (_cells.find(cell_id) == _cells.end())
-    log_printf(ERROR, "Unable to return Cell with ID = %d from Universe with "
+    log_printf(ERROR_LOG, "Unable to return Cell with ID = %d from Universe with "
                "ID = %d since it does not contain this Cell", cell_id, _id);
 
     return _cells.at(cell_id);
@@ -287,12 +287,12 @@ CellFill* Universe::getCellFill(int cell_id) {
 
   CellFill* cell = NULL;
   if (_cells.find(cell_id) == _cells.end())
-    log_printf(ERROR, "Unable to return Cell with ID = %d from Universe with "
+    log_printf(ERROR_LOG, "Unable to return Cell with ID = %d from Universe with "
                "ID = %d since it does not contain this Cell", cell_id, _id);
 
   cell = static_cast<CellFill*>(_cells.at(cell_id));
   if (cell->getType() != FILL)
-    log_printf(WARNING, "Retrieving Cell %d from Universe %d, but it "
+    log_printf(WARNING_LOG, "Retrieving Cell %d from Universe %d, but it "
                "is not a FILL type Cell", cell->getId(), _id);
   return cell;
 }
@@ -307,12 +307,12 @@ CellBasic* Universe::getCellBasic(int cell_id) {
 
   CellBasic* cell = NULL;
   if (_cells.find(cell_id) == _cells.end())
-    log_printf(ERROR, "Unable to return Cell with ID = %d from Universe with "
+    log_printf(ERROR_LOG, "Unable to return Cell with ID = %d from Universe with "
                "ID = %d since the it does not contain this Cell", cell_id, _id);
 
   cell = static_cast<CellBasic*>(_cells.at(cell_id));
   if (cell->getType() != MATERIAL)
-    log_printf(WARNING, "Retrieving Cell %d from Universe %d, but it "
+    log_printf(WARNING_LOG, "Retrieving Cell %d from Universe %d, but it "
                "is not a MATERIAL type Cell", cell->getId(), _id);
 
   return cell;
@@ -472,7 +472,7 @@ int Universe::computeFSRMaps() {
  */
 void Universe::subdivideCells() {
 
-  log_printf(DEBUG, "Subdividing Cells for Universe %d", _id);
+  log_printf(DEBUG_LOG, "Subdividing Cells for Universe %d", _id);
 
   std::map<int, Cell*>::iterator iter1;
 
@@ -507,7 +507,7 @@ void Universe::subdivideCells() {
  *        the console.
  */
 void Universe::printString() {
-  log_printf(RESULT, toString().c_str());
+  log_printf(RESULT_LOG, toString().c_str());
 }
 
 
@@ -517,7 +517,7 @@ void Universe::printString() {
  */
 Universe* Universe::clone() {
 
-  log_printf(DEBUG, "Cloning Universe %d", _id);
+  log_printf(DEBUG_LOG, "Cloning Universe %d", _id);
 
   /* Instantiate new Universe clone */
   Universe* clone = new Universe(universe_id());
@@ -540,7 +540,7 @@ Universe* Universe::clone() {
 
     /* Throw error message if Cell is FILL type */
     else {
-      log_printf(ERROR, "Unable to clone Universe %d since it contains Cell %d"
+      log_printf(ERROR_LOG, "Unable to clone Universe %d since it contains Cell %d"
                  "which is filled with a Universe rather than a Material");
     }
   }
@@ -627,7 +627,7 @@ Universe* Lattice::getUniverse(int lattice_x, int lattice_y) const {
 
   /* Checks that lattice indices are within the bounds of the lattice */
   if (lattice_x > _num_x || lattice_y > _num_y)
-    log_printf(ERROR, "Cannot retrieve Universe from Lattice ID = %d: Index"
+    log_printf(ERROR_LOG, "Cannot retrieve Universe from Lattice ID = %d: Index"
                "out of bounds: Tried to access Cell x = %d, y = %d but bounds"
                "are x = %d, y = %d", _id, lattice_x, lattice_y, _num_x, _num_y);
 
@@ -667,7 +667,7 @@ int Lattice::getFSR(int lat_x, int lat_y) {
 
   /* Check if Lattice indices are out of bounds */
   if (lat_x > _num_x || lat_y > _num_y)
-    log_printf(ERROR, "Tried to access FSR map of Lattice ID = %d, but indices"
+    log_printf(ERROR_LOG, "Tried to access FSR map of Lattice ID = %d, but indices"
                "lat_x = %d and lat_y = %d were out of bounds",
                _id, lat_x, lat_y);
 
@@ -722,11 +722,11 @@ void Lattice::setUniversePointer(Universe* universe) {
   }
 
   if (universe_not_found)
-    log_printf(WARNING, "Tried to set the Universe pointer for "
+    log_printf(WARNING_LOG, "Tried to set the Universe pointer for "
               "Lattice id = %d for Universe ID = %d but the Lattice "
                "does not contain the Universe", _id, universe_id);
   else
-    log_printf(INFO, "Set the Universe pointer for Lattice "
+    log_printf(INFO_LOG, "Set the Universe pointer for Lattice "
                "ID = %d for Universe ID = %d", _id, universe_id);
 
   return;
@@ -1156,5 +1156,5 @@ std::string Lattice::toString() {
  *        the console.
  */
 void Lattice::printString() {
-  log_printf(RESULT, toString().c_str());
+  log_printf(RESULT_LOG, toString().c_str());
 }

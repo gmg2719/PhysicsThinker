@@ -181,7 +181,7 @@ int Material::getNumEnergyGroups() const {
  */
 FP_PRECISION* Material::getSigmaT() {
   if (_sigma_t == NULL)
-    log_printf(ERROR, "Unable to return Material %d's total "
+    log_printf(ERROR_LOG, "Unable to return Material %d's total "
                "cross-section since it has not yet been set", _id);
 
   return _sigma_t;
@@ -195,7 +195,7 @@ FP_PRECISION* Material::getSigmaT() {
  */
 FP_PRECISION* Material::getSigmaA() {
   if (_sigma_a == NULL)
-      log_printf(ERROR, "Unable to return Material %d's absorption "
+      log_printf(ERROR_LOG, "Unable to return Material %d's absorption "
                  "cross-section since it has not yet been set", _id);
 
   return _sigma_a;
@@ -208,7 +208,7 @@ FP_PRECISION* Material::getSigmaA() {
  */
 FP_PRECISION* Material::getSigmaS() {
   if (_sigma_s == NULL)
-    log_printf(ERROR, "Unable to return Material %d's scattering "
+    log_printf(ERROR_LOG, "Unable to return Material %d's scattering "
                "cross-section since it has not yet been set", _id);
 
   return _sigma_s;
@@ -221,7 +221,7 @@ FP_PRECISION* Material::getSigmaS() {
  */
 FP_PRECISION* Material::getSigmaF() {
   if (_sigma_f == NULL)
-    log_printf(ERROR, "Unable to return material %d's fission "
+    log_printf(ERROR_LOG, "Unable to return material %d's fission "
                "cross-section since it has not yet been set", _id);
 
   return _sigma_f;
@@ -236,7 +236,7 @@ FP_PRECISION* Material::getSigmaF() {
  */
 FP_PRECISION* Material::getNuSigmaF() {
   if (_nu_sigma_f == NULL)
-    log_printf(ERROR, "Unable to return Material %d's nu times fission "
+    log_printf(ERROR_LOG, "Unable to return Material %d's nu times fission "
                "cross-section since it has not yet been set", _id);
 
   return _nu_sigma_f;
@@ -249,7 +249,7 @@ FP_PRECISION* Material::getNuSigmaF() {
  */
 FP_PRECISION* Material::getChi() {
   if (_chi == NULL)
-    log_printf(ERROR, "Unable to return Material %d's chi spectrum "
+    log_printf(ERROR_LOG, "Unable to return Material %d's chi spectrum "
                "since it has not yet been set", _id);
 
   return _chi;
@@ -370,7 +370,7 @@ int Material::getNumVectorGroups() {
 void Material::setNumEnergyGroups(const int num_groups) {
 
   if (num_groups < 0)
-    log_printf(ERROR, "Unable to set the number of energy groups for "
+    log_printf(ERROR_LOG, "Unable to set the number of energy groups for "
                "material %d to %d", _num_groups);
 
   _num_groups = num_groups;
@@ -472,7 +472,7 @@ void Material::setNumEnergyGroups(const int num_groups) {
 void Material::setSigmaT(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
-    log_printf(ERROR, "Unable to set sigma_t with %d groups for Material "
+    log_printf(ERROR_LOG, "Unable to set sigma_t with %d groups for Material "
                "%d which contains %d energy groups", num_groups,  _num_groups);
 
   for (int i=0; i < _num_groups; i++)
@@ -488,7 +488,7 @@ void Material::setSigmaT(double* xs, int num_groups) {
 void Material::setSigmaTByGroup(double xs, int group) {
 
   if (group < 0 || group >= _num_groups)
-    log_printf(ERROR, "Unable to set sigma_t for group %d for Material "
+    log_printf(ERROR_LOG, "Unable to set sigma_t for group %d for Material "
                "%d which contains %d energy groups", group, _uid, _num_groups);
 
   _sigma_t[group] = xs;
@@ -517,7 +517,7 @@ void Material::setSigmaTByGroup(double xs, int group) {
 void Material::setSigmaA(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
-    log_printf(ERROR, "Unable to set sigma_a with %d groups for Material "
+    log_printf(ERROR_LOG, "Unable to set sigma_a with %d groups for Material "
                "%d which contains %d energy groups", num_groups, _num_groups);
 
   for (int i=0; i < _num_groups; i++){
@@ -537,7 +537,7 @@ void Material::setSigmaA(double* xs, int num_groups) {
 void Material::setSigmaAByGroup(double xs, int group) {
 
   if (group < 0 || group >= _num_groups)
-    log_printf(ERROR, "Unable to set sigma_a for group %d for material "
+    log_printf(ERROR_LOG, "Unable to set sigma_a for group %d for material "
                "%d which contains %d energy groups", group, _uid, _num_groups);
 
   _sigma_a[group] = xs;
@@ -577,7 +577,7 @@ void Material::setSigmaAByGroup(double xs, int group) {
 void Material::setSigmaS(double* xs, int num_groups_squared) {
 
   if (_num_groups*_num_groups != num_groups_squared)
-    log_printf(ERROR, "Unable to set sigma_s with %f groups for Material %d "
+    log_printf(ERROR_LOG, "Unable to set sigma_s with %f groups for Material %d "
                "which contains %d energy groups",
                 float(sqrt(num_groups_squared)), _num_groups);
 
@@ -597,7 +597,7 @@ void Material::setSigmaS(double* xs, int num_groups_squared) {
 void Material::setSigmaSByGroup(double xs, int group1, int group2) {
 
   if (group1 < 0 || group2 < 0 || group1 >= _num_groups || group2 >= _num_groups)
-    log_printf(ERROR, "Unable to set sigma_s for group %d,%d for Material %d "
+    log_printf(ERROR_LOG, "Unable to set sigma_s for group %d,%d for Material %d "
                "which contains %d energy groups",
                group1, group2, _uid, _num_groups);
 
@@ -627,7 +627,7 @@ void Material::setSigmaSByGroup(double xs, int group1, int group2) {
 void Material::setSigmaF(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
-    log_printf(ERROR, "Unable to set sigma_f with %d groups for Material "
+    log_printf(ERROR_LOG, "Unable to set sigma_f with %d groups for Material "
                "%d which contains %d energy groups", num_groups, _num_groups);
 
   for (int i=0; i < _num_groups; i++)
@@ -653,7 +653,7 @@ void Material::setSigmaF(double* xs, int num_groups) {
 void Material::setSigmaFByGroup(double xs, int group) {
 
   if (group < 0 || group >= _num_groups)
-    log_printf(ERROR, "Unable to set sigma_f for group %d for Material "
+    log_printf(ERROR_LOG, "Unable to set sigma_f for group %d for Material "
                "%d which contains %d energy groups", group, _uid, _num_groups);
 
   _sigma_f[group] = xs;
@@ -680,7 +680,7 @@ void Material::setSigmaFByGroup(double xs, int group) {
 void Material::setNuSigmaF(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
-    log_printf(ERROR, "Unable to set nu_sigma_f with %d groups for Material %d "
+    log_printf(ERROR_LOG, "Unable to set nu_sigma_f with %d groups for Material %d "
               "which contains %d energy groups", num_groups, _uid, _num_groups);
 
   for (int i=0; i < _num_groups; i++)
@@ -711,7 +711,7 @@ void Material::setNuSigmaF(double* xs, int num_groups) {
 void Material::setNuSigmaFByGroup(double xs, int group) {
 
   if (group < 0 || group >= _num_groups)
-    log_printf(ERROR, "Unable to set nu_sigma_f for group %d for Material "
+    log_printf(ERROR_LOG, "Unable to set nu_sigma_f for group %d for Material "
                "%d which contains %d energy groups", group, _uid);
 
   _nu_sigma_f[group] = xs;
@@ -741,7 +741,7 @@ void Material::setNuSigmaFByGroup(double xs, int group) {
 void Material::setChi(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
-    log_printf(ERROR, "Unable to set chi with %d groups for Material "
+    log_printf(ERROR_LOG, "Unable to set chi with %d groups for Material "
                "%d which contains %d energy groups", num_groups, _num_groups);
 
   for (int i=0; i < _num_groups; i++)
@@ -757,7 +757,7 @@ void Material::setChi(double* xs, int num_groups) {
 void Material::setChiByGroup(double xs, int group) {
 
   if (group < 0 || group >= _num_groups)
-    log_printf(ERROR, "Unable to set chi for group %d for Material "
+    log_printf(ERROR_LOG, "Unable to set chi for group %d for Material "
               "%d which contains %d energy groups", group, _num_groups, _uid);
 
   _chi[group] = xs;
@@ -786,7 +786,7 @@ void Material::setChiByGroup(double xs, int group) {
 void Material::setDifCoef(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
-    log_printf(ERROR, "Unable to set diffusion coefficient with %d groups for "
+    log_printf(ERROR_LOG, "Unable to set diffusion coefficient with %d groups for "
                "Material %d which contains %d energy groups", num_groups,
                _num_groups);
 
@@ -806,7 +806,7 @@ void Material::setDifCoef(double* xs, int num_groups) {
 void Material::setDifCoefByGroup(double xs, int group) {
 
   if (group < 0 || group >= _num_groups)
-    log_printf(ERROR, "Unable to set diffusion coefficient for group %d for "
+    log_printf(ERROR_LOG, "Unable to set diffusion coefficient for group %d for "
                "Material %d which contains %d energy groups",
                group, _num_groups, _uid);
 
@@ -843,7 +843,7 @@ void Material::setDifCoefByGroup(double xs, int group) {
 void Material::setBuckling(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
-    log_printf(ERROR, "Unable to set diffusion coefficient with %d groups for "
+    log_printf(ERROR_LOG, "Unable to set diffusion coefficient with %d groups for "
                "Material %d which contains %d energy groups", num_groups,
                _num_groups);
 
@@ -863,7 +863,7 @@ void Material::setBuckling(double* xs, int num_groups) {
 void Material::setBucklingByGroup(double xs, int group) {
 
   if (group < 0 || group >= _num_groups)
-    log_printf(ERROR, "Unable to set diffusion coefficient for group %d for "
+    log_printf(ERROR_LOG, "Unable to set diffusion coefficient for group %d for "
                "Material %d which contains %d energy groups",
                group, _num_groups, _uid);
 
@@ -899,7 +899,7 @@ void Material::setBucklingByGroup(double xs, int group) {
 void Material::setDifHat(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
-    log_printf(ERROR, "Unable to set diffusion coefficient with %d groups "
+    log_printf(ERROR_LOG, "Unable to set diffusion coefficient with %d groups "
                "for Material %d which contains %d energy groups", num_groups,
                _num_groups);
 
@@ -921,7 +921,7 @@ void Material::setDifHat(double* xs, int num_groups) {
 void Material::setDifHatByGroup(double xs, int group, int surface) {
 
   if (group < 0 || group >= _num_groups)
-    log_printf(ERROR, "Unable to set diffusion coefficient for group %d for "
+    log_printf(ERROR_LOG, "Unable to set diffusion coefficient for group %d for "
               "Material %d which contains %d energy groups",
               group, _num_groups, _uid);
 
@@ -959,7 +959,7 @@ void Material::setDifHatByGroup(double xs, int group, int surface) {
 void Material::setDifTilde(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
-    log_printf(ERROR, "Unable to set diffusion coefficient with %d groups "
+    log_printf(ERROR_LOG, "Unable to set diffusion coefficient with %d groups "
               "for Material %d which contains %d energy groups", num_groups,
               _num_groups);
 
@@ -982,7 +982,7 @@ void Material::setDifTilde(double* xs, int num_groups) {
 void Material::setDifTildeByGroup(double xs, int group, int surface) {
 
   if (group < 0 || group >= _num_groups)
-    log_printf(ERROR, "Unable to set diffusion coefficient correction for "
+    log_printf(ERROR_LOG, "Unable to set diffusion coefficient correction for "
               "group %d for Material %d which contains %d energy groups",
                group, _num_groups, _uid);
 
@@ -1007,16 +1007,16 @@ void Material::setDifTildeByGroup(double xs, int group, int surface) {
 void Material::checkSigmaT() {
 
   if (_num_groups == 0)
-    log_printf(ERROR, "Unable to verify Material %d's total cross-section "
+    log_printf(ERROR_LOG, "Unable to verify Material %d's total cross-section "
               "since the number of energy groups has not been set", _id);
   if (_sigma_t == NULL)
-    log_printf(ERROR, "Unable to verify Material %d's total cross-section "
+    log_printf(ERROR_LOG, "Unable to verify Material %d's total cross-section "
               "since its total cross-section has not been set", _id);
   if (_sigma_a == NULL)
-    log_printf(ERROR, "Unable to verify Material %d's total cross-section "
+    log_printf(ERROR_LOG, "Unable to verify Material %d's total cross-section "
                "since its absorption cross-section has not been set", _id);
   if (_sigma_s == NULL)
-    log_printf(ERROR, "Unable to verify Material %d's total cross-section "
+    log_printf(ERROR_LOG, "Unable to verify Material %d's total cross-section "
               "since its scattering cross-section has not been set", _id);
 
   FP_PRECISION calc_sigma_t;
@@ -1033,7 +1033,7 @@ void Material::checkSigmaT() {
 
     /* Check if the calculated and total match up to certain threshold */
     if (fabs(calc_sigma_t - _sigma_t[i]) > SIGMA_T_THRESH) {
-      log_printf(ERROR, "Material id = %d has a different total cross-section "
+      log_printf(ERROR_LOG, "Material id = %d has a different total cross-section "
                  "than the sum of its scattering and absorption cross-sections "
                  "for group %d: sigma_t = %f, calc_sigma_t = %f",
                  _id, i+1, _sigma_t[i], calc_sigma_t);
@@ -1140,7 +1140,7 @@ void Material::alignData() {
     return;
 
   if (_num_groups <= 0)
-    log_printf(ERROR, "Unable to align Material %d data since the "
+    log_printf(ERROR_LOG, "Unable to align Material %d data since the "
                "cross-sections have not yet been set\n", _uid);
 
   _num_vector_groups = (_num_groups / VEC_LENGTH) + 1;
@@ -1149,11 +1149,11 @@ void Material::alignData() {
   int size = _num_vector_groups * VEC_LENGTH * sizeof(FP_PRECISION);
 
   /* Allocate word-aligned memory for cross-section data arrays */
-  FP_PRECISION* new_sigma_t = (FP_PRECISION*)_mm_malloc(size, VEC_ALIGNMENT);
-  FP_PRECISION* new_sigma_a = (FP_PRECISION*)_mm_malloc(size, VEC_ALIGNMENT);
-  FP_PRECISION* new_sigma_f = (FP_PRECISION*)_mm_malloc(size, VEC_ALIGNMENT);
-  FP_PRECISION* new_nu_sigma_f=(FP_PRECISION*)_mm_malloc(size, VEC_ALIGNMENT);
-  FP_PRECISION* new_chi = (FP_PRECISION*)_mm_malloc(size, VEC_ALIGNMENT);
+  FP_PRECISION* new_sigma_t = (FP_PRECISION*)my_simd_malloc(size, VEC_ALIGNMENT);
+  FP_PRECISION* new_sigma_a = (FP_PRECISION*)my_simd_malloc(size, VEC_ALIGNMENT);
+  FP_PRECISION* new_sigma_f = (FP_PRECISION*)my_simd_malloc(size, VEC_ALIGNMENT);
+  FP_PRECISION* new_nu_sigma_f=(FP_PRECISION*)my_simd_malloc(size, VEC_ALIGNMENT);
+  FP_PRECISION* new_chi = (FP_PRECISION*)my_simd_malloc(size, VEC_ALIGNMENT);
 
   /* The scattering matrix will be the number of vector groups
    * wide (SIMD) and the actual number of groups long since
@@ -1161,7 +1161,7 @@ void Material::alignData() {
 
   size = _num_vector_groups * VEC_LENGTH * _num_vector_groups;
   size *= VEC_LENGTH * sizeof(FP_PRECISION);
-  FP_PRECISION* new_sigma_s = (FP_PRECISION*)_mm_malloc(size, VEC_ALIGNMENT);
+  FP_PRECISION* new_sigma_s = (FP_PRECISION*)my_simd_malloc(size, VEC_ALIGNMENT);
 
   /* Initialize data structures to ones for sigma_t since it is used to
    * divide the source in the solver, and zeroes for everything else */

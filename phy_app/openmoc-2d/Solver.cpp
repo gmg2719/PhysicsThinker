@@ -150,7 +150,7 @@ Solver::~Solver() {
 Geometry* Solver::getGeometry() {
 
   if (_geometry == NULL)
-    log_printf(ERROR, "Unable to return the Solver's Geometry since it "
+    log_printf(ERROR_LOG, "Unable to return the Solver's Geometry since it "
                "has not yet been set");
 
   return _geometry;
@@ -164,7 +164,7 @@ Geometry* Solver::getGeometry() {
 TrackGenerator* Solver::getTrackGenerator() {
 
   if (_track_generator == NULL)
-    log_printf(ERROR, "Unable to return the Solver's TrackGenetrator "
+    log_printf(ERROR_LOG, "Unable to return the Solver's TrackGenetrator "
                "since it has not yet been set");
 
   return _track_generator;
@@ -297,18 +297,18 @@ bool Solver::isUsingExponentialIntrinsic() {
 void Solver::setGeometry(Geometry* geometry) {
 
   if (geometry->getNumFSRs() == 0)
-    log_printf(ERROR, "Unable to set the Geometry for the Solver since the "
+    log_printf(ERROR_LOG, "Unable to set the Geometry for the Solver since the "
                "Geometry has not yet initialized FSRs");
 
   if (geometry->getNumEnergyGroups() == 0)
-    log_printf(ERROR, "Unable to set the Geometry for the Solver "
+    log_printf(ERROR_LOG, "Unable to set the Geometry for the Solver "
                "since the Geometry does noet contain any materials");
 
   if (geometry->getBCTop() == ZERO_FLUX ||
       geometry->getBCBottom() == ZERO_FLUX ||
       geometry->getBCLeft() == ZERO_FLUX ||
       geometry->getBCRight() == ZERO_FLUX)
-    log_printf(ERROR, "You have input a ZERO_FLUX BC for solving an MOC "
+    log_printf(ERROR_LOG, "You have input a ZERO_FLUX BC for solving an MOC "
                "transport problem! OpenMOC only supports ZERO_FLUX BCs "
                "for solving diffusion problems. Please use a different "
                 "BC (VACUUM or REFLECTIVE).");
@@ -338,7 +338,7 @@ void Solver::setGeometry(Geometry* geometry) {
 void Solver::setTrackGenerator(TrackGenerator* track_generator) {
 
   if (!track_generator->containsTracks())
-    log_printf(ERROR, "Unable to set the TrackGenerator for the Solver "
+    log_printf(ERROR_LOG, "Unable to set the TrackGenerator for the Solver "
                "since the TrackGenerator has not yet generated tracks");
 
   _track_generator = track_generator;
@@ -387,11 +387,11 @@ void Solver::setPolarQuadratureType(quadratureType quadrature_type) {
 void Solver::setNumPolarAngles(int num_polar) {
 
   if (num_polar <= 0)
-    log_printf(ERROR, "Unable to set the Solver's number of polar angles "
+    log_printf(ERROR_LOG, "Unable to set the Solver's number of polar angles "
                "to %d since this is a negative number", num_polar);
 
   if (num_polar > 3)
-    log_printf(ERROR, "Unable to set the Solver's number of polar angles to %d"
+    log_printf(ERROR_LOG, "Unable to set the Solver's number of polar angles to %d"
                "since only 1, 2 or 3 are currently supported", num_polar);
 
   _num_polar = num_polar;
@@ -407,7 +407,7 @@ void Solver::setNumPolarAngles(int num_polar) {
 void Solver::setSourceConvergenceThreshold(FP_PRECISION source_thresh) {
 
   if (source_thresh <= 0.0)
-    log_printf(ERROR, "Unable to set the source convergence threshold to %f"
+    log_printf(ERROR_LOG, "Unable to set the source convergence threshold to %f"
                "since the threshold must be a positive number", source_thresh);
 
   _source_convergence_thresh = source_thresh;
@@ -442,7 +442,7 @@ void Solver::useExponentialIntrinsic() {
  */
 void Solver::initializeCmfd(){
 
-  log_printf(INFO, "Initializing CMFD...");
+  log_printf(INFO_LOG, "Initializing CMFD...");
 
   /* Initialize a dummy CMFD object if one has not been set */
   if (_cmfd == NULL)
@@ -504,7 +504,7 @@ void Solver::checkTrackSpacing() {
   for (int r=0; r < _num_FSRs; r++) {
 
     if (FSR_segment_tallies[r] == 0) {
-      log_printf(ERROR, "No tracks were tallied inside FSR id = %d. Please "
+      log_printf(ERROR_LOG, "No tracks were tallied inside FSR id = %d. Please "
                  "reduce your track spacing, increase the number of azimuthal"
                  "angles, or increase the size of the FSRs", r);
     }
@@ -535,14 +535,14 @@ FP_PRECISION Solver::convergeSource(int max_iterations) {
 
   /* Error checking */
   if (_geometry == NULL)
-    log_printf(ERROR, "The Solver is unable to converge the source "
+    log_printf(ERROR_LOG, "The Solver is unable to converge the source "
                "since it does not contain a Geometry");
 
   if (_track_generator == NULL)
-    log_printf(ERROR, "The Solver is unable to converge the source "
+    log_printf(ERROR_LOG, "The Solver is unable to converge the source "
                "since it does not contain a TrackGenerator");
 
-  log_printf(NORMAL, "Converging the source...");
+  log_printf(NORMAL_LOG, "Converging the source...");
 
   /* Clear all timing data from a previous simulation run */
   clearTimerSplits();
@@ -585,7 +585,7 @@ FP_PRECISION Solver::convergeSource(int max_iterations) {
   /* Source iteration loop */
   for (int i=0; i < max_iterations; i++) {
 
-    log_printf(NORMAL, "Iteration %d: \tk_eff = %1.6f"
+    log_printf(NORMAL_LOG, "Iteration %d: \tk_eff = %1.6f"
                "\tres = %1.3E", i, _k_eff, residual);
 
     normalizeFluxes();
@@ -614,7 +614,7 @@ FP_PRECISION Solver::convergeSource(int max_iterations) {
   _timer->stopTimer();
   _timer->recordSplit("Total time to converge the source");
 
-  log_printf(WARNING, "Unable to converge the source after %d iterations",
+  log_printf(WARNING_LOG, "Unable to converge the source after %d iterations",
              max_iterations);
 
   return _k_eff;
@@ -637,25 +637,25 @@ void Solver::printTimerReport() {
 
   std::string msg_string;
 
-  log_printf(TITLE, "TIMING REPORT");
+  log_printf(TITLE_LOG, "TIMING REPORT");
 
   /* Get the total runtime */
   double tot_time = _timer->getSplit("Total time to converge the source");
   msg_string = "Total time to solution";
   msg_string.resize(53, '.');
-  log_printf(RESULT, "%s%1.4E sec", msg_string.c_str(), tot_time);
+  log_printf(RESULT_LOG, "%s%1.4E sec", msg_string.c_str(), tot_time);
 
   /* Time per unknown */
   double time_per_unknown = tot_time / (_num_FSRs * _num_groups);
   msg_string = "Solution time per unknown";
   msg_string.resize(53, '.');
-  log_printf(RESULT, "%s%1.4E sec", msg_string.c_str(), time_per_unknown);
+  log_printf(RESULT_LOG, "%s%1.4E sec", msg_string.c_str(), time_per_unknown);
 
   /* Time per iteration */
   double time_per_iter = tot_time / _num_iterations;
   msg_string = "Solution time per iteration";
   msg_string.resize(53, '.');
-  log_printf(RESULT, "%s%1.4E sec", msg_string.c_str(), time_per_iter);
+  log_printf(RESULT_LOG, "%s%1.4E sec", msg_string.c_str(), time_per_iter);
 
   /* Time per segment */
   int num_segments = _track_generator->getNumSegments();
@@ -663,14 +663,14 @@ void Solver::printTimerReport() {
   double time_per_integration = (time_per_iter / num_integrations);
   msg_string = "Integration time per segment integration";
   msg_string.resize(53, '.');
-  log_printf(RESULT, "%s%1.4E sec", msg_string.c_str(), time_per_integration);
+  log_printf(RESULT_LOG, "%s%1.4E sec", msg_string.c_str(), time_per_integration);
 
   set_separator_character('-');
-  log_printf(SEPARATOR, "-");
+  log_printf(SEPARATOR_LOG, "-");
 
   msg_string = "           # tracks          # segments          # FSRs";
-  log_printf(RESULT, "%s", msg_string.c_str());
-  log_printf(SEPARATOR, "-");
+  log_printf(RESULT_LOG, "%s", msg_string.c_str());
+  log_printf(SEPARATOR_LOG, "-");
 
   int num_digits = (int) log10((double) _tot_num_tracks);
   num_digits += (int) log10((double) num_segments);
@@ -693,6 +693,6 @@ void Solver::printTimerReport() {
       msg << _num_FSRs;
   }
 
-  log_printf(RESULT, "%s", msg.str().c_str());
-  log_printf(SEPARATOR, "-");
+  log_printf(RESULT_LOG, "%s", msg.str().c_str());
+  log_printf(SEPARATOR_LOG, "-");
 }

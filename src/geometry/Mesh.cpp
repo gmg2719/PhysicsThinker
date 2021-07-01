@@ -114,7 +114,7 @@ void Mesh::initialize(){
     _bounds_y  = new double[_num_y+1];
   }
   catch(std::exception &e){
-        log_printf(ERROR, "Could not allocate memory for the Mesh properties"
+        log_printf(ERROR_LOG, "Could not allocate memory for the Mesh properties"
                    ". Backtrace:%s", e.what());
   }
 
@@ -270,7 +270,7 @@ void Mesh::setFSRBounds(){
     _fsr_indices = new int[2 * _num_x * _num_y];
   }
   catch(std::exception &e){
-    log_printf(ERROR, "Could not allocate memory for the Mesh fsr bounds. "
+    log_printf(ERROR_LOG, "Could not allocate memory for the Mesh fsr bounds. "
                "Backtrace:%s", e.what());
   }
 
@@ -424,7 +424,7 @@ void Mesh::printCurrents(){
       /* Loop over energy groups */
       for (int g = 0; g < _num_groups; g++){
         current = _currents[i*_num_groups*8 + s*_num_groups + g];
-        log_printf(NORMAL, "cell: %i, surface: %i, group: %i, "
+        log_printf(NORMAL_LOG, "cell: %i, surface: %i, group: %i, "
                    "current: %f", i, s, g, current);
       }
     }
@@ -452,7 +452,7 @@ void Mesh::setBoundary(int side, boundaryType boundary){
  */
 void Mesh::splitCorners(){
 
-  log_printf(INFO, "splitting corners...");
+  log_printf(INFO_LOG, "splitting corners...");
 
   for (int x = 0; x < _num_x; x++){
     for (int y = 0; y < _num_y; y++){
@@ -465,7 +465,7 @@ void Mesh::splitCorners(){
 
         for (int e = 0; e < _num_groups; e++){
 
-          log_printf(DEBUG, "cell: %i, group: %i, LEFT BOTTOM current: %f",
+          log_printf(DEBUG_LOG, "cell: %i, group: %i, LEFT BOTTOM current: %f",
                      y*_num_x+x,e,
                      _currents[(y*_num_x+x)*_num_groups*8 + 4*_num_groups + e]);
 
@@ -482,7 +482,7 @@ void Mesh::splitCorners(){
 
         for (int e = 0; e < _num_groups; e++){
 
-          log_printf(DEBUG, "cell: %i, group: %i, LEFT BOTTOM current: %f", 
+          log_printf(DEBUG_LOG, "cell: %i, group: %i, LEFT BOTTOM current: %f", 
 		     y*_num_x+x,e, 
 		     _currents[(y*_num_x+x)*_num_groups*8 + 4*_num_groups + e]);
 
@@ -502,7 +502,7 @@ void Mesh::splitCorners(){
 
         for (int e = 0; e < _num_groups; e++){
 
-          log_printf(DEBUG, "cell: %i, group: %i, RIGHT BOTTOM current: %f",
+          log_printf(DEBUG_LOG, "cell: %i, group: %i, RIGHT BOTTOM current: %f",
                      y*_num_x+x,e,
                      _currents[(y*_num_x+x)*_num_groups*8 + 5*_num_groups + e]);
 
@@ -519,7 +519,7 @@ void Mesh::splitCorners(){
 
         for (int e = 0; e < _num_groups; e++){
 
-          log_printf(DEBUG, "cell: %i, group: %i, RIGHT BOTTOM current: %f",
+          log_printf(DEBUG_LOG, "cell: %i, group: %i, RIGHT BOTTOM current: %f",
                      y*_num_x+x,e,
                      _currents[(y*_num_x+x)*_num_groups*8 + 5*_num_groups + e]);
 
@@ -538,7 +538,7 @@ void Mesh::splitCorners(){
 
         for (int e = 0; e < _num_groups; e++){
 
-          log_printf(DEBUG, "cell: %i, group: %i, RIGHT TOP current: %f",
+          log_printf(DEBUG_LOG, "cell: %i, group: %i, RIGHT TOP current: %f",
                      y*_num_x+x,e,
                      _currents[(y*_num_x+x)*_num_groups*8 + 6*_num_groups + e]);
 
@@ -555,7 +555,7 @@ void Mesh::splitCorners(){
 
         for (int e = 0; e < _num_groups; e++){
 
-          log_printf(DEBUG, "cell: %i, group: %i, RIGHT TOP current: %f",
+          log_printf(DEBUG_LOG, "cell: %i, group: %i, RIGHT TOP current: %f",
                      y*_num_x+x,e,
                      _currents[(y*_num_x+x)*_num_groups*8 + 6*_num_groups + e]);
 
@@ -574,7 +574,7 @@ void Mesh::splitCorners(){
 
         for (int e = 0; e < _num_groups; e++){
 
-          log_printf(DEBUG, "cell: %i, group: %i, LEFT TOP current: %f",
+          log_printf(DEBUG_LOG, "cell: %i, group: %i, LEFT TOP current: %f",
                      y*_num_x+x,e,
                      _currents[(y*_num_x+x)*_num_groups*8 + 7*_num_groups + e]);
 
@@ -591,7 +591,7 @@ void Mesh::splitCorners(){
 
         for (int e = 0; e < _num_groups; e++){
 
-          log_printf(DEBUG, "cell: %i, group: %i, LEFT TOP current: %f",
+          log_printf(DEBUG_LOG, "cell: %i, group: %i, LEFT TOP current: %f",
                      y*_num_x+x,e,
                      _currents[(y*_num_x+x)*_num_groups*8 + 7*_num_groups + e]);
 
@@ -756,20 +756,20 @@ void Mesh::setCellBounds(){
   _bounds_x[0] = -_length_x / 2.0;
   _bounds_y[0] = _length_y / 2.0;
 
-  log_printf(DEBUG, "bounds x: %f", _bounds_x[0]);
+  log_printf(DEBUG_LOG, "bounds x: %f", _bounds_x[0]);
 
   /* Set x bounds */
   for (int x = 1; x < _num_x+1; x++){
     _bounds_x[x] = _bounds_x[x-1] + _lengths_x[x-1];
-    log_printf(DEBUG, "bounds x: %f", _bounds_x[x]);
+    log_printf(DEBUG_LOG, "bounds x: %f", _bounds_x[x]);
   }
 
-  log_printf(DEBUG, "bounds y: %f", _bounds_y[0]);
+  log_printf(DEBUG_LOG, "bounds y: %f", _bounds_y[0]);
 
   /* Set y bounds */
   for (int y = 1; y < _num_y+1; y++){
     _bounds_y[y] = _bounds_y[y-1] - _lengths_y[y-1];
-    log_printf(DEBUG, "bounds y: %f", _bounds_y[y]);
+    log_printf(DEBUG_LOG, "bounds y: %f", _bounds_y[y]);
   }
 
   for (int x = 0; x < _num_x; x++){
@@ -898,7 +898,7 @@ void Mesh::initializeMaterialsMOC(){
     }
   }
   catch(std::exception &e){
-    log_printf(ERROR, "Could not allocate memory for the Mesh cell materials. "
+    log_printf(ERROR_LOG, "Could not allocate memory for the Mesh cell materials. "
                "Backtrace:%s", e.what());
   }
 }
@@ -923,7 +923,7 @@ void Mesh::initializeMaterialsDiffusion(std::map<int, Material*>* materials,
     }
   }
   catch(std::exception &e){
-    log_printf(ERROR, "Could not allocate memory for the Mesh cell materials. "
+    log_printf(ERROR_LOG, "Could not allocate memory for the Mesh cell materials. "
                "Backtrace:%s", e.what());
   }
 }
@@ -947,7 +947,7 @@ void Mesh::initializeSurfaceCurrents(){
     _currents = new double[8*_num_x*_num_y*_num_groups];
   }
   catch(std::exception &e){
-    log_printf(ERROR, "Could not allocate memory for the Mesh currents. "
+    log_printf(ERROR_LOG, "Could not allocate memory for the Mesh currents. "
                "Backtrace:%s", e.what());
   }
 
@@ -1036,7 +1036,7 @@ void Mesh::initializeFlux(){
     adj_flux = new double[_num_x*_num_y*_num_groups];
   }
   catch(std::exception &e){
-    log_printf(ERROR, "Could not allocate memory for the Mesh cell fluxes, "
+    log_printf(ERROR_LOG, "Could not allocate memory for the Mesh cell fluxes, "
                "lengths, and volumes. Backtrace:%s", e.what());
   }
 

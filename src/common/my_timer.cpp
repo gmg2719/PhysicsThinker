@@ -142,7 +142,7 @@ void Timer::printSplits() {
     curr_msg.resize(53, '.');
     formatted_msg << curr_msg;
 
-    log_printf(RESULT, "%s%1.4E sec", formatted_msg.str().c_str(), curr_split);
+    log_printf(RESULT_LOG, "%s%1.4E sec", formatted_msg.str().c_str(), curr_split);
   }
 }
 

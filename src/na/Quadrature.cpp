@@ -30,7 +30,7 @@
 Quadrature::Quadrature(quadratureType type, int num_polar_angles) {
 
   if (num_polar_angles != 1 && num_polar_angles != 2 && num_polar_angles != 3)
-    log_printf(ERROR, "Unable to set the number of polar angles to %d. Only"
+    log_printf(ERROR_LOG, "Unable to set the number of polar angles to %d. Only"
                "1, 2 and 3 polar angles are supported by OpenMOC.");
 
   _num_polar_angles = num_polar_angles;
@@ -73,7 +73,7 @@ Quadrature::Quadrature(quadratureType type, int num_polar_angles) {
     }
 
     else
-      log_printf(ERROR, "TABUCHI type polar Quadrature supports 1, 2, or "
+      log_printf(ERROR_LOG, "TABUCHI type polar Quadrature supports 1, 2, or "
                  "3 polar angles but %d are defined", _num_polar_angles);
   }
 
@@ -104,14 +104,14 @@ Quadrature::Quadrature(quadratureType type, int num_polar_angles) {
     }
 
     else {
-      log_printf(ERROR, "LEONARD type polar Quadrature supports 2, or 3"
+      log_printf(ERROR_LOG, "LEONARD type polar Quadrature supports 2, or 3"
                  "polar angles but %d are defined", _num_polar_angles);
     }
 
   }
 
   else
-    log_printf(ERROR, "LEONARD and TABUCHI polar Quadrature types "
+    log_printf(ERROR_LOG, "LEONARD and TABUCHI polar Quadrature types "
                "supported, but unknown type given");
 }
 
@@ -153,7 +153,7 @@ int Quadrature::getNumPolarAngles() const {
 FP_PRECISION Quadrature::getSinTheta(const int n) const {
 
   if (n < 0 || n >= _num_polar_angles)
-    log_printf(ERROR, "Attempted to retrieve sintheta for polar angle = %d"
+    log_printf(ERROR_LOG, "Attempted to retrieve sintheta for polar angle = %d"
                " but only %d polar angles are defined", _num_polar_angles);
 
   return _sinthetas[n];
@@ -168,7 +168,7 @@ FP_PRECISION Quadrature::getSinTheta(const int n) const {
 FP_PRECISION Quadrature::getWeight(const int n) const {
 
   if (n < 0 || n >= _num_polar_angles)
-    log_printf(ERROR, "Attempted to retrieve the weight for polar angle = %d "
+    log_printf(ERROR_LOG, "Attempted to retrieve the weight for polar angle = %d "
                "but only %d polar angles are defined", _num_polar_angles);
 
   return _weights[n];
@@ -184,7 +184,7 @@ FP_PRECISION Quadrature::getWeight(const int n) const {
 FP_PRECISION Quadrature::getMultiple(const int n) const {
 
   if (n < 0 || n >= _num_polar_angles)
-    log_printf(ERROR, "Attempted to retrieve the multiple for polar angle = %d"
+    log_printf(ERROR_LOG, "Attempted to retrieve the multiple for polar angle = %d"
                "but only %d polar angles are defined", _num_polar_angles);
 
   return _multiples[n];

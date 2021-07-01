@@ -54,7 +54,7 @@ Surface::Surface(const int id){
   if (id == 0)
     _id = surf_id();
   else if (id >= surf_id())
-    log_printf(ERROR, "Unable to set the ID of a surface to %d since surface "
+    log_printf(ERROR_LOG, "Unable to set the ID of a surface to %d since surface "
                "IDs greater than 10000 are probibited by OpenMOC.", id);
   /* Use the user-defined ID */
   else
@@ -167,7 +167,7 @@ Plane::Plane(const double A, const double B,
  * @return the minimum x value of -INFINITY
  */
 double Plane::getXMin(){
-  log_printf(ERROR, "Plane::getXMin() not yet implemented");
+  log_printf(ERROR_LOG, "Plane::getXMin() not yet implemented");
   return -std::numeric_limits<double>::infinity();
 }
 
@@ -177,7 +177,7 @@ double Plane::getXMin(){
  * @return the maximum x value of INFINITY
  */
 double Plane::getXMax(){
-  log_printf(ERROR, "Plane::getXMax() not yet implemented");
+  log_printf(ERROR_LOG, "Plane::getXMax() not yet implemented");
   return std::numeric_limits<double>::infinity();
 }
 
@@ -187,7 +187,7 @@ double Plane::getXMax(){
  * @return the minimum y value of -INFINITY
  */
 double Plane::getYMin(){
-  log_printf(ERROR, "Plane::getYMin() not yet implemented");
+  log_printf(ERROR_LOG, "Plane::getYMin() not yet implemented");
   return -std::numeric_limits<double>::infinity();
 }
 
@@ -197,7 +197,7 @@ double Plane::getYMin(){
  * @return the maximum y value of INFINITY
  */
 double Plane::getYMax(){
-  log_printf(ERROR, "Plane::getYMax() not yet implemented");
+  log_printf(ERROR_LOG, "Plane::getYMax() not yet implemented");
   return std::numeric_limits<double>::infinity();
 }
 
@@ -286,7 +286,7 @@ std::string Plane::toString() {
  *        the console.
  */
 void Plane::printString() {
-  log_printf(RESULT, toString().c_str());
+  log_printf(RESULT_LOG, toString().c_str());
 }
 
 
@@ -465,7 +465,7 @@ std::string YPlane::toString() {
  *        the console.
  */
 void YPlane::printString() {
-  log_printf(RESULT, toString().c_str());
+  log_printf(RESULT_LOG, toString().c_str());
 }
 
 
@@ -558,7 +558,7 @@ std::string ZPlane::toString() {
  *        the console.
  */
 void ZPlane::printString() {
-  log_printf(RESULT, toString().c_str());
+  log_printf(RESULT_LOG, toString().c_str());
 }
 
 
@@ -753,7 +753,7 @@ std::string Circle::toString() {
  *        the console.
  */
 void Circle::printString() {
-  log_printf(RESULT, toString().c_str());
+  log_printf(RESULT_LOG, toString().c_str());
 }
 
 

@@ -209,7 +209,7 @@ int Geometry::getNumFSRs() {
  */
 int Geometry::getNumEnergyGroups() {
   if (getNumMaterials() == 0)
-    log_printf(ERROR, "Unable to return the number of energy groups from "
+    log_printf(ERROR_LOG, "Unable to return the number of energy groups from "
                "the geometry since it does not contain any materials");
 
   return _num_groups;
@@ -232,7 +232,7 @@ int Geometry::getNumMaterials() {
  */
 int* Geometry::getFSRtoCellMap() {
   if (_num_FSRs == 0)
-    log_printf(ERROR, "Unable to return the FSR-to-Cell map array since "
+    log_printf(ERROR_LOG, "Unable to return the FSR-to-Cell map array since "
                "the Geometry has not initialized FSRs.");
 
   return _FSRs_to_cells;
@@ -246,7 +246,7 @@ int* Geometry::getFSRtoCellMap() {
  */
 int* Geometry::getFSRtoMaterialMap() {
   if (_num_FSRs == 0)
-    log_printf(ERROR, "Unable to return the FSR-to-Material map array since "
+    log_printf(ERROR_LOG, "Unable to return the FSR-to-Material map array since "
                "the Geometry has not initialized FSRs.");
 
   return _FSRs_to_material_UIDs;
@@ -294,7 +294,7 @@ Material* Geometry::getMaterial(int id) {
     material = _materials.at(id);
   }
   catch (std::exception & e) {
-    log_printf(ERROR, "Attempted to retrieve Material with ID = %d which"
+    log_printf(ERROR_LOG, "Attempted to retrieve Material with ID = %d which"
                " does not exist. Backtrace:\n%s", id, e.what());
   }
 
@@ -315,7 +315,7 @@ Surface* Geometry::getSurface(int id) {
     surface = _surfaces.at(id);
   }
   catch (std::exception & e) {
-    log_printf(ERROR, "Attempted to retrieve Surface with ID = %d which "
+    log_printf(ERROR_LOG, "Attempted to retrieve Surface with ID = %d which "
                "has not been declared. Backtrace:\n%s", id, e.what());
   }
 
@@ -336,7 +336,7 @@ Cell* Geometry::getCell(int id) {
     cell = static_cast<Cell*>(_cells.at(id));
   }
   catch (std::exception & e) {
-    log_printf(ERROR, "Attempted to retrieve Cell with ID = %d which has "
+    log_printf(ERROR_LOG, "Attempted to retrieve Cell with ID = %d which has "
                "not been declared. Backtrace:\n%s", id, e.what());
   }
 
@@ -357,11 +357,11 @@ CellBasic* Geometry::getCellBasic(int id) {
   try {
     cell = static_cast<CellBasic*>(_cells.at(id));
     if (cell->getType() != MATERIAL)
-      log_printf(WARNING, "Retrieving Cell %d from the Geometry, but it "
+      log_printf(WARNING_LOG, "Retrieving Cell %d from the Geometry, but it "
                  "is not a MATERIAL type Cell", cell->getId());
   }
   catch (std::exception & e) {
-    log_printf(ERROR, "Attempted to retrieve Cell with ID = %d which has "
+    log_printf(ERROR_LOG, "Attempted to retrieve Cell with ID = %d which has "
                "not been declared. Backtrace:\n%s", id, e.what());
   }
 
@@ -382,11 +382,11 @@ CellFill* Geometry::getCellFill(int id) {
   try {
     cell = static_cast<CellFill*>(_cells.at(id));
     if (cell->getType() != FILL)
-      log_printf(WARNING, "Retrieving Cell %d from the Geometry, but it "
+      log_printf(WARNING_LOG, "Retrieving Cell %d from the Geometry, but it "
                  "is not a FILL type Cell", cell->getId());
   }
   catch (std::exception & e) {
-    log_printf(ERROR, "Attempted to retrieve Cell with ID = %d which has "
+    log_printf(ERROR_LOG, "Attempted to retrieve Cell with ID = %d which has "
                "not been declared. Backtrace:\n%s", id, e.what());
   }
 
@@ -408,7 +408,7 @@ Universe* Geometry::getUniverse(int id) {
     universe = _universes.at(id);
   }
   catch (std::exception & e) {
-    log_printf(ERROR, "Attempted to retrieve Universe with ID = %d which "
+    log_printf(ERROR_LOG, "Attempted to retrieve Universe with ID = %d which "
                "has not been declared. Backtrace:\n%s", id, e.what());
   }
 
@@ -428,7 +428,7 @@ Lattice* Geometry::getLattice(int id) {
     lattice = _lattices.at(id);
   }
   catch (std::exception & e) {
-    log_printf(ERROR, "Attempted to retrieve Lattice with ID = %d which "
+    log_printf(ERROR_LOG, "Attempted to retrieve Lattice with ID = %d which "
                "has not been declared. Backtrace:\n%s", id, e.what());
   }
 
@@ -453,14 +453,14 @@ void Geometry::addMaterial(Material* material) {
 
   /* Checks the number of energy groups */
   if (material->getNumEnergyGroups() == 0)
-    log_printf(ERROR, "Unable to add Material %d since it does not "
+    log_printf(ERROR_LOG, "Unable to add Material %d since it does not "
                "contain any nuclear data", material->getId());
 
   if (_num_groups == 0)
     _num_groups = material->getNumEnergyGroups();
 
   else if (_num_groups != material->getNumEnergyGroups())
-    log_printf(ERROR, "Unable to add Material %d with %d energy groups to the"
+    log_printf(ERROR_LOG, "Unable to add Material %d with %d energy groups to the"
                " Geometry which contains Material(s) with %d energy groups",
                material->getId(), material->getNumEnergyGroups(), _num_groups);
 
@@ -469,11 +469,11 @@ void Geometry::addMaterial(Material* material) {
      * cross-sections equals its total cross-section */
     material->checkSigmaT();
     _materials.insert(std::pair<int,Material*>(material->getId(), material));
-    log_printf(INFO, "Added Material with ID = %d to Geometry",
+    log_printf(INFO_LOG, "Added Material with ID = %d to Geometry",
                material->getId());
   }
   catch (std::exception &e) {
-    log_printf(ERROR, "Unable to add Material with ID = %d to Geometry. "
+    log_printf(ERROR_LOG, "Unable to add Material with ID = %d to Geometry. "
                "Backtrace:\n%s", material->getId(), e.what());
   }
 }
@@ -490,10 +490,10 @@ void Geometry::addSurface(Surface* surface) {
 
   try {
     _surfaces.insert(std::pair<int, Surface*>(surface->getId(), surface));
-    log_printf(INFO, "Added Surface with ID = %d to Geometry",surface->getId());
+    log_printf(INFO_LOG, "Added Surface with ID = %d to Geometry",surface->getId());
   }
   catch (std::exception &e) {
-    log_printf(ERROR, "Unable to add Surface with ID = %d to Geometry. "
+    log_printf(ERROR_LOG, "Unable to add Surface with ID = %d to Geometry. "
                "Backtrace:\n%s", surface->getId(), e.what());
   }
 
@@ -598,7 +598,7 @@ void Geometry::addCell(Cell* cell) {
            _materials.find(static_cast<CellBasic*>(cell)->getMaterial()) ==
            _materials.end()) {
 
-    log_printf(ERROR, "Attempted to add Cell with Material with ID = %d,"
+    log_printf(ERROR_LOG, "Attempted to add Cell with Material with ID = %d,"
                " but the Geometry does not contain this Material",
     static_cast<CellBasic*>(cell)->getMaterial());
   }
@@ -612,10 +612,10 @@ void Geometry::addCell(Cell* cell) {
   /* Insert the Cell into the Geometry's Cell container */
   try {
     _cells.insert(std::pair<int, Cell*>(cell->getId(), cell));
-    log_printf(INFO, "Added Cell with ID = %d to Geometry", cell->getId());
+    log_printf(INFO_LOG, "Added Cell with ID = %d to Geometry", cell->getId());
   }
   catch (std::exception &e) {
-    log_printf(ERROR, "Unable to add Cell with ID = %d to Geometry. "
+    log_printf(ERROR_LOG, "Unable to add Cell with ID = %d to Geometry. "
                "Backtrace:\n%s", cell->getId(), e.what());
   }
 
@@ -624,10 +624,10 @@ void Geometry::addCell(Cell* cell) {
     try {
       Universe* univ = new Universe(cell->getUniverseId());
       addUniverse(univ);
-      log_printf(INFO, "Created Universe with ID = %d", cell->getUniverseId());
+      log_printf(INFO_LOG, "Created Universe with ID = %d", cell->getUniverseId());
     }
     catch (std::exception &e) {
-      log_printf(ERROR, "Unable to create a new Universe with ID = %d "
+      log_printf(ERROR_LOG, "Unable to create a new Universe with ID = %d "
                  "and add it to the Geometry. Backtrace:\n%s",
                  cell->getUniverseId(), e.what());
     }
@@ -652,11 +652,11 @@ void Geometry::addUniverse(Universe* universe) {
   try {
     _universes.insert(std::pair<int,Universe*>(universe->getId(),
                                                universe));
-    log_printf(INFO, "Added Universe with ID = %d to Geometry. ",
+    log_printf(INFO_LOG, "Added Universe with ID = %d to Geometry. ",
                universe->getId());
   }
   catch (std::exception &e) {
-    log_printf(ERROR, "Unable to add Universe with ID = %d to Geometry. "
+    log_printf(ERROR_LOG, "Unable to add Universe with ID = %d to Geometry. "
                "Backtrace:\n%s", universe->getId(), e.what());
   }
 
@@ -695,7 +695,7 @@ void Geometry::addLattice(Lattice* lattice) {
 
       /* If the Universe does not exist */
       if (_universes.find(universe_id) == _universes.end())
-        log_printf(ERROR, "Attempted to create Lattice containing Universe "
+        log_printf(ERROR_LOG, "Attempted to create Lattice containing Universe "
                    "with ID = %d, but the Geometry does not contain this "
                    "Universe", lattice->getUniverses().at(i).at(j).first);
 
@@ -708,11 +708,11 @@ void Geometry::addLattice(Lattice* lattice) {
   /* Add the Lattice to the Geometry's :attices container */
   try {
     _lattices.insert(std::pair<int, Lattice*>(lattice->getId(), lattice));
-    log_printf(INFO, "Added Lattice with ID = %d to Geometry",
+    log_printf(INFO_LOG, "Added Lattice with ID = %d to Geometry",
     lattice->getId());
   }
   catch (std::exception &e) {
-    log_printf(ERROR, "Unable to add Lattice with ID = %d to Geometry. "
+    log_printf(ERROR_LOG, "Unable to add Lattice with ID = %d to Geometry. "
                ". Backtrace:\n%s", lattice->getId(), e.what());
   }
 
@@ -731,17 +731,17 @@ void Geometry::removeMaterial(int id) {
 
   /* Checks if the Geometry contains this Material */
   if (_materials.find(id) == _materials.end())
-    log_printf(WARNING, "Cannot remove a Material with ID = %d from the "
+    log_printf(WARNING_LOG, "Cannot remove a Material with ID = %d from the "
                "geometry since it doesn't contain that Material", id);
 
   try {
     std::map<int, Material*>::iterator iter;
     iter = _materials.find(id);
     _materials.erase(iter);
-    log_printf(INFO, "Removed Material with ID = %d from geometry", id);
+    log_printf(INFO_LOG, "Removed Material with ID = %d from geometry", id);
   }
   catch (std::exception &e) {
-    log_printf(ERROR, "Unable to remove a Material with ID = %d from "
+    log_printf(ERROR_LOG, "Unable to remove a Material with ID = %d from "
                "Geometry. Backtrace:\n%s", id, e.what());
   }
 }
@@ -757,17 +757,17 @@ void Geometry::removeCell(int id) {
 
   /* Checks if the Geometry contains this Cell */
   if (_cells.find(id) == _cells.end())
-    log_printf(WARNING, "Cannot remove a Cell with ID = %d from the "
+    log_printf(WARNING_LOG, "Cannot remove a Cell with ID = %d from the "
                "Geometry since it doesn't contain that Cell", id);
 
   try {
     std::map<int, Cell*>::iterator iter;
     iter = _cells.find(id);
     _cells.erase(iter);
-    log_printf(INFO, "Removed Cell with ID = %d from Geometry", id);
+    log_printf(INFO_LOG, "Removed Cell with ID = %d from Geometry", id);
   }
   catch (std::exception &e) {
-    log_printf(ERROR, "Unable to remove a Cell with ID = %d "
+    log_printf(ERROR_LOG, "Unable to remove a Cell with ID = %d "
                "from Geometry. Backtrace:\n%s", id, e.what());
   }
 }
@@ -784,7 +784,7 @@ void Geometry::removeUniverse(int id) {
 
   /* Checks if the Geometry contains this Universe */
   if (_universes.find(id) == _universes.end())
-    log_printf(WARNING, "Cannot remove a Universe with ID = %d from the "
+    log_printf(WARNING_LOG, "Cannot remove a Universe with ID = %d from the "
                "Geometry since it doesn't contain that Universe", id);
 
   /* Remove the Universe from the Geometry */
@@ -793,10 +793,10 @@ void Geometry::removeUniverse(int id) {
       std::map<int, Universe*>::iterator iter;
       iter = _universes.find(id);
       _universes.erase(iter);
-      log_printf(INFO, "Removed Universe with ID = %d from Geometry", id);
+      log_printf(INFO_LOG, "Removed Universe with ID = %d from Geometry", id);
     }
     catch (std::exception &e) {
-      log_printf(ERROR, "Unable to remove Universe with ID = %d from "
+      log_printf(ERROR_LOG, "Unable to remove Universe with ID = %d from "
                  "Geometry. Backtrace:\n%s", id, e.what());
     }
   }
@@ -815,7 +815,7 @@ void Geometry::removeLattice(int id) {
 
   /* Checks if the Geometry contains this Universe */
   if (_lattices.find(id) == _lattices.end())
-    log_printf(WARNING, "Cannot remove a Lattice with ID = %d from the "
+    log_printf(WARNING_LOG, "Cannot remove a Lattice with ID = %d from the "
                "Geometry since it doesn't contain that Lattice", id);
 
   /* Remove the Universe from the Geometry */
@@ -824,10 +824,10 @@ void Geometry::removeLattice(int id) {
       std::map<int, Lattice*>::iterator iter;
       iter = _lattices.find(id);
       _lattices.erase(iter);
-      log_printf(INFO, "Removed Lattice with ID = %d from Geometry", id);
+      log_printf(INFO_LOG, "Removed Lattice with ID = %d from Geometry", id);
     }
     catch (std::exception &e) {
-      log_printf(ERROR, "Unable to remove Lattice with ID = %d from "
+      log_printf(ERROR_LOG, "Unable to remove Lattice with ID = %d from "
                  "Geometry. Backtrace:\n%s", id, e.what());
     }
   }
@@ -922,7 +922,7 @@ Cell* Geometry::findCell(Universe* univ, int fsr_id) {
 
   /* Check if the FSR ID is out of bounds */
   if (fsr_id < -1 || fsr_id > _num_FSRs)
-    log_printf(ERROR, "Tried to find the Cell for FSR with ID = %d which "
+    log_printf(ERROR_LOG, "Tried to find the Cell for FSR with ID = %d which "
                "does not exist", fsr_id);
 
 
@@ -953,7 +953,7 @@ Cell* Geometry::findCell(Universe* univ, int fsr_id) {
      * an error or we are at Universe 0 and need to go down one level */
     if (max_id > fsr_id) {
       if (cell_min->getType() == MATERIAL)
-        log_printf(ERROR, "Could not find Cell for FSR ID = %d: "
+        log_printf(ERROR_LOG, "Could not find Cell for FSR ID = %d: "
                    "max_id (%d) > fsr_id (%d)", fsr_id, max_id, fsr_id);
       else {
         CellFill* cellfill = static_cast<CellFill*>(cell_min);
@@ -967,7 +967,7 @@ Cell* Geometry::findCell(Universe* univ, int fsr_id) {
       if (fsr_id == 0 && cell_min->getType() == MATERIAL)
         return cell;
       else if (fsr_id != 0 && cell_min->getType() == MATERIAL)
-        log_printf(ERROR, "Could not find Cell for FSR ID = %d: "
+        log_printf(ERROR_LOG, "Could not find Cell for FSR ID = %d: "
                    "fsr_id = %d and Cell type = MATERIAL", fsr_id, fsr_id);
       else {
         CellFill* cellfill = static_cast<CellFill*>(cell_min);
@@ -1001,7 +1001,7 @@ Cell* Geometry::findCell(Universe* univ, int fsr_id) {
 
     /* If the max_id is out of bounds, then query failed */
     if (max_id > fsr_id || next_univ == NULL)
-      log_printf(ERROR, "No Lattice cell found for FSR ID = %d, max_id = "
+      log_printf(ERROR_LOG, "No Lattice cell found for FSR ID = %d, max_id = "
                  "%d", fsr_id, max_id);
 
     /* Otherwise update fsr_id and make recursive call to next level */
@@ -1278,7 +1278,7 @@ void Geometry::initializeFlatSourceRegions() {
   Universe *univ = _universes.at(0);
   _num_FSRs = univ->computeFSRMaps();
 
-  log_printf(NORMAL, "Number of flat source regions: %d", _num_FSRs);
+  log_printf(NORMAL_LOG, "Number of flat source regions: %d", _num_FSRs);
 
   /* Allocate memory for maps between FSR IDs and Cell or Material IDs/UIDs */
   _FSRs_to_cells = new int[_num_FSRs];
@@ -1333,7 +1333,7 @@ void Geometry::segmentize(Track* track) {
 
   /* If starting Point was outside the bounds of the Geometry */
   if (curr == NULL)
-    log_printf(ERROR, "Could not find a Cell containing the start Point "
+    log_printf(ERROR_LOG, "Could not find a Cell containing the start Point "
                "of this Track: %s", track->toString().c_str());
 
   /* While the end of the segment's LocalCoords is still within the Geometry,
@@ -1352,7 +1352,7 @@ void Geometry::segmentize(Track* track) {
     if (segment_start.getX() == segment_end.getX() &&
       segment_start.getY() == segment_end.getY()) {
 
-      log_printf(ERROR, "Created a Track segment with the same start and end "
+      log_printf(ERROR_LOG, "Created a Track segment with the same start and end "
                  "point: x = %f, y = %f", segment_start.getX(),
                   segment_start.getY());
     }
@@ -1389,7 +1389,7 @@ void Geometry::segmentize(Track* track) {
       if (segment_length < _min_seg_length)
         _min_seg_length = segment_length;
 
-      log_printf(DEBUG, "segment start x = %f, y = %f, segment end "
+      log_printf(DEBUG_LOG, "segment start x = %f, y = %f, segment end "
                  "x = %f, y = %f", segment_start.getX(), segment_start.getY(),
                  segment_end.getX(), segment_end.getY());
 
@@ -1410,16 +1410,16 @@ void Geometry::segmentize(Track* track) {
     }
   }
 
-  log_printf(DEBUG, "Created %d segments for Track: %s",
+  log_printf(DEBUG_LOG, "Created %d segments for Track: %s",
              track->getNumSegments(), track->toString().c_str());
 
   /* Truncate the linked list for the LocalCoords */
   segment_start.prune();
   segment_end.prune();
 
-  log_printf(DEBUG, "Track %d max. segment length: %f",
+  log_printf(DEBUG_LOG, "Track %d max. segment length: %f",
              track->getUid(), _max_seg_length);
-  log_printf(DEBUG, "Track %d min. segment length: %f",
+  log_printf(DEBUG_LOG, "Track %d min. segment length: %f",
              track->getUid(), _min_seg_length);
 
   return;
@@ -1544,7 +1544,7 @@ std::string Geometry::toString() {
  *          Surfaces, Cell, Universes and Lattices contained by the Geometry.
  */
 void Geometry::printString() {
-  log_printf(RESULT, toString().c_str());
+  log_printf(RESULT_LOG, toString().c_str());
 }
 
 
@@ -1568,7 +1568,7 @@ void Geometry::initializeMesh(){
 
   /* Find the Mesh depth of the Geometry */
   max_mesh_level = findMeshDepth(univ, max_mesh_level);
-  log_printf(DEBUG, "Max mesh depth is: %i level(s)", max_mesh_level);
+  log_printf(DEBUG_LOG, "Max mesh depth is: %i level(s)", max_mesh_level);
 
   /* Set CMFD level to user specified value if possible */
   if (_mesh->getMeshLevel() == -1){
@@ -1580,13 +1580,13 @@ void Geometry::initializeMesh(){
            _mesh->getMeshLevel() <= max_mesh_level)
     mesh_level = _mesh->getMeshLevel();
   else{
-    log_printf(WARNING, "User input CMFD Mesh level was outside the bounds of "
+    log_printf(WARNING_LOG, "User input CMFD Mesh level was outside the bounds of "
                "the Mesh level range (%d to %d)", 0, max_mesh_level);
     mesh_level = max_mesh_level;
     _mesh->setMeshLevel(max_mesh_level);
   }
 
-  log_printf(INFO, "CMFD Mesh level: %i, max mesh level: %i",
+  log_printf(INFO_LOG, "CMFD Mesh level: %i, max mesh level: %i",
              mesh_level, max_mesh_level);
 
   /* Find Cell width and height at Mesh nested Universe level */
@@ -1617,14 +1617,14 @@ void Geometry::initializeMesh(){
   _mesh->setLengthY(getHeight());
   _mesh->setLengthX(getWidth());
   _mesh->initialize();
-  log_printf(NORMAL, "Number of mesh cells: %i", height*width);
-  log_printf(DEBUG, "mesh cell width: %i", _mesh->getCellsX());
-  log_printf(DEBUG, "mesh cell height: %i", _mesh->getCellsY());
+  log_printf(NORMAL_LOG, "Number of mesh cells: %i", height*width);
+  log_printf(DEBUG_LOG, "mesh cell width: %i", _mesh->getCellsX());
+  log_printf(DEBUG_LOG, "mesh cell height: %i", _mesh->getCellsY());
 
   /* Decide whether CMFD acceleration is needed for MOC acceleration */
   if (_num_FSRs <= 1000 && _mesh->getSolveType() == MOC){
     _mesh->setAcceleration(false);
-    log_printf(INFO, "CMFD acceleration was turned off because there are "
+    log_printf(INFO_LOG, "CMFD acceleration was turned off because there are "
                "<= 100 fsrs and CMFD is not needed for small geometries");
   }
 
@@ -1634,7 +1634,7 @@ void Geometry::initializeMesh(){
       _mesh->getSolveType() == MOC){
 
     _mesh->setOpticallyThick(true);
-    log_printf(INFO, "Optically thick correction factor turned on for CMFD "
+    log_printf(INFO_LOG, "Optically thick correction factor turned on for CMFD "
                "acceleration because the average mesh cell size is >= 10 cm^2");
   }
 
@@ -1687,9 +1687,9 @@ void Geometry::findFSRsInCell(Universe* univ, int cell_num, int* fsr_id){
       /* If the current Cell is a MATERIAL type cell, store its FSR ID */
       if (curr->getType() == MATERIAL) {
 
-        log_printf(DEBUG, "Storing FSR ID = %i in CMFD Mesh", *fsr_id);
+        log_printf(DEBUG_LOG, "Storing FSR ID = %i in CMFD Mesh", *fsr_id);
         _mesh->getCellFSRs()->at(cell_num).push_back(*fsr_id);
-        log_printf(DEBUG, "cell num %i, fsr list: %i",
+        log_printf(DEBUG_LOG, "cell num %i, fsr list: %i",
                    cell_num, _mesh->getCellFSRs()->at(cell_num).size());
         *fsr_id += 1;
       }
@@ -1719,7 +1719,7 @@ void Geometry::findFSRsInCell(Universe* univ, int cell_num, int* fsr_id){
 
         /* Get a pointer to the current Lattice cell */
         curr = lattice->getUniverse(j, i);
-        log_printf(DEBUG, "Getting Lattice FSR offset= %i",
+        log_printf(DEBUG_LOG, "Getting Lattice FSR offset= %i",
                    lattice->getFSR(j,i));
         *fsr_id = baseFSR + lattice->getFSR(j,i);
 
@@ -1776,7 +1776,7 @@ void Geometry::defineMesh(Mesh* mesh, Universe* univ, int depth,
     Universe* curr;
     int num_x = lattice->getNumX();
     int num_y = lattice->getNumY();
-    log_printf(DEBUG, "num_x: %i num_y: %i", num_x, num_y);
+    log_printf(DEBUG_LOG, "num_x: %i num_y: %i", num_x, num_y);
 
     /* If the current LATTICE is the CMFD Mesh Lattice */
     if (depth == 1){
@@ -1788,14 +1788,14 @@ void Geometry::defineMesh(Mesh* mesh, Universe* univ, int depth,
 
             curr = lattice->getUniverse(j,i);
             fsr_id = lattice->getFSR(j,i);
-            log_printf(DEBUG, "Added FSR ID to counter -> fsr_id: %i", fsr_id);
+            log_printf(DEBUG_LOG, "Added FSR ID to counter -> fsr_id: %i", fsr_id);
 
             /* Store fsr_ids of FSRs in this LATTICE in a Mesh cell object */
             findFSRsInCell(curr, *meshCellNum, &fsr_id);
             mesh->setCellLengthX(*meshCellNum, lattice->getWidthX());
             mesh->setCellLengthY(*meshCellNum, lattice->getWidthY());
 
-            log_printf(DEBUG, "Mesh cell: %i, width: %f, height: %f",
+            log_printf(DEBUG_LOG, "Mesh cell: %i, width: %f, height: %f",
                       *meshCellNum, lattice->getWidthX(), lattice->getWidthY());
 
             *meshCellNum = *meshCellNum + 1;
@@ -1813,14 +1813,14 @@ void Geometry::defineMesh(Mesh* mesh, Universe* univ, int depth,
           curr = lattice->getUniverse(j,row);
           fsr_id = baseFSR + lattice->getFSR(j,row);
 
-          log_printf(DEBUG, "Set FSr ID to: %i", fsr_id);
+          log_printf(DEBUG_LOG, "Set FSr ID to: %i", fsr_id);
 
           /* Store fsr_ids of the FSRs in this LATTICE in a Mesh cell object */
           findFSRsInCell(curr, *meshCellNum, &fsr_id);
           mesh->setCellLengthX(*meshCellNum, lattice->getWidthX());
           mesh->setCellLengthY(*meshCellNum, lattice->getWidthY());
 
-          log_printf(DEBUG, "Mesh cell num: %i, width: %f, height: %f",
+          log_printf(DEBUG_LOG, "Mesh cell num: %i, width: %f, height: %f",
                      *meshCellNum, lattice->getWidthX(), lattice->getWidthY());
 
           *meshCellNum = *meshCellNum + 1;
@@ -1838,7 +1838,7 @@ void Geometry::defineMesh(Mesh* mesh, Universe* univ, int depth,
         curr = lattice->getUniverse(0,i);
         int nextHeight = nextLatticeHeight(curr);
 
-        log_printf(DEBUG, "next height: %i", nextHeight);
+        log_printf(DEBUG_LOG, "next height: %i", nextHeight);
 
         for (int k = nextHeight-1; k > -1; k--) {
           for (int j = 0; j < num_x; j++) {

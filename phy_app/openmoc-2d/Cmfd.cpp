@@ -77,7 +77,7 @@ Cmfd::Cmfd(Geometry* geometry, double criteria) {
            (FP_PRECISION*)calloc(_num_FSRs*_num_groups, sizeof(FP_PRECISION));
     }
     catch(std::exception &e){
-      log_printf(ERROR, "Could not allocate memory for the CMFD diffusion "
+      log_printf(ERROR_LOG, "Could not allocate memory for the CMFD diffusion "
                  "Mesh objects. Backtrace:%s", e.what());
     }
 
@@ -133,7 +133,7 @@ Cmfd::~Cmfd() {
  */
 void Cmfd::computeXS(){
 
-  log_printf(INFO, "Computing CMFD cross-sections...");
+  log_printf(INFO_LOG, "Computing CMFD cross-sections...");
 
   /* Split corner currents to side surfaces */
   _mesh->splitCorners();
@@ -253,7 +253,7 @@ void Cmfd::computeXS(){
       else
         cell_material->setChiByGroup(0.0,e);
 
-      log_printf(DEBUG, "cell: %i, group: %i, vol: %f, siga: %f, sigt: %f,"
+      log_printf(DEBUG_LOG, "cell: %i, group: %i, vol: %f, siga: %f, sigt: %f,"
                  " nu_sigf: %f, dif_coef: %f, flux: %f, chi: %f", i, e,
                  vol_tally, abs_tally / rxn_tally, tot_tally / rxn_tally,
                  nu_fis_tally / rxn_tally, dif_tally / rxn_tally,
@@ -261,7 +261,7 @@ void Cmfd::computeXS(){
 
       for (int g = 0; g < _num_cmfd_groups; g++){
         cell_material->setSigmaSByGroup(scat_tally[g] / rxn_tally, g, e);
-        log_printf(DEBUG, "scattering from %i to %i: %f", e, g,
+        log_printf(DEBUG_LOG, "scattering from %i to %i: %f", e, g,
                    scat_tally[g] / rxn_tally);
       }
     }
@@ -278,7 +278,7 @@ void Cmfd::computeXS(){
  */
 void Cmfd::computeDs(){
 
-  log_printf(INFO, "Computing CMFD diffusion coefficients...");
+  log_printf(INFO_LOG, "Computing CMFD diffusion coefficients...");
 
   double d, d_next, d_hat, d_tilde;
   double current, flux, flux_next, f, f_next;
@@ -460,7 +460,7 @@ void Cmfd::computeDs(){
           materials[cell]->setDifHatByGroup(d_hat, e, surface);
           materials[cell]->setDifTildeByGroup(d_tilde, e, surface);
 
-          log_printf(DEBUG, "cell: %i, group: %i, side: %i, flux: %f,"
+          log_printf(DEBUG_LOG, "cell: %i, group: %i, side: %i, flux: %f,"
                      " current: %f, d: %f, dhat: %f, dtilde: %f",
                      y*_cx + x, e, surface, flux, current, d, d_hat,
                      d_tilde);
@@ -477,7 +477,7 @@ void Cmfd::computeDs(){
  */
 double Cmfd::computeKeff(){
 
-  log_printf(INFO, "Running diffusion solver...");
+  log_printf(INFO_LOG, "Running diffusion solver...");
 
   /* Create matrix and vector objects */
   if (_A == NULL){
@@ -506,7 +506,7 @@ double Cmfd::computeKeff(){
       }
     }
     catch(std::exception &e){
-      log_printf(ERROR, "Could not allocate memory for the CMFD mesh objects. "
+      log_printf(ERROR_LOG, "Could not allocate memory for the CMFD mesh objects. "
                  "Backtrace:%s", e.what());
     }
   }
@@ -572,7 +572,7 @@ double Cmfd::computeKeff(){
       vecScale(_new_source, scale_val);
       vecCopy(_new_source, _old_source);
 
-      log_printf(INFO, "GS POWER iter: %i, keff: %f, error: %f",
+      log_printf(INFO_LOG, "GS POWER iter: %i, keff: %f, error: %f",
                  iter, _k_eff, norm);
 
       /* Check for convergence */
@@ -584,7 +584,7 @@ double Cmfd::computeKeff(){
 
     /* Allocate memory for AM matrix */
     if (_AM == NULL){
-      log_printf(INFO, "Allocating memory for AM");
+      log_printf(INFO_LOG, "Allocating memory for AM");
 
       try{
         _AM = new double*[_cx*_cy];
@@ -594,10 +594,10 @@ double Cmfd::computeKeff(){
         }
       }
       catch(std::exception &e){
-        log_printf(ERROR, "Could not allocate memory for the _AM matrix."
+        log_printf(ERROR_LOG, "Could not allocate memory for the _AM matrix."
                    " Backtrace:%s", e.what());
       }
-      log_printf(INFO, "Done allocating memory for AM");
+      log_printf(INFO_LOG, "Done allocating memory for AM");
     }
 
     int max_iter = 100;
@@ -652,11 +652,11 @@ double Cmfd::computeKeff(){
 
       iter++;
 
-      log_printf(INFO, "iter: %i, k_eff: %f, norm: %f", iter, _k_eff, norm);
+      log_printf(INFO_LOG, "iter: %i, k_eff: %f, norm: %f", iter, _k_eff, norm);
     }
 
     offset = 0.05;
-    log_printf(INFO, "offset set to: %f", offset);
+    log_printf(INFO_LOG, "offset set to: %f", offset);
 
     while (norm > _conv_criteria){
 
@@ -689,7 +689,7 @@ double Cmfd::computeKeff(){
 
       iter++;
 
-      log_printf(INFO, "iter: %i, k_eff: %f, norm: %f", iter, _k_eff, norm);
+      log_printf(INFO_LOG, "iter: %i, k_eff: %f, norm: %f", iter, _k_eff, norm);
     }
   }
 
@@ -706,7 +706,7 @@ double Cmfd::computeKeff(){
   /* If solving diffusion problem, print timing results */
   if (_solve_method == DIFFUSION){
     std::string msg_string;
-    log_printf(TITLE, "TIMING REPORT");
+    log_printf(TITLE_LOG, "TIMING REPORT");
     _timer->stopTimer();
     _timer->recordSplit("Total time to solve diffusion eigenvalue problem");
 
@@ -863,13 +863,13 @@ void Cmfd::linearSolve(double** mat, double* vec_x, double* vec_b,
 
     iter++;
 
-    log_printf(DEBUG, "GS iter: %i, norm: %f", iter, norm);
+    log_printf(DEBUG_LOG, "GS iter: %i, norm: %f", iter, norm);
 
     if (iter >= max_iter)
       break;
   }
 
-  log_printf(DEBUG, "linear solver iterations: %i", iter);
+  log_printf(DEBUG_LOG, "linear solver iterations: %i", iter);
 }
 
 
@@ -1004,7 +1004,7 @@ void Cmfd::matZero(double** mat, int width){
  */
 void Cmfd::constructMatrices(){
 
-  log_printf(INFO,"Constructing matrices...");
+  log_printf(INFO_LOG,"Constructing matrices...");
 
   double value, volume;
   int cell, row;
@@ -1140,20 +1140,20 @@ void Cmfd::constructMatrices(){
             _M[cell][g*_num_cmfd_groups+e] += value;
         }
 
-        log_printf(DEBUG, "cel: %i, vol; %f", cell, _mesh->getVolumes()[cell]);
+        log_printf(DEBUG_LOG, "cel: %i, vol; %f", cell, _mesh->getVolumes()[cell]);
 
         for (int i = 0; i < _num_cmfd_groups+4; i++)
-          log_printf(DEBUG, "i: %i, A value: %f",
+          log_printf(DEBUG_LOG, "i: %i, A value: %f",
                      i, _A[cell][e*(_num_cmfd_groups+4)+i]);
 
         for (int i = 0; i < _num_cmfd_groups; i++)
-          log_printf(DEBUG, "i: %i, M value: %f",
+          log_printf(DEBUG_LOG, "i: %i, M value: %f",
                      i, _M[cell][e*(_num_cmfd_groups+4)+i]);
       }
     }
   }
 
-  log_printf(INFO, "Done constructing matrices...");
+  log_printf(INFO_LOG, "Done constructing matrices...");
 }
 
 
@@ -1162,7 +1162,7 @@ void Cmfd::constructMatrices(){
  */
 void Cmfd::updateMOCFlux(){
 
-  log_printf(INFO, "Updating MOC flux...");
+  log_printf(INFO_LOG, "Updating MOC flux...");
 
   /* Initialize variables */
   double* old_flux = _mesh->getFluxes(PRIMAL);
@@ -1192,7 +1192,7 @@ void Cmfd::updateMOCFlux(){
           _FSR_fluxes[*iter*_num_groups+h] =
              new_cell_flux / old_cell_flux * _FSR_fluxes[*iter*_num_groups+h];
 
-          log_printf(DEBUG, "Updating flux in FSR: %i, cell: %i, group: "
+          log_printf(DEBUG_LOG, "Updating flux in FSR: %i, cell: %i, group: "
                      "%i, ratio: %f", *iter ,i, h,
                       new_cell_flux / old_cell_flux);
         }
@@ -1251,7 +1251,7 @@ double Cmfd::getKeff(){
  */
 void Cmfd::initializeFSRs(){
 
-  log_printf(INFO, "Initialize FSRs...");
+  log_printf(INFO_LOG, "Initialize FSRs...");
 
   /* Initialize variables */
   int fsr_id;
@@ -1278,13 +1278,13 @@ void Cmfd::initializeFSRs(){
     material = _geometry->getMaterial(cell->getMaterial());
     _FSR_materials[fsr_id] = material;
 
-    log_printf(DEBUG, "cell %i with FSR id = %d has cell id = %d and "
+    log_printf(DEBUG_LOG, "cell %i with FSR id = %d has cell id = %d and "
                "material id = %d and volume = %f", i, fsr_id, cell->getId(),
                _FSR_materials[fsr_id]->getUid(), _FSR_volumes[fsr_id]);
 
   }
 
-  log_printf(INFO, "Done initializing FSRs");
+  log_printf(INFO_LOG, "Done initializing FSRs");
 }
 
 
@@ -1320,7 +1320,7 @@ void Cmfd::setFSRVolumes(FP_PRECISION* FSR_volumes){
 
         _mesh->setVolume(volume, y*_cx+x);
 
-        log_printf(DEBUG, "set cell %i volume to: %f", y*_cx+x, volume);
+        log_printf(DEBUG_LOG, "set cell %i volume to: %f", y*_cx+x, volume);
     }
   }
 }
@@ -1355,7 +1355,7 @@ void Cmfd::setFluxType(const char* flux_type){
   else if (strcmp("ADJOINT", flux_type) == 0)
     _flux_type = ADJOINT;
   else
-    log_printf(ERROR, "Could not recognize flux type: "
+    log_printf(ERROR_LOG, "Could not recognize flux type: "
                " the options are PRIMAL and ADJOINT");
 }
 
@@ -1371,7 +1371,7 @@ void Cmfd::setEigenMethod(const char* eigen_method){
   else if (strcmp("WIELANDT", eigen_method) == 0)
     _eigen_method = WIELANDT;
   else
-    log_printf(ERROR, "Could not recognize eigen method: "
+    log_printf(ERROR_LOG, "Could not recognize eigen method: "
                " the options are POWER and WIELANDT");
 }
 
@@ -1383,12 +1383,12 @@ void Cmfd::setEigenMethod(const char* eigen_method){
  */
 void Cmfd::dumpVec(double* vec, int length){
 
-  log_printf(NORMAL, "dumping vector...");
+  log_printf(NORMAL_LOG, "dumping vector...");
 
   for (int i = 0; i < length; i++)
-    log_printf(NORMAL, "cell: %i, value: %f", i, vec[i]);
+    log_printf(NORMAL_LOG, "cell: %i, value: %f", i, vec[i]);
 
-  log_printf(NORMAL, "done dumping vector...");
+  log_printf(NORMAL_LOG, "done dumping vector...");
 }
 
 
@@ -1550,7 +1550,7 @@ void Cmfd::createGroupStructure(int* group_indices, int ncg){
     else{
         /* check that the group indices span the group space */
         if (group_indices[0] != 0 || group_indices[ncg-1] != _num_groups)
-            log_printf(ERROR, "The first and last indicies of group structure "
+            log_printf(ERROR_LOG, "The first and last indicies of group structure "
                        " must be 0 and the number of MOC energy groups");
         
         _group_indices[0] = 0;
@@ -1558,10 +1558,10 @@ void Cmfd::createGroupStructure(int* group_indices, int ncg){
         for (int i = 1; i < ncg; i++){
             /* check that the group indices are always increasing */
             if (group_indices[i] <= group_indices[i-1])
-                log_printf(ERROR, "The group indices must be increasing!");
+                log_printf(ERROR_LOG, "The group indices must be increasing!");
             
             _group_indices[i] = group_indices[i];
-            log_printf(INFO, "group indices %i: %i", i, _group_indices[i]);
+            log_printf(INFO_LOG, "group indices %i: %i", i, _group_indices[i]);
         }
     }
     
