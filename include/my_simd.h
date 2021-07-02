@@ -91,7 +91,7 @@ extern "C"
 //////////////////////////////////////
 // int32_t simd basic operations    //
 //////////////////////////////////////
-static inline simd_i_t my_simd_i_load(int32_t *x)
+static inline simd_i_t my_simd_i_load(const int32_t *x)
 {
 #ifdef __AVX512__
     return _mm512_load_epi32((__m512i *)x);
@@ -110,7 +110,7 @@ static inline simd_i_t my_simd_i_load(int32_t *x)
 #endif  // __AVX512__
 }
 
-static inline simd_i_t my_simd_i_loadu(int32_t *x)
+static inline simd_i_t my_simd_i_loadu(const int32_t *x)
 {
 #ifdef __AVX512__
     return _mm512_loadu_epi32((__m512i *)x);
