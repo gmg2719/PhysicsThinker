@@ -17,6 +17,11 @@ g++ -c -O3 -std=c++11 -I${PWD_PATH}/include/ *.cpp
 mv *.o ../../build/.
 echo "Compile common/ module done !"
 cd ${PWD_PATH}
+cd src/na/
+g++ -c -O3 -std=c++11 -I${PWD_PATH}/include/ *.cpp
+mv *.o ../../build/.
+echo "Compile na/ module done !"
+cd ${PWD_PATH}
 cd src/geometry/
 g++ -c -O3 -std=c++11 -I${PWD_PATH}/include/ *.cpp
 mv *.o ../../build/.

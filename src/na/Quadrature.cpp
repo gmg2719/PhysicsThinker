@@ -20,7 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "Quadrature.h"
+#include "na/Quadrature.h"
 
 /**
  * @brief Constructor initializes arrays with polar angles and weights.

@@ -481,8 +481,8 @@ void CPUSolver::initializeCmfd() {
       #pragma omp parallel for schedule(guided)
       for (int r=0; r < _num_mesh_cells*8; r++)
           omp_init_lock(&_mesh_surface_locks[r]);
-    }
 #endif
+    }
 
   return;
 }
@@ -775,8 +775,11 @@ void CPUSolver::computeKeff() {
     material, nu_sigma_f) schedule(guided)
 #endif
   for (int r=0; r < _num_FSRs; r++) {
-
+#ifdef _OPENMP
     tid = omp_get_thread_num() * _num_groups;
+#else
+    tid = 0;
+#endif
     volume = _FSR_volumes[r];
     material = _FSR_materials[r];
     nu_sigma_f = material->getNuSigmaF();
