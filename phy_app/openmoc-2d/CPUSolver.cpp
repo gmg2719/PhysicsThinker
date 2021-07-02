@@ -38,8 +38,10 @@ CPUSolver::CPUSolver(Geometry* geometry, TrackGenerator* track_generator,
 
   setNumThreads(1);
 
+#ifdef _OPENMP
   _FSR_locks = NULL;
   _mesh_surface_locks = NULL;
+#endif
   _thread_fsr_flux = NULL;
 }
 
@@ -50,12 +52,13 @@ CPUSolver::CPUSolver(Geometry* geometry, TrackGenerator* track_generator,
  *        to deletes arrays for fluxes and sources.
  */
 CPUSolver::~CPUSolver() {
-
+#ifdef _OPENMP
   if (_FSR_locks != NULL)
     delete [] _FSR_locks;
 
   if (_mesh_surface_locks != NULL)
     delete [] _mesh_surface_locks;
+  #endif
 
   if (_thread_fsr_flux != NULL)
     delete [] _thread_fsr_flux;
@@ -380,7 +383,9 @@ void CPUSolver::initializeFSRs() {
 
   _FSR_volumes = (FP_PRECISION*)calloc(_num_FSRs, sizeof(FP_PRECISION));
   _FSR_materials = new Material*[_num_FSRs];
+#ifdef _OPENMP
   _FSR_locks = new omp_lock_t[_num_FSRs];
+#endif
 
   int num_segments;
   segment* curr_segment;
@@ -468,7 +473,7 @@ void CPUSolver::initializeCmfd() {
   }
 
   if (_cmfd->getMesh()->getCmfdOn()){
-
+#ifdef _OPENMP
     /* Initialize an array of OpenMP locks for each Cmfd Mesh surface */
     _mesh_surface_locks = new omp_lock_t[_cmfd->getMesh()->getNumCells() * 8];
 
@@ -477,6 +482,7 @@ void CPUSolver::initializeCmfd() {
       for (int r=0; r < _num_mesh_cells*8; r++)
           omp_init_lock(&_mesh_surface_locks[r]);
     }
+#endif
 
   return;
 }
@@ -655,8 +661,11 @@ FP_PRECISION CPUSolver::computeFSRSources() {
     sigma_s, sigma_t, fission_source, scatter_source) schedule(guided)
 #endif
   for (int r=0; r < _num_FSRs; r++) {
-
+#ifdef _OPENMP
     tid = omp_get_thread_num();
+#else
+    tid = 0;
+#endif
     material = _FSR_materials[r];
     nu_sigma_f = material->getNuSigmaF();
     chi = material->getChi();
@@ -741,8 +750,11 @@ void CPUSolver::computeKeff() {
     material, sigma_a) schedule(guided)
 #endif
   for (int r=0; r < _num_FSRs; r++) {
-
+#ifdef _OPENMP
     tid = omp_get_thread_num() * _num_groups;
+#else
+    tid = 0;
+#endif
     volume = _FSR_volumes[r];
     material = _FSR_materials[r];
     sigma_a = material->getSigmaA();

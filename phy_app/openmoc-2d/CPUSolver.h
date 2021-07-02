@@ -78,11 +78,13 @@ protected:
   /** The number of shared memory OpenMP threads */
   int _num_threads;
 
+#ifdef _OPENMP
   /** OpenMP mutual exclusion locks for atomic FSR scalar flux updates */
   omp_lock_t* _FSR_locks;
 
   /** OpenMP mutual exclusion locks for atomic surface current updates */
   omp_lock_t* _mesh_surface_locks;
+#endif
 
   /** A buffer for temporary FSR scalar flux updates for each thread */
   FP_PRECISION* _thread_fsr_flux;

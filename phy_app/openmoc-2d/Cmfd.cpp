@@ -714,7 +714,7 @@ double Cmfd::computeKeff(){
                                        "eigenvalue problem");
     msg_string = "Total time to solve diffusion eigenvalue problem";
     msg_string.resize(53, '.');
-    log_printf(RESULT, "%s%1.4E sec", msg_string.c_str(), tot_time);
+    log_printf(RESULT_LOG, "%s%1.4E sec", msg_string.c_str(), tot_time);
   }
 
   return _k_eff;

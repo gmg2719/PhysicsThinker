@@ -117,7 +117,7 @@ void VectorizedPrivateSolver::initializeFluxArrays() {
     size = _num_FSRs * _num_groups * sizeof(FP_PRECISION);
 
     for (int t=0; t < _num_threads; t++)
-      _thread_flux[t] = (FP_PRECISION*)_mm_malloc(size, VEC_ALIGNMENT);
+      _thread_flux[t] = (FP_PRECISION*)my_simd_malloc(size);
   }
   catch(std::exception &e) {
     log_printf(ERROR_LOG, "Could not allocate memory for the "
@@ -140,8 +140,11 @@ void VectorizedPrivateSolver::scalarFluxTally(segment* curr_segment,
                                               int azim_index,
                                               FP_PRECISION* track_flux,
                                               FP_PRECISION* fsr_flux){
-
+#ifdef _OPENMP
   int tid = omp_get_thread_num();
+#else
+  int tid = 0;
+#endif
   int fsr_id = curr_segment->_region_id;
   FP_PRECISION length = curr_segment->_length;
   FP_PRECISION* sigma_t = curr_segment->_material->getSigmaT();

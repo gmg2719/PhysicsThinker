@@ -21,7 +21,7 @@
 // SOFTWARE.
 
 #include "VectorizedSolver.h"
-#include "common/my_simd.h"
+#include "my_simd.h"
 
 
 /**
