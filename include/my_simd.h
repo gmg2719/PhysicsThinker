@@ -551,7 +551,7 @@ inline void my_simd_vec_i32_add(const int32_t *x, const int32_t *y, int32_t *z, 
     int i = 0;
 
 #if SIMD_I32_WORD_SIZE
-    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) SIMD_IS_ALIGNED(z)) {
+    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) && SIMD_IS_ALIGNED(z)) {
         for (; i < len - SIMD_I32_WORD_SIZE + 1; i += SIMD_I32_WORD_SIZE)
         {
             simd_i_t a = my_simd_i_load(&x[i]);
@@ -582,7 +582,7 @@ inline void my_simd_vec_i32_sub(const int32_t *x, const int32_t *y, int32_t *z, 
     int i = 0;
 
 #if SIMD_I32_WORD_SIZE
-    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) SIMD_IS_ALIGNED(z)) {
+    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) && SIMD_IS_ALIGNED(z)) {
         for (; i < len - SIMD_I32_WORD_SIZE + 1; i += SIMD_I32_WORD_SIZE)
         {
             simd_i_t a = my_simd_i_load(&x[i]);
@@ -613,7 +613,7 @@ inline void my_simd_vec_i32_prod(const int32_t *x, const int32_t *y, int32_t *z,
     int i = 0;
 
 #if SIMD_I32_WORD_SIZE
-    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) SIMD_IS_ALIGNED(z)) {
+    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) && SIMD_IS_ALIGNED(z)) {
         for (; i < len - SIMD_I32_WORD_SIZE + 1; i += SIMD_I32_WORD_SIZE)
         {
             simd_i_t a = my_simd_i_load(&x[i]);
@@ -647,7 +647,7 @@ inline void my_simd_vec_f32_add(const float *x, const float *y, float *z, const 
     int i = 0;
 
 #if SIMD_F32_WORD_SIZE
-    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) SIMD_IS_ALIGNED(z)) {
+    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) && SIMD_IS_ALIGNED(z)) {
         for (; i < len - SIMD_F32_WORD_SIZE + 1; i += SIMD_F32_WORD_SIZE)
         {
             simd_f_t a = my_simd_f_load(&x[i]);
@@ -680,7 +680,7 @@ inline void my_simd_vec_f32_scale_add(const float *x, const float *y, const floa
 #if SIMD_F32_WORD_SIZE
     const simd_f_t scale = my_simd_f_set1(h);
 
-    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) SIMD_IS_ALIGNED(z)) {
+    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) && SIMD_IS_ALIGNED(z)) {
         for (; i < len - SIMD_F32_WORD_SIZE + 1; i += SIMD_F32_WORD_SIZE)
         {
             simd_f_t a = my_simd_f_load(&x[i]);
@@ -711,7 +711,7 @@ inline void my_simd_vec_f32_sub(const float *x, const float *y, float *z, const 
     int i = 0;
 
 #if SIMD_F32_WORD_SIZE
-    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) SIMD_IS_ALIGNED(z)) {
+    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) && SIMD_IS_ALIGNED(z)) {
         for (; i < len - SIMD_F32_WORD_SIZE + 1; i += SIMD_F32_WORD_SIZE)
         {
             simd_f_t a = my_simd_f_load(&x[i]);
@@ -742,7 +742,7 @@ inline void my_simd_vec_f32_prod(const float *x, const float *y, float *z, const
     int i = 0;
 
 #if SIMD_F32_WORD_SIZE
-    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) SIMD_IS_ALIGNED(z)) {
+    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) && SIMD_IS_ALIGNED(z)) {
         for (; i < len - SIMD_F32_WORD_SIZE + 1; i += SIMD_F32_WORD_SIZE)
         {
             simd_f_t a = my_simd_f_load(&x[i]);
@@ -773,7 +773,7 @@ inline void my_simd_vec_f32_div(const float *x, const float *y, float *z, const 
     int i = 0;
 
 #if SIMD_F32_WORD_SIZE
-    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) SIMD_IS_ALIGNED(z)) {
+    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) && SIMD_IS_ALIGNED(z)) {
         for (; i < len - SIMD_F32_WORD_SIZE + 1; i += SIMD_F32_WORD_SIZE)
         {
             simd_f_t a = my_simd_f_load(&x[i]);
@@ -806,7 +806,7 @@ inline void my_simd_vec_f32_abs(const float *x, float *z, const int len)
     int i = 0;
 
 #if SIMD_F32_WORD_SIZE
-    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) SIMD_IS_ALIGNED(z)) {
+    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) && SIMD_IS_ALIGNED(z)) {
         for (; i < len - SIMD_F32_WORD_SIZE + 1; i += SIMD_F32_WORD_SIZE)
         {
             my_simd_f_store(&z[i], my_simd_f_abs(my_simd_f_load(&x[i])));

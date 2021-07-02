@@ -630,7 +630,7 @@ std::string CellBasic::toString() {
  *        to the console.
  */
 void CellBasic::printString() {
-  log_printf(NORMAL, toString().c_str());
+  log_printf(NORMAL_LOG, toString().c_str());
 }
 
 

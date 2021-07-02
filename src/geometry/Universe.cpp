@@ -486,7 +486,7 @@ void Universe::subdivideCells() {
         if (cell->getNumRings() > 0 || cell->getNumSectors() > 0) {
           std::vector<CellBasic*> newcells = cell->subdivideCell();
 
-          log_printf(DEBUG, "Cell %d in Universe %d has %d subcells",
+          log_printf(DEBUG_LOG, "Cell %d in Universe %d has %d subcells",
                      cell->getId(), _id, newcells.size());
 
           std::vector<CellBasic*>::iterator iter2;

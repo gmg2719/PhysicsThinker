@@ -43,7 +43,7 @@
 #include <map>
 #include <utility>
 #include <sstream>
-#include "log.h"
+#include "common/log.h"
 #include "LocalCoords.h"
 #include "Surface.h"
 #include "Material.h"

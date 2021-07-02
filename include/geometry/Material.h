@@ -28,7 +28,9 @@
 // Implement and modification base on the : https://github.com/mit-crpg/OpenMOC
 //
 
-typdef double FP_PRECISION;
+typedef double FP_PRECISION;
+#define VEC_LENGTH          4
+#define VEC_ALIGNMENT       16
 
 /**
  * @file Material.h
