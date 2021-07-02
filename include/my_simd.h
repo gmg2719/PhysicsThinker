@@ -22,6 +22,11 @@
 #ifndef _MY_SIMD_H_
 #define _MY_SIMD_H_     1
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #if defined(__x86_64__) || defined(__i386__)
     #include <immintrin.h>
 #else
@@ -806,7 +811,7 @@ inline void my_simd_vec_f32_abs(const float *x, float *z, const int len)
     int i = 0;
 
 #if SIMD_F32_WORD_SIZE
-    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(y) && SIMD_IS_ALIGNED(z)) {
+    if (SIMD_IS_ALIGNED(x) && SIMD_IS_ALIGNED(z)) {
         for (; i < len - SIMD_F32_WORD_SIZE + 1; i += SIMD_F32_WORD_SIZE)
         {
             my_simd_f_store(&z[i], my_simd_f_abs(my_simd_f_load(&x[i])));
@@ -823,5 +828,9 @@ inline void my_simd_vec_f32_abs(const float *x, float *z, const int len)
         z[i] = fabs(x[i]);
     }
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

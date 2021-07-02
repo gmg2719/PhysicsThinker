@@ -1149,11 +1149,11 @@ void Material::alignData() {
   int size = _num_vector_groups * VEC_LENGTH * sizeof(FP_PRECISION);
 
   /* Allocate word-aligned memory for cross-section data arrays */
-  FP_PRECISION* new_sigma_t = (FP_PRECISION*)my_simd_malloc(size, VEC_ALIGNMENT);
-  FP_PRECISION* new_sigma_a = (FP_PRECISION*)my_simd_malloc(size, VEC_ALIGNMENT);
-  FP_PRECISION* new_sigma_f = (FP_PRECISION*)my_simd_malloc(size, VEC_ALIGNMENT);
-  FP_PRECISION* new_nu_sigma_f=(FP_PRECISION*)my_simd_malloc(size, VEC_ALIGNMENT);
-  FP_PRECISION* new_chi = (FP_PRECISION*)my_simd_malloc(size, VEC_ALIGNMENT);
+  FP_PRECISION* new_sigma_t = (FP_PRECISION*)my_simd_malloc(size);
+  FP_PRECISION* new_sigma_a = (FP_PRECISION*)my_simd_malloc(size);
+  FP_PRECISION* new_sigma_f = (FP_PRECISION*)my_simd_malloc(size);
+  FP_PRECISION* new_nu_sigma_f=(FP_PRECISION*)my_simd_malloc(size);
+  FP_PRECISION* new_chi = (FP_PRECISION*)my_simd_malloc(size);
 
   /* The scattering matrix will be the number of vector groups
    * wide (SIMD) and the actual number of groups long since
@@ -1161,7 +1161,7 @@ void Material::alignData() {
 
   size = _num_vector_groups * VEC_LENGTH * _num_vector_groups;
   size *= VEC_LENGTH * sizeof(FP_PRECISION);
-  FP_PRECISION* new_sigma_s = (FP_PRECISION*)my_simd_malloc(size, VEC_ALIGNMENT);
+  FP_PRECISION* new_sigma_s = (FP_PRECISION*)my_simd_malloc(size);
 
   /* Initialize data structures to ones for sigma_t since it is used to
    * divide the source in the solver, and zeroes for everything else */
