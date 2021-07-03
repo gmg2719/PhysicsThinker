@@ -371,7 +371,7 @@ void Material::setNumEnergyGroups(const int num_groups) {
 
   if (num_groups < 0)
     log_printf(ERROR_LOG, "Unable to set the number of energy groups for "
-               "material %d to %d", _num_groups);
+               "material %d to %d", num_groups, _num_groups);
 
   _num_groups = num_groups;
 
@@ -473,7 +473,7 @@ void Material::setSigmaT(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
     log_printf(ERROR_LOG, "Unable to set sigma_t with %d groups for Material "
-               "%d which contains %d energy groups", num_groups,  _num_groups);
+               "%d which contains %d energy groups", num_groups,  _uid, _num_groups);
 
   for (int i=0; i < _num_groups; i++)
     _sigma_t[i] = FP_PRECISION(xs[i]);
@@ -518,7 +518,7 @@ void Material::setSigmaA(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
     log_printf(ERROR_LOG, "Unable to set sigma_a with %d groups for Material "
-               "%d which contains %d energy groups", num_groups, _num_groups);
+               "%d which contains %d energy groups", num_groups, _uid, _num_groups);
 
   for (int i=0; i < _num_groups; i++){
     _sigma_a[i] = FP_PRECISION(xs[i]);
@@ -579,7 +579,7 @@ void Material::setSigmaS(double* xs, int num_groups_squared) {
   if (_num_groups*_num_groups != num_groups_squared)
     log_printf(ERROR_LOG, "Unable to set sigma_s with %f groups for Material %d "
                "which contains %d energy groups",
-                float(sqrt(num_groups_squared)), _num_groups);
+                float(sqrt(num_groups_squared)), _uid, _num_groups);
 
   for (int i=0; i < _num_groups; i++) {
     for (int j=0; j < _num_groups; j++)
@@ -628,7 +628,7 @@ void Material::setSigmaF(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
     log_printf(ERROR_LOG, "Unable to set sigma_f with %d groups for Material "
-               "%d which contains %d energy groups", num_groups, _num_groups);
+               "%d which contains %d energy groups", num_groups, _uid, _num_groups);
 
   for (int i=0; i < _num_groups; i++)
     _sigma_f[i] = xs[i];
@@ -712,7 +712,7 @@ void Material::setNuSigmaFByGroup(double xs, int group) {
 
   if (group < 0 || group >= _num_groups)
     log_printf(ERROR_LOG, "Unable to set nu_sigma_f for group %d for Material "
-               "%d which contains %d energy groups", group, _uid);
+               "%d which contains %d energy groups", group, _uid, _num_groups);
 
   _nu_sigma_f[group] = xs;
 }
@@ -742,7 +742,7 @@ void Material::setChi(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
     log_printf(ERROR_LOG, "Unable to set chi with %d groups for Material "
-               "%d which contains %d energy groups", num_groups, _num_groups);
+               "%d which contains %d energy groups", num_groups, _uid, _num_groups);
 
   for (int i=0; i < _num_groups; i++)
     _chi[i] = xs[i];
@@ -758,7 +758,7 @@ void Material::setChiByGroup(double xs, int group) {
 
   if (group < 0 || group >= _num_groups)
     log_printf(ERROR_LOG, "Unable to set chi for group %d for Material "
-              "%d which contains %d energy groups", group, _num_groups, _uid);
+              "%d which contains %d energy groups", group, _uid, _num_groups);
 
   _chi[group] = xs;
 }
@@ -787,8 +787,7 @@ void Material::setDifCoef(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
     log_printf(ERROR_LOG, "Unable to set diffusion coefficient with %d groups for "
-               "Material %d which contains %d energy groups", num_groups,
-               _num_groups);
+               "Material %d which contains %d energy groups", num_groups, _uid, _num_groups);
 
   if (_dif_coef == NULL)
     _dif_coef = new FP_PRECISION[_num_groups];
@@ -844,8 +843,7 @@ void Material::setBuckling(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
     log_printf(ERROR_LOG, "Unable to set diffusion coefficient with %d groups for "
-               "Material %d which contains %d energy groups", num_groups,
-               _num_groups);
+               "Material %d which contains %d energy groups", num_groups, _uid, _num_groups);
 
   if (_buckling == NULL)
     _buckling = new FP_PRECISION[_num_groups];
@@ -864,8 +862,7 @@ void Material::setBucklingByGroup(double xs, int group) {
 
   if (group < 0 || group >= _num_groups)
     log_printf(ERROR_LOG, "Unable to set diffusion coefficient for group %d for "
-               "Material %d which contains %d energy groups",
-               group, _num_groups, _uid);
+               "Material %d which contains %d energy groups", group, _uid, _num_groups);
 
   if (_buckling == NULL){
     _buckling = new FP_PRECISION[_num_groups];
@@ -900,8 +897,7 @@ void Material::setDifHat(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
     log_printf(ERROR_LOG, "Unable to set diffusion coefficient with %d groups "
-               "for Material %d which contains %d energy groups", num_groups,
-               _num_groups);
+               "for Material %d which contains %d energy groups", num_groups, _uid, _num_groups);
 
   if (_dif_hat == NULL)
     _dif_hat = new FP_PRECISION[4*_num_groups];
@@ -922,8 +918,7 @@ void Material::setDifHatByGroup(double xs, int group, int surface) {
 
   if (group < 0 || group >= _num_groups)
     log_printf(ERROR_LOG, "Unable to set diffusion coefficient for group %d for "
-              "Material %d which contains %d energy groups",
-              group, _num_groups, _uid);
+              "Material %d which contains %d energy groups", group, _uid, _num_groups);
 
   if (_dif_hat == NULL){
 
@@ -960,8 +955,7 @@ void Material::setDifTilde(double* xs, int num_groups) {
 
   if (_num_groups != num_groups)
     log_printf(ERROR_LOG, "Unable to set diffusion coefficient with %d groups "
-              "for Material %d which contains %d energy groups", num_groups,
-              _num_groups);
+              "for Material %d which contains %d energy groups", num_groups, _uid, _num_groups);
 
   if (_dif_tilde == NULL){
     _dif_tilde = new FP_PRECISION[4*_num_groups];
@@ -984,7 +978,7 @@ void Material::setDifTildeByGroup(double xs, int group, int surface) {
   if (group < 0 || group >= _num_groups)
     log_printf(ERROR_LOG, "Unable to set diffusion coefficient correction for "
               "group %d for Material %d which contains %d energy groups",
-               group, _num_groups, _uid);
+               group, _uid, _num_groups);
 
   if (_dif_tilde == NULL){
     _dif_tilde = new FP_PRECISION[4*_num_groups];

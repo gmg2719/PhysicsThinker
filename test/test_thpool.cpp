@@ -20,6 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <cstdio>
+#include <pthread.h>
 #include "os/thread_pool.h"
 
 void task(void *arg)
@@ -29,17 +31,17 @@ void task(void *arg)
 
 int main(void)
 {
-	puts("Making threadpool with 4 threads");
+	printf("Making threadpool with 4 threads\n");
 	threadpool thpool = thpool_init(4);
 
-	puts("Adding 40 tasks to threadpool");
+	printf("Adding 40 tasks to threadpool\n");
 	int i;
 	for (i=0; i<40; i++){
 		thpool_add_work(thpool, task, NULL);
 	};
 
 	thpool_wait(thpool);
-	puts("Killing threadpool");
+	printf("Killing threadpool\n");
 	thpool_destroy(thpool);
 
     return 0;

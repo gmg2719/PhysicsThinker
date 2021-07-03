@@ -3,7 +3,7 @@ echo "Compile the src/ module into .o files ..."
 PWD_PATH=`pwd`
 if [ -d "./build" ]; then
     cd build
-    rm -f *
+    rm -rf *
     cd ${PWD_PATH}
 else
     mkdir build
