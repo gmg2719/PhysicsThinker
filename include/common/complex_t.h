@@ -104,6 +104,8 @@ struct complex_t
         Re = tmp;
         return *this;
     }
+
+    void conj() NOEXCEPT  { Im = -Im; }
 };
 
 typedef float* __restrict const float_vector;
