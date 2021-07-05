@@ -491,6 +491,322 @@ void large_lattice_demo()
 
 void full_core_demo()
 {
+    std::cout << "Set the main simulation parameters ..." << std::endl;
+    int num_threads = 1;
+    double track_spacing = 0.1;
+    int num_azim = 4;
+    double tolerance = 1.0E-5;
+    int max_iters = 200;
+    set_log_level("NORMAL_LOG");
+    std::cout << "Simulating a mock full core PWR ..." << std::endl;
+    std::cout << "Create the materials ..." << std::endl;
+    Material uo2(1);
+    Material mox43(2);
+    Material mox7(3);
+    Material mox87(4);
+    Material gtube(5);
+    Material fchamber(6);
+    Material water(7);
+    uo2.setNumEnergyGroups(7);
+    uo2.setSigmaT(uo2_total_xs, 7);
+    uo2.setSigmaA(uo2_abs_xs, 7);
+    uo2.setSigmaS(uo2_scatter_xs, 49);
+    uo2.setSigmaF(uo2_fis_xs, 7);
+    uo2.setNuSigmaF(uo2_nufis_xs, 7);
+    uo2.setChi(uo2_chi, 7);
+    mox43.setNumEnergyGroups(7);
+    mox43.setSigmaT(mox43_total_xs, 7);
+    mox43.setSigmaA(mox43_abs_xs, 7);
+    mox43.setSigmaS(mox43_scatter_xs, 49);
+    mox43.setSigmaF(mox43_fis_xs, 7);
+    mox43.setNuSigmaF(mox43_nufis_xs, 7);
+    mox43.setChi(mox43_chi, 7);
+    mox7.setNumEnergyGroups(7);
+    mox7.setSigmaT(mox7_total_xs, 7);
+    mox7.setSigmaA(mox7_abs_xs, 7);
+    mox7.setSigmaS(mox7_scatter_xs, 49);
+    mox7.setSigmaF(mox7_fis_xs, 7);
+    mox7.setNuSigmaF(mox7_nufis_xs, 7);
+    mox7.setChi(mox7_chi, 7);
+    mox87.setNumEnergyGroups(7);
+    mox87.setSigmaT(mox87_total_xs, 7);
+    mox87.setSigmaA(mox87_abs_xs, 7);
+    mox87.setSigmaS(mox87_scatter_xs, 49);
+    mox87.setSigmaF(mox87_fis_xs, 7);
+    mox87.setNuSigmaF(mox87_nufis_xs, 7);
+    mox87.setChi(mox87_chi, 7);
+    gtube.setNumEnergyGroups(7);
+    gtube.setSigmaT(guide_total_xs, 7);
+    gtube.setSigmaA(guide_abs_xs, 7);
+    gtube.setSigmaS(guide_scatter_xs, 49);
+    gtube.setSigmaF(guide_fis_xs, 7);
+    gtube.setNuSigmaF(guide_nufis_xs, 7);
+    gtube.setChi(guide_chi, 7);
+    fchamber.setNumEnergyGroups(7);
+    fchamber.setSigmaT(chamber_total_xs, 7);
+    fchamber.setSigmaA(chamber_abs_xs, 7);
+    fchamber.setSigmaS(chamber_scatter_xs, 49);
+    fchamber.setSigmaF(chamber_fis_xs, 7);
+    fchamber.setNuSigmaF(chamber_nufis_xs, 7);
+    fchamber.setChi(chamber_chi, 7);
+    water.setNumEnergyGroups(7);
+    water.setSigmaT(water_total_xs, 7);
+    water.setSigmaA(water_abs_xs, 7);
+    water.setSigmaS(water_scatter_xs, 49);
+    water.setSigmaF(water_fis_xs, 7);
+    water.setNuSigmaF(water_nufis_xs, 7);
+    water.setChi(water_chi, 7);
+    std::cout << "Create surfaces ..." << std::endl;
+    Circle circle1(0.0, 0.0, 0.54, 1);
+    Circle circle2(0.0, 0.0, 0.58, 2);
+    Circle circle3(0.0, 0.0, 0.62, 3);
+    XPlane left(-224.91);
+    XPlane right(224.91);
+    YPlane bottom(-224.91);
+    YPlane top(224.91);
+    left.setBoundaryType(VACUUM);
+    right.setBoundaryType(VACUUM);
+    top.setBoundaryType(VACUUM);
+    bottom.setBoundaryType(VACUUM);
+    std::cout << "Create cells ..." << std::endl;
+    // UO2 pin cells
+    Universe u0(0);
+    Universe u1(1);
+    Universe u2(2);
+    Universe u3(3);
+    Universe u4(4);
+    Universe u5(5);
+    Universe u6(6);
+    Universe u7(7);
+    Universe u10(10);
+    Universe u11(11);
+    Universe u12(12);
+    Universe u13(13);
+    Universe u14(14);
+    
+    Cell *cell0 = new CellBasic(1, 1, 3, 8);
+    Cell *cell1 = new CellBasic(1, 7, 0, 8);
+    Cell *cell2 = new CellBasic(1, 7, 0, 8);
+    Cell *cell3 = new CellBasic(1, 7, 0, 8);
+    cell0->addSurface(-1, &circle1);
+    cell1->addSurface(1, &circle1);
+    cell1->addSurface(-1, &circle2);
+    cell2->addSurface(1, &circle2);
+    cell2->addSurface(-1, &circle3);
+    cell3->addSurface(1, &circle3);
+    // 4.3% MOX pin cells
+    Cell *cell4 = new CellBasic(2, 2, 3, 8);
+    Cell *cell5 = new CellBasic(2, 7, 0, 8);
+    Cell *cell6 = new CellBasic(2, 7, 0, 8);
+    Cell *cell7 = new CellBasic(2, 7, 0, 8);
+    cell4->addSurface(-1, &circle1);
+    cell5->addSurface(1, &circle1);
+    cell5->addSurface(-1, &circle2);
+    cell6->addSurface(1, &circle2);
+    cell6->addSurface(-1, &circle3);
+    cell7->addSurface(1, &circle3);
+    // 7% MOX pin cells
+    Cell *cell8 = new CellBasic(3, 3, 3, 8);
+    Cell *cell9 = new CellBasic(3, 7, 0, 8);
+    Cell *cell10 = new CellBasic(3, 7, 0, 8);
+    Cell *cell11 = new CellBasic(3, 7, 0, 8);
+    cell8->addSurface(-1, &circle1);
+    cell9->addSurface(1, &circle1);
+    cell9->addSurface(-1, &circle2);
+    cell10->addSurface(1, &circle2);
+    cell10->addSurface(-1, &circle3);
+    cell11->addSurface(1, &circle3);
+    // 8.7% MOX pin cells
+    Cell *cell12 = new CellBasic(4, 4, 3, 8);
+    Cell *cell13 = new CellBasic(4, 7, 0, 8);
+    Cell *cell14 = new CellBasic(4, 7, 0, 8);
+    Cell *cell15 = new CellBasic(4, 7, 0, 8);
+    cell12->addSurface(-1, &circle1);
+    cell13->addSurface(1, &circle1);
+    cell13->addSurface(-1, &circle2);
+    cell14->addSurface(1, &circle2);
+    cell14->addSurface(-1, &circle3);
+    cell15->addSurface(1, &circle3);
+    // Fission chamber pin cells
+    Cell *cell16 = new CellBasic(5, 6, 3, 8);
+    Cell *cell17 = new CellBasic(5, 7, 0, 8);
+    Cell *cell18 = new CellBasic(5, 7, 0, 8);
+    Cell *cell19 = new CellBasic(5, 7, 0, 8);
+    cell16->addSurface(-1, &circle1);
+    cell17->addSurface(1, &circle1);
+    cell17->addSurface(-1, &circle2);
+    cell18->addSurface(1, &circle2);
+    cell18->addSurface(-1, &circle3);
+    cell19->addSurface(1, &circle3);
+    // Guide tube pin cells
+    Cell *cell20 = new CellBasic(6, 5, 3, 8);
+    Cell *cell21 = new CellBasic(6, 7, 0, 8);
+    Cell *cell22 = new CellBasic(6, 7, 0, 8);
+    Cell *cell23 = new CellBasic(6, 7, 0, 8);
+    cell20->addSurface(-1, &circle1);
+    cell21->addSurface(1, &circle1);
+    cell21->addSurface(-1, &circle2);
+    cell22->addSurface(1, &circle2);
+    cell22->addSurface(-1, &circle3);
+    cell23->addSurface(1, &circle3);
+    // Moderator cell
+    Cell *cell24 = new CellBasic(7, 7);
+    // Lattice is related with cells
+    Cell *cell25 = new CellFill(10, 20);
+    Cell *cell26 = new CellFill(11, 21);
+    Cell *cell27 = new CellFill(12, 22);
+    Cell *cell28 = new CellFill(13, 23);
+    Cell *cell29 = new CellFill(14, 24);
+    // Full geometry
+    cell *cell30 = new CellFill(0, 30);
+    cell30->addSurface(1, &left);
+    cell30->addSurface(-1, &right);
+    cell30->addSurface(1, &bottom);
+    cell30->addSurface(-1, &top);
+    std::cout << "Create lattices ..." << std::endl;
+    Lattice lattice1(20, 1.26, 1.26);
+    int universe_id1[17*17] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 1, 1, 1, 6, 1, 1, 6, 1, 1, 6, 1, 1, 1, 1, 1,
+                               1, 1, 1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 1, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 6, 1, 1, 6, 1, 1, 6, 1, 1, 6, 1, 1, 6, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 6, 1, 1, 6, 1, 1, 5, 1, 1, 6, 1, 1, 6, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 6, 1, 1, 6, 1, 1, 6, 1, 1, 6, 1, 1, 6, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 1, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 6, 1, 1, 1,
+                               1, 1, 1, 1, 1, 6, 1, 1, 6, 1, 1, 6, 1, 1, 1, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    lattice1.setLatticeCells(17, 17, universe_id1);
+    Lattice lattice2(21, 1.26, 1.26);
+    int universe_id2[17*17] = {2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+                               2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2,
+                               2, 3, 3, 3, 3, 6, 3, 3, 6, 3, 3, 6, 3, 3, 3, 3, 2,
+                               2, 3, 3, 6, 3, 4, 4, 4, 4, 4, 4, 4, 3, 6, 3, 3, 2,
+                               2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 2,
+                               2, 3, 6, 4, 4, 6, 4, 4, 6, 4, 4, 6, 4, 4, 6, 3, 2,
+                               2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 2,
+                               2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 2,
+                               2, 3, 6, 4, 4, 6, 4, 4, 5, 4, 4, 6, 4, 4, 6, 3, 2,
+                               2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 2,
+                               2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 2,
+                               2, 3, 6, 4, 4, 6, 4, 4, 6, 4, 4, 6, 4, 4, 6, 3, 2,
+                               2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 3, 3, 3, 2,
+                               2, 3, 3, 6, 3, 4, 4, 4, 4, 4, 4, 4, 3, 6, 3, 3, 2,
+                               2, 3, 3, 3, 3, 6, 3, 3, 6, 3, 3, 6, 3, 3, 3, 3, 2,
+                               2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2,
+                               2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2};
+    lattice2.setLatticeCells(17, 17, universe_id2);
+    Lattice lattice3(22, 0.252, 0.252);
+    int universe_id3[25] = {7, 7, 7, 7, 7,
+                            7, 7, 7, 7, 7,
+                            7, 7, 7, 7, 7,
+                            7, 7, 7, 7, 7,
+                            7, 7, 7, 7, 7};
+    lattice3.setLatticeCells(5, 5, universe_id3);
+    Lattice lattice4(23, 1.26, 1.26);
+    int universe_id4[17*17] = {12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12,
+                               12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12};
+    lattice4.setLatticeCells(17, 17, universe_id4);
+    Lattice lattice5(24, 1.26, 1.26);
+    int universe_id5[17*17] = {7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
+                               7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7};
+    lattice5.setLatticeCells(17, 17, universe_id5);
+    // 21x21 core to represent two bundles and water
+    Lattice lattice6(30, 21.42, 21.42);
+    int universe_id6[21*21] = {13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13,
+                               13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 14, 13, 13, 13, 13, 13, 13, 13,
+                               13, 13, 13, 13, 14, 14, 14, 10, 11, 10, 11, 10, 11, 10, 14, 14, 13, 13, 13, 13, 13,
+                               13, 13, 13, 14, 14, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 14, 13, 13, 13, 13,
+                               13, 13, 14, 14, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 14, 14, 13, 13,
+                               13, 13, 14, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 14, 13, 13,
+                               13, 14, 14, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 14, 13, 13,
+                               13, 14, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 14, 13,
+                               13, 14, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 14, 13,
+                               13, 14, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 14, 13,
+                               13, 14, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 14, 13,
+                               13, 14, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 14, 13,
+                               13, 14, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 14, 13,
+                               13, 14, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 14, 13,
+                               13, 14, 14, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 14, 13, 13,
+                               13, 13, 14, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 14, 13, 13,
+                               13, 13, 14, 14, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 14, 13, 13, 13,
+                               13, 13, 13, 14, 14, 11, 10, 11, 10, 11, 10, 11, 10, 11, 10, 11, 14, 13, 13, 13, 13,
+                               13, 13, 13, 13, 14, 14, 14, 10, 11, 10, 11, 10, 11, 10, 14, 14, 13, 13, 13, 13, 13,
+                               13, 13, 14, 13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 14, 13, 13, 13, 13, 13, 13, 13,
+                               13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13};
+    lattice6.setLatticeCells(21, 21, universe_id6);
+    std::cout << "Create the geometry ..." << std::endl;
+    Geometry geom;
+    geom.addMaterial(&uo2);
+    geom.addMaterial(&mox43);
+    geom.addMaterial(&mox7);
+    geom.addMaterial(&mox87);
+    geom.addMaterial(&gtube);
+    geom.addMaterial(&fchamber);
+    geom.addMaterial(&water);
+    geom.addCell(cell0); geom.addCell(cell1); geom.addCell(cell2);
+    geom.addCell(cell3); geom.addCell(cell4); geom.addCell(cell5);
+    geom.addCell(cell6); geom.addCell(cell7); geom.addCell(cell8);
+    geom.addCell(cell9); geom.addCell(cell10); geom.addCell(cell11);
+    geom.addCell(cell12); geom.addCell(cell13); geom.addCell(cell14);
+    geom.addCell(cell15); geom.addCell(cell16); geom.addCell(cell17);
+    geom.addCell(cell18); geom.addCell(cell19); geom.addCell(cell20);
+    geom.addCell(cell21); geom.addCell(cell22); geom.addCell(cell23);
+    geom.addCell(cell24); geom.addCell(cell25); geom.addCell(cell26);
+    geom.addCell(cell27); geom.addCell(cell28); geom.addCell(cell29);
+    geom.addCell(cell30);
+    geom.addLattice(&lattice1);
+    geom.addLattice(&lattice2);
+    geom.addLattice(&lattice3);
+    geom.addLattice(&lattice4);
+    geom.addLattice(&lattice5);
+    geom.addLattice(&lattice6);
+    geom.initializeFlatSourceRegions();
+    std::cout << "Create the track generator ..." << std::endl;
+    TrackGenerator tracks(&geom, num_azim, track_spacing);
+    tracks.generateTracks();
+    std::cout << "start to run the simulation ..." << std::endl;
+    CPUSolver moc_solver(&geom, &tracks);
+    moc_solver.setNumThreads(num_threads);
+    moc_solver.setSourceConvergenceThreshold(tolerance);
+    moc_solver.convergeSource(max_iters);
+    moc_solver.printTimerReport();
 }
 
 void bundled_lattice_demo()
