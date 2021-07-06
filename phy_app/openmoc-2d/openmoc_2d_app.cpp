@@ -487,6 +487,103 @@ void nested_lattice_demo()
 
 void large_lattice_demo()
 {
+    std::cout << "Set the main simulation parameters ..." << std::endl;
+    int num_threads = 1;
+    double track_spacing = 0.1;
+    int num_azim = 4;
+    double tolerance = 1.0E-5;
+    int max_iters = 200;
+    set_log_level("NORMAL_LOG");
+    std::cout << "Create the materials ..." << std::endl;
+    Material uo2(1);
+    Material water(2);
+    uo2.setNumEnergyGroups(7);
+    uo2.setSigmaT(uo2_total_xs, 7);
+    uo2.setSigmaA(uo2_abs_xs, 7);
+    uo2.setSigmaS(uo2_scatter_xs, 49);
+    uo2.setSigmaF(uo2_fis_xs, 7);
+    uo2.setNuSigmaF(uo2_nufis_xs, 7);
+    uo2.setChi(uo2_chi, 7);
+    water.setNumEnergyGroups(7);
+    water.setSigmaT(water_total_xs, 7);
+    water.setSigmaA(water_abs_xs, 7);
+    water.setSigmaS(water_scatter_xs, 49);
+    water.setSigmaF(water_fis_xs, 7);
+    water.setNuSigmaF(water_nufis_xs, 7);
+    water.setChi(water_chi, 7);
+    std::cout << "Create surfaces ..." << std::endl;
+    Circle circle1(0.0, 0.0, 0.4, 1);
+    Circle circle2(0.0, 0.0, 0.3, 2);
+    Circle circle3(0.0, 0.0, 0.2, 3);
+    XPlane left(-2.0);
+    XPlane right(2.0);
+    YPlane bottom(-2.0);
+    YPlane top(2.0);
+    left.setBoundaryType(REFLECTIVE);
+    right.setBoundaryType(REFLECTIVE);
+    top.setBoundaryType(REFLECTIVE);
+    bottom.setBoundaryType(REFLECTIVE);
+    std::cout << "Create cells ..." << std::endl;
+    Universe u0(0);
+    Universe u1(1);
+    Universe u2(2);
+    Universe u3(3);
+    Universe u5(5);
+    Cell *cell0 = new CellBasic(1, 1);
+    Cell *cell1 = new CellBasic(1, 2);
+    Cell *cell2 = new CellBasic(2, 1);
+    Cell *cell3 = new CellBasic(2, 2);
+    Cell *cell4 = new CellBasic(3, 1);
+    Cell *cell5 = new CellBasic(3, 2);
+    Cell *cell6 = new CellFill(5, 4);
+    Cell *cell7 = new CellFill(0, 6);
+    cell0->addSurface(-1, &circle1);
+    cell1->addSurface(1, &circle1);
+    cell2->addSurface(-1, &circle2);
+    cell3->addSurface(1, &circle2);
+    cell4->addSurface(-1, &circle3);
+    cell5->addSurface(1, &circle3);
+
+    cell7->addSurface(1, &left);
+    cell7->addSurface(-1, &right);
+    cell7->addSurface(1, &bottom);
+    cell7->addSurface(-1, &top);
+    std::cout << "Create lattices ..." << std::endl;
+    // 2x2 assembly
+    Lattice assembly(4, 1.0, 1.0);
+    int universe_id1[4] = {1, 2, 1, 3};
+    assembly.setLatticeCells(2, 2, universe_id1);
+    // 2x2 core
+    Lattice core(6, 2.0, 2.0);
+    int universe_id2[4] = {5, 5, 5, 5};
+    core.setLatticeCells(2, 2, universe_id2);
+
+    std::cout << "Create the geometry ..." << std::endl;
+    Geometry geom(&mesh);
+    geom.addMaterial(&uo2);
+    geom.addMaterial(&water);
+    geom.addCell(cell0);
+    geom.addCell(cell1);
+    geom.addCell(cell2);
+    geom.addCell(cell3);
+    geom.addCell(cell4);
+    geom.addCell(cell5);
+    geom.addCell(cell6);
+    geom.addCell(cell7);
+    geom.addLattice(&assembly);
+    geom.addLattice(&core);
+    geom.initializeFlatSourceRegions();
+
+    std::cout << "Create the track generator ..." << std::endl;
+    TrackGenerator tracks(&geom, num_azim, track_spacing);
+    tracks.generateTracks();
+
+    std::cout << "start to run the simulation ..." << std::endl;
+    CPUSolver moc_solver(&geom, &tracks);
+    moc_solver.setNumThreads(num_threads);
+    moc_solver.setSourceConvergenceThreshold(tolerance);
+    moc_solver.convergeSource(max_iters);
+    moc_solver.printTimerReport();
 }
 
 void full_core_demo()
@@ -811,6 +908,160 @@ void full_core_demo()
 
 void bundled_lattice_demo()
 {
+    std::cout << "Set the main simulation parameters ..." << std::endl;
+    int num_threads = 1;
+    double track_spacing = 0.1;
+    int num_azim = 4;
+    double tolerance = 1.0E-5;
+    int max_iters = 200;
+    set_log_level("NORMAL_LOG");
+    std::cout << "Simulating a mock full core PWR ..." << std::endl;
+    std::cout << "Create the materials ..." << std::endl;
+    Material uo2(1);
+    Material water(2);
+    uo2.setNumEnergyGroups(7);
+    uo2.setSigmaT(uo2_total_xs, 7);
+    uo2.setSigmaA(uo2_abs_xs, 7);
+    uo2.setSigmaS(uo2_scatter_xs, 49);
+    uo2.setSigmaF(uo2_fis_xs, 7);
+    uo2.setNuSigmaF(uo2_nufis_xs, 7);
+    uo2.setChi(uo2_chi, 7);
+    water.setNumEnergyGroups(7);
+    water.setSigmaT(water_total_xs, 7);
+    water.setSigmaA(water_abs_xs, 7);
+    water.setSigmaS(water_scatter_xs, 49);
+    water.setSigmaF(water_fis_xs, 7);
+    water.setNuSigmaF(water_nufis_xs, 7);
+    water.setChi(water_chi, 7);
+    std::cout << "Create surfaces ..." << std::endl;
+    Circle circle1(0.0, 0.0, 0.15, 1);
+    Circle circle2(0.0, 0.0, 0.2, 2);
+    Circle circle3(0.0, 0.0, 0.25, 3);
+    Circle circle4(0.0, 0.0, 0.3, 4);
+    Circle circle5(0.0, 0.0, 0.35, 5);
+    Circle circle6(0.0, 0.0, 0.4, 6);
+    XPlane left(-34.0);
+    XPlane right(34.0);
+    YPlane bottom(-34.0);
+    YPlane top(34.0);
+    left.setBoundaryType(REFLECTIVE);
+    right.setBoundaryType(REFLECTIVE);
+    top.setBoundaryType(REFLECTIVE);
+    bottom.setBoundaryType(REFLECTIVE);
+    std::cout << "Create cells ..." << std::endl;
+    // UO2 pin cells
+    Universe u0(0);
+    Universe u1(1);
+    Universe u2(2);
+    Universe u3(3);
+    Universe u4(4);
+    Universe u5(5);
+    Universe u6(6);
+    Universe u7(7);
+    Universe u10(10);
+    Universe u11(11);
+    
+    Cell *cell0 = new CellBasic(1, 1);
+    Cell *cell1 = new CellBasic(1, 2);
+    Cell *cell2 = new CellBasic(2, 1);
+    Cell *cell3 = new CellBasic(2, 2);
+    Cell *cell4 = new CellBasic(3, 1);
+    Cell *cell5 = new CellBasic(3, 2);
+    Cell *cell6 = new CellBasic(4, 1);
+    Cell *cell7 = new CellBasic(4, 2);
+    Cell *cell8 = new CellBasic(5, 1);
+    Cell *cell9 = new CellBasic(5, 2);
+    Cell *cell10 = new CellBasic(6, 1);
+    Cell *cell11 = new CellBasic(6, 2);
+    Cell *cell12 = new CellFill(9, 7);
+    Cell *cell13 = new CellFill(11, 8);
+    Cell *cell14 = new CellFill(0, 10);
+
+    cell0->addSurface(-1, &circle1);
+    cell1->addSurface(1, &circle1);
+    cell2->addSurface(-1, &circle2);
+    cell3->addSurface(1, &circle2);
+    cell4->addSurface(-1, &circle3);
+    cell5->addSurface(1, &circle3);
+    cell6->addSurface(-1, &circle4);
+    cell7->addSurface(1, &circle4);
+    cell8->addSurface(-1, &circle5);
+    cell9->addSurface(1, &circle5);
+    cell10->addSurface(-1, &circle6);
+    cell11->addSurface(1, &circle6);
+    cell14->addSurface(1, &left);
+    cell14->addSurface(-1, &right);
+    cell14->addSurface(1, &bottom);
+    cell14->addSurface(-1, &top);
+    std::cout << "Create lattices ..." << std::endl;
+    Lattice assembly1(7, 1.0, 1.0);
+    int universe_id1[17*17] = {1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1,
+                               2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2,
+                               1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1,
+                               2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2,
+                               1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1,
+                               2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2,
+                               1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1,
+                               2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2,
+                               1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1,
+                               2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2,
+                               1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1,
+                               2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2,
+                               1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1,
+                               2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2,
+                               1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1,
+                               2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2,
+                               1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1, 2, 1};
+    assembly1.setLatticeCells(17, 17, universe_id1);
+
+    Lattice assembly2(8, 1.0, 1.0);
+    int universe_id2[17*17] = {4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4,
+                               5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5,
+                               4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4,
+                               5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5,
+                               4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4,
+                               5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5,
+                               4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4,
+                               5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5,
+                               4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4,
+                               5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5,
+                               4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4,
+                               5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5,
+                               4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4,
+                               5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5,
+                               4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4,
+                               5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5, 6, 5,
+                               4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4, 5, 4};
+    assembly2.setLatticeCells(17, 17, universe_id2);
+    // 4x4 core
+    Lattice core(10, 17.0, 17.0);
+    int universe_id3[21*21] = {9, 11, 9, 11,
+                               11, 9, 11, 9,
+                               9, 11, 9, 11,
+                               11, 9, 11, 9};
+    core.setLatticeCells(4, 4, universe_id3);
+    std::cout << "Create the geometry ..." << std::endl;
+    Geometry geom;
+    geom.addMaterial(&uo2);
+    geom.addMaterial(&water);
+    geom.addCell(cell0); geom.addCell(cell1); geom.addCell(cell2);
+    geom.addCell(cell3); geom.addCell(cell4); geom.addCell(cell5);
+    geom.addCell(cell6); geom.addCell(cell7); geom.addCell(cell8);
+    geom.addCell(cell9); geom.addCell(cell10); geom.addCell(cell11);
+    geom.addCell(cell12); geom.addCell(cell13); geom.addCell(cell14);
+    geom.addLattice(&assembly1);
+    geom.addLattice(&assembly2);
+    geom.addLattice(&core);
+    geom.initializeFlatSourceRegions();
+    std::cout << "Create the track generator ..." << std::endl;
+    TrackGenerator tracks(&geom, num_azim, track_spacing);
+    tracks.generateTracks();
+    std::cout << "start to run the simulation ..." << std::endl;
+    CPUSolver moc_solver(&geom, &tracks);
+    moc_solver.setNumThreads(num_threads);
+    moc_solver.setSourceConvergenceThreshold(tolerance);
+    moc_solver.convergeSource(max_iters);
+    moc_solver.printTimerReport();
 }
 
 int main(int argc, char *argv[])
