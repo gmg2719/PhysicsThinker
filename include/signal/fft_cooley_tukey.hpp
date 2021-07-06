@@ -69,7 +69,7 @@ void fft_original(int N, int q, complex_t<T> *x)
 // N : sequence length
 // x : input/output sequence
 template<typename T>
-void fft(int N, complex_t<T> *x)
+void fft_cooley_tukey0(int N, complex_t<T> *x)
 {
     fft_original<T>(N, 0, x);
     bit_reverse<T>(N, x);
@@ -79,7 +79,7 @@ void fft(int N, complex_t<T> *x)
 // N : sequence length
 // x : input/output sequence
 template<typename T>
-void ifft(int N, complex_t<T> *x)
+void ifft_cooley_tukey0(int N, complex_t<T> *x)
 {
     for (int k = 0; k < N; k++) {
         x[k].conj();
@@ -124,7 +124,7 @@ void fft_original_reversal(int N, int s, int q, int d, complex_t<T> *x)
 // N : sequence length
 // x : input/output sequence
 template<typename T>
-void fft_n(int N, complex_t<T> *x)
+void fft_cooley_tukey(int N, complex_t<T> *x)
 {
     fft_original_reversal<T>(N, 1, 0, 0, x);
 }
@@ -133,7 +133,7 @@ void fft_n(int N, complex_t<T> *x)
 // N : sequence length
 // x : input/output sequence
 template<typename T>
-void ifft_n(int N, complex_t<T> *x)
+void ifft_cooley_tukey(int N, complex_t<T> *x)
 {
     for (int k = 0; k < N; k++) {
         x[k].conj();
