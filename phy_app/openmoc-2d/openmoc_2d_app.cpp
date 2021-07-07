@@ -455,10 +455,10 @@ void nested_lattice_demo()
     // 2x2 core
     Lattice core(6, 2.0, 2.0);
     int universe_id2[4] = {5, 5, 5, 5};
-    core.setLatticeCells(2, 2, &universe_id2);
+    core.setLatticeCells(2, 2, universe_id2);
 
     std::cout << "Create the geometry ..." << std::endl;
-    Geometry geom(&mesh);
+    Geometry geom;
     geom.addMaterial(&uo2);
     geom.addMaterial(&water);
     geom.addCell(cell0);
@@ -559,7 +559,7 @@ void large_lattice_demo()
     core.setLatticeCells(2, 2, universe_id2);
 
     std::cout << "Create the geometry ..." << std::endl;
-    Geometry geom(&mesh);
+    Geometry geom;
     geom.addMaterial(&uo2);
     geom.addMaterial(&water);
     geom.addCell(cell0);
@@ -755,7 +755,7 @@ void full_core_demo()
     Cell *cell28 = new CellFill(13, 23);
     Cell *cell29 = new CellFill(14, 24);
     // Full geometry
-    cell *cell30 = new CellFill(0, 30);
+    Cell *cell30 = new CellFill(0, 30);
     cell30->addSurface(1, &left);
     cell30->addSurface(-1, &right);
     cell30->addSurface(1, &bottom);
@@ -915,7 +915,7 @@ void bundled_lattice_demo()
     double tolerance = 1.0E-5;
     int max_iters = 200;
     set_log_level("NORMAL_LOG");
-    std::cout << "Simulating a mock full core PWR ..." << std::endl;
+    std::cout << "Simulating a mock PWR lattice structure ..." << std::endl;
     std::cout << "Create the materials ..." << std::endl;
     Material uo2(1);
     Material water(2);
@@ -1075,7 +1075,7 @@ int main(int argc, char *argv[])
     large_lattice_demo();
     full_core_demo();
     bundled_lattice_demo();
-    
+
     std::cout << "Finished !" << std::endl;
 
     return 0;
