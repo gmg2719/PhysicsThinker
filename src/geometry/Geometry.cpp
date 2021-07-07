@@ -20,8 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <cmath>
 #include "geometry/Geometry.h"
 
+using namespace std;
 
 /**
  * @brief Constructor initializes an empty Geometry.

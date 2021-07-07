@@ -20,7 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <cmath>
 #include "geometry/Surface.h"
+
+using namespace std;
 
 int Surface::_n = 0;
 
@@ -156,9 +159,9 @@ Plane::Plane(const double A, const double B,
   Surface(id) {
 
   _surface_type = PLANE;
-  _A = A;
-  _B = B;
-  _C = C;
+  _a = A;
+  _b = B;
+  _c = C;
 }
 
 
@@ -222,13 +225,13 @@ inline int Plane::intersection(Point* point, double angle, Point* points) {
   if ((fabs(angle - (M_PI / 2))) < 1.0e-10) {
 
     /* The plane is also vertical => no intersections */
-    if (_B == 0)
+    if (_b == 0)
       return 0;
 
     /* The plane is not vertical */
     else {
       xcurr = x0;
-      ycurr = (-_A * x0 - _C) / _B;
+      ycurr = (-_a * x0 - _c) / _b;
       points->setCoords(xcurr, ycurr);
 
       /* Check that point is in same direction as angle */
@@ -245,11 +248,11 @@ inline int Plane::intersection(Point* point, double angle, Point* points) {
     double m = sin(angle) / cos(angle);
 
     /* The plane and track are parallel, no intersections */
-    if (fabs(-_A/_B - m) < 1e-11 && _B != 0)
+    if (fabs(-_a/_b - m) < 1e-11 && _b != 0)
       return 0;
 
     else {
-      xcurr = -(_B * (y0 - m * x0) + _C) / (_A + _B * m);
+      xcurr = -(_b * (y0 - m * x0) + _c) / (_a + _b * m);
       ycurr = y0 + m * (xcurr - x0);
       points->setCoords(xcurr, ycurr);
 
@@ -275,7 +278,7 @@ std::string Plane::toString() {
   std::stringstream string;
 
   string << "Surface id = " << _id << ", type = PLANE " << ", A = "
-         << _A << ", B = " << _B << ", C = " << _C;
+         << _a << ", B = " << _b << ", C = " << _c;
 
   return string.str();
 }
@@ -370,7 +373,7 @@ std::string XPlane::toString() {
   std::stringstream string;
 
   string << "Surface id = " << _id << ", type = XPLANE " << ", A = "
-         << _A << ", B = " << _B << ", C = " << _C << ", x = " << _x;
+         << _a << ", B = " << _b << ", C = " << _c << ", x = " << _x;
 
   return string.str();
 }
@@ -454,7 +457,7 @@ std::string YPlane::toString() {
   std::stringstream string;
 
   string << "Surface id = " << _id << ", type = YPLANE " << ", A = "
-         << _A << ", B = " << _B << ", C = " << _C << ", y = " << _y;
+         << _a << ", B = " << _b << ", C = " << _c << ", y = " << _y;
 
   return string.str();
 }
@@ -547,7 +550,7 @@ std::string ZPlane::toString() {
   std::stringstream string;
 
   string << "Surface id = " << _id << ", type = ZPLANE " << ", A = "
-         << _A << ", B = " << _B << ", C = " << _C << ", z = " << _z;
+         << _a << ", B = " << _b << ", C = " << _c << ", z = " << _z;
 
   return string.str();
 }
@@ -574,11 +577,11 @@ Circle::Circle(const double x, const double y,
   Surface(id) {
 
   _surface_type = CIRCLE;
-  _A = 1.;
-  _B = 1.;
-  _C = -2.*x;
-  _D = -2.*y;
-  _E = x*x + y*y - radius*radius;
+  _a = 1.;
+  _b = 1.;
+  _c = -2.*x;
+  _d = -2.*y;
+  _e = x*x + y*y - radius*radius;
   _radius = radius;
   _center.setX(x);
   _center.setY(y);
@@ -626,9 +629,9 @@ int Circle::intersection(Point* point, double angle, Point* points) {
      * Find the y where F(x0, y) = 0
      * Substitute x0 into F(x,y) and rearrange to put in
      * the form of the quadratic formula: ay^2 + by + c = 0 */
-    a = _B * _B;
-    b = _D;
-    c = _A * x0 * x0 + _C * x0 + _E;
+    a = _b * _b;
+    b = _d;
+    c = _a * x0 * x0 + _c * x0 + _e;
 
     discr = b*b - 4*a*c;
 
@@ -679,9 +682,9 @@ int Circle::intersection(Point* point, double angle, Point* points) {
      */
     double m = sin(angle) / cos(angle);
     q = y0 - m * x0;
-    a = _A + _B * _B * m * m;
-    b = 2 * _B * m * q + _C + _D * m;
-    c = _B * q * q + _D * q + _E;
+    a = _a + _b * _b * m * m;
+    b = 2 * _b * m * q + _c + _d * m;
+    c = _b * q * q + _d * q + _e;
 
     discr = b*b - 4*a*c;
 
@@ -740,8 +743,8 @@ std::string Circle::toString() {
   std::stringstream string;
 
   string << "Surface id = " << _id << ", type = CIRCLE " << ", A = "
-         << _A << ", B = " << _B << ", C = " << _C << ", D = " << _D
-         << ", E = " << _E << ", x0 = " << _center.getX() << ", y0 = "
+         << _a << ", B = " << _b << ", C = " << _c << ", D = " << _d
+         << ", E = " << _e << ", x0 = " << _center.getX() << ", y0 = "
          << _center.getY() << ", radius = " << _radius;
 
     return string.str();

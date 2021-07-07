@@ -19,32 +19,13 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+#ifndef _BASIC_H_
+#define _BASIC_H_           1
 
 #include <cmath>
-#include "geometry/Point.h"
 
-using namespace std;
+#ifndef _USE_MATH_DEFINES
+  #define M_PI    3.14159265358979323846
+#endif
 
-/**
- * @brief Constructor initializes an empty Point.
- */
-Point::Point() { }
-
-
-/**
- * @brief Destructor
- */
-Point::~Point() { }
-
-
-/**
- * @brief Converts this Point to a character representation of its attributes.
- * @details The character array includes the x-coordinate and y-coordinates.
- * @return a character array of this Point's attributes
- */
-std::string Point::toString()
-{
-    std::stringstream string;
-    string << "Point: x = " << _x << ", y = " << _y;
-    return string.str();
-}
+#endif

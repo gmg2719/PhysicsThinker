@@ -20,8 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <cmath>
 #include "geometry/Universe.h"
 
+using namespace std;
 
 int Universe::_n = 0;
 

@@ -20,8 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <cmath>
 #include "geometry/Cell.h"
 
+using namespace std;
 
 int Cell::_n = 0;
 

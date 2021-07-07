@@ -20,8 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef POINT_H_
-#define POINT_H_
+#ifndef _POINT_H_
+#define _POINT_H_
+
+#include "Basic.h"
 
 //
 // 2D MOC neutron transport calculation

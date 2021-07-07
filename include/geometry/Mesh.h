@@ -23,6 +23,8 @@
 #ifndef _MESH_H_
 #define _MESH_H_      1
 
+#include "Basic.h"
+
 //
 // 2D MOC neutron transport calculation
 // Implement and modification base on the : https://github.com/mit-crpg/OpenMOC

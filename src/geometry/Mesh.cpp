@@ -20,7 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <cmath>
 #include "geometry/Mesh.h"
+
+using namespace std;
 
 /**
  * @brief Constructor initializes boundaries and variables that describe

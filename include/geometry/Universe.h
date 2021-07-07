@@ -23,6 +23,8 @@
 #ifndef _UNIVERSE_H_
 #define _UNIVERSE_H_
 
+#include "Basic.h"
+
 //
 // 2D MOC neutron transport calculation
 // Implement and modification base on the : https://github.com/mit-crpg/OpenMOC

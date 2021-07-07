@@ -23,6 +23,8 @@
 #ifndef _SURFACE_H_
 #define _SURFACE_H_     1
 
+#include "Basic.h"
+
 //
 // 2D MOC neutron transport calculation
 // Implement and modification base on the : https://github.com/mit-crpg/OpenMOC
@@ -210,13 +212,13 @@ class Plane: public Surface {
 protected:
 
   /** The coefficient for the linear term in x */
-  double _A;
+  double _a;
 
   /** The coefficient for the linear term in y */
-  double _B;
+  double _b;
 
   /** The constant offset */
-  double _C;
+  double _c;
 
   /** The Plane is a friend of class Surface */
   friend class Surface;
@@ -336,19 +338,19 @@ private:
   double _radius;
 
   /** The coefficient of the x-squared term */
-  double _A;
+  double _a;
 
   /** The coefficient of the y-squared term */
-  double _B;
+  double _b;
 
   /** The coefficient of the linear term in x */
-  double _C;
+  double _c;
 
   /** The coefficient of the linear term in y */
-  double _D;
+  double _d;
 
   /** The constant offset */
-  double _E;
+  double _e;
 
   /** The Circle is a friend of the Surface class */
   friend class Surface;
@@ -434,7 +436,7 @@ inline double Plane::evaluate(const Point* point) const {
   double y = point->getY();
 
   //TODO: does not support ZPlanes
-  return (_A * x + _B * y + _C);
+  return (_a * x + _b * y + _c);
 }
 
 
@@ -455,7 +457,7 @@ inline double Circle::getRadius() {
 inline double Circle::evaluate(const Point* point) const {
   double x = point->getX();
   double y = point->getY();
-  return (_A * x * x + _B * y * y + _C * x + _D * y + _E);
+  return (_a * x * x + _b * y * y + _c * x + _d * y + _e);
 }
 
 

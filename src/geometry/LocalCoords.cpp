@@ -20,7 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <cmath>
 #include "geometry/LocalCoords.h"
+
+using namespace std;
 
 /**
  * @brief Constructor sets the x and y coordinates.

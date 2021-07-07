@@ -8,6 +8,8 @@
 #ifndef GEOMETRY_H_
 #define GEOMETRY_H_
 
+#include "Basic.h"
+
 #ifdef __cplusplus
 #include <limits.h>
 #include <limits>
