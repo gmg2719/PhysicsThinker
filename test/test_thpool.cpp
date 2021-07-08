@@ -26,7 +26,7 @@
 
 void task(void *arg)
 {
-	printf("Thread #%u working\n", (int)pthread_self());
+	printf("Thread #%d working\n", pthread_self());
 }
 
 int main(void)
