@@ -23,16 +23,16 @@
 #ifndef _TEMP_MATRIX_H_
 #define _TEMP_MATRIX_H_         1
 
-#include "geometry/Grid.h"
-#include "geometry/Field.h"
-#include "geometry/Boundary.h"
+#include "geometry/Grid.hpp"
+#include "geometry/Field.hpp"
+#include "geometry/Boundary.hpp"
 
 class TempMatrix
 {
 private:
-    Grid_cfd& grid_;
-    Field_cfd& field_;
-    Boundary_cfd& bd_;
+    Grid_cfd *grid_;
+    Field_cfd *fld_;
+    Boundary_cfd *bd_;
     std::map<int, double> a_w, a_e, a_p;
     std::map<int, double> s_u;
 
@@ -41,7 +41,8 @@ private:
     std::vector<double> upperDiagonal;
 
 public:
-    TempMatrix(Grid_cfd& grid_, Field_cfd& field);
+    // Pay attention to pass reference
+    TempMatrix(Grid_cfd& grid_, Field_cfd& fld);
     ~TempMatrix() {}
 
     void divergence(const double& constant, const Field_cfd& variable);

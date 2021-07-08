@@ -23,21 +23,22 @@
 #ifndef _FIELD_HPP_
 #define _FIELD_HPP_           1
 
-#include "Grid.h"
+#include "Grid.hpp"
 
 class Field_cfd
 {
-    const Grid_cfd& grid_;
+    const Grid_cfd *grid_;
     std::vector<double> data_;
 public:
-    Field_cfd(const Grid_cfd& grid) : grid_(grid)
+    Field_cfd(const Grid_cfd& grid)
     {
-        data_ = std::vector<double>(grid_.ncells()+2);
+        grid_ = &grid;
+        data_ = std::vector<double>(grid_->ncells()+2);
         data_[0] = 1;
-        data_[grid_.ncells() + 1] = 2;
+        data_[grid_->ncells() + 1] = 2;
     }
     ~Field_cfd() {}
-    double operator [](int i) const
+    const double& operator [](int i) const
     {
         return data_[i];
     }

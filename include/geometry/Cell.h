@@ -216,7 +216,7 @@ private:
 
 public:
     Cell_cfd() : dx_(1E-4), a_(1.0) {}
-    ~Cell_cfd();
+    ~Cell_cfd() {}
     inline const double& A() const { return a_; }
     inline const double& dx() const { return dx_; }
     inline const double& cell_centre() const { return centre_; }

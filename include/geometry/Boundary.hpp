@@ -23,21 +23,41 @@
 #ifndef _BOUNDARY_HPP_
 #define _BOUNDARY_HPP_            1
 
-#include "Grid.h"
-#include "Field.h"
+#include "Grid.hpp"
+#include "Field.hpp"
 
 class Boundary_cfd
 {
 private:
-    Grid_cfd& grid_;
-    std::map<int, Cell_cfd> sp_;
+    Grid_cfd *grid_;
+    std::map<int, double> sp_;
 public:
-    Boundary_cfd(Grid_cfd& grid);
+    // Pay attention to pass reference
+    Boundary_cfd(Grid_cfd& grid)
+    {
+        grid_ = &grid;
+    }
     ~Boundary_cfd() {}
+
+    void set(Grid_cfd grid)
+    {
+        grid_ = &grid;
+    }
+
     void apply_convection(std::map<int, double>& a_w, std::map<int, double>& a_p, std::map<int, double>& a_e,
-                          const double& constant, const Field_cfd& variable);
+                          const double& constant, const Field_cfd& variable)
+    {
+        sp_[1] += -constant;
+        a_p[1] -= -constant;
+    }
     void apply_diffusion(std::map<int, double>& a_w, std::map<int, double>& a_p, std::map<int, double>& a_e,
-                          const double& constant, const Field_cfd& variable);
+                          const double& constant, const Field_cfd& variable)
+    {
+        sp_[1] += -2*constant*grid_->get_cell(1).A()/grid_->get_cell(1).dx();
+        sp_[grid_->ncells()] += -2*constant*grid_->get_cell(grid_->ncells()).A()/grid_->get_cell(grid_->ncells()).dx();
+        a_p[1] -= -2*constant*grid_->get_cell(1).A()/grid_->get_cell(1).dx();
+        a_p[grid_->ncells()] -= -2*constant*grid_->get_cell(grid_->ncells()).A()/grid_->get_cell(grid_->ncells()).dx();
+    }
 };
 
 #endif

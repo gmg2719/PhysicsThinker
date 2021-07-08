@@ -46,7 +46,7 @@ public:
         }
     }
     ~Grid_cfd() {}
-    bool load_grid() { return true; }
+
     inline const int& ncells() const { return ncells_; }
     inline Cell_cfd& get_cell(const int i) { return cells_[i]; }
 };

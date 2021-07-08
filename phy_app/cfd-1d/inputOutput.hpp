@@ -29,7 +29,8 @@
 #include <cstdlib>
 #include <iomanip>
 #include <ctime>
-#include "geometry/Grid.h"
+#include "geometry/Grid.hpp"
+#include "geometry/Field.hpp"
 
 class inputOutput
 {
@@ -59,12 +60,12 @@ public:
         os << "|----------------------------------------------------|\n" << std::endl;
     }
 
-    void print_results(std::ostream& os, Grid_cfd& grid, Field_cfd& field)
+    void print_results(std::ostream& os, Grid_cfd& grid, Field_cfd& fld)
     {
         os << std::left << std::scientific << std::setw(10) << "# x (m)" << " " << "Temperature (K)" << std::endl;
 
         for (int i = 1; i <= grid.ncells(); ++i) {
-            os << std::setw(10) << grid.get_cell(i).cell_centre() << " " << field[i] << std::endl;
+            os << std::setw(10) << grid.get_cell(i).cell_centre() << " " << fld[i] << std::endl;
         }
     }
 

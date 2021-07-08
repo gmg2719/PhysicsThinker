@@ -23,10 +23,10 @@
 #include <iostream>
 #include <ostream>
 #include <fstream>
-#include "inputOutput.h"
+#include "inputOutput.hpp"
 #include "TempMatrix.h"
-#include "geometry/Grid.h"
-#include "geometry/Field.h"
+#include "geometry/Grid.hpp"
+#include "geometry/Field.hpp"
 
 using namespace std;
 
@@ -40,26 +40,28 @@ int main(void)
     // Create the grid
     Grid_cfd grid;
     // Create the field
-    Field_cfd field(grid);
+    Field_cfd fld(grid);
 
-    TempMatrix temp_matrix(grid, field);
+    TempMatrix temp_matrix(grid, fld);
 
     // Diffusion coefficient
     double k = 0.001;
     double coeff = 1.0;
 
-    temp_matrix.laplacian(k, field);
-    temp_matrix.divergence(coeff, field);
+    temp_matrix.laplacian(k, fld);
+    temp_matrix.divergence(coeff, fld);
 
     // Solve the temperature matrix
     temp_matrix.solve();
 
     // Output the results
-    io.print_results(std::cout, grid, field);
+    io.print_results(std::cout, grid, fld);
 
+#if 0
     std::ofstream file("results.txt");
-    io.print_results(file, grid, field);
+    io.print_results(file, grid, fld);
     file.close();
+#endif
 
     io.print_time();
 

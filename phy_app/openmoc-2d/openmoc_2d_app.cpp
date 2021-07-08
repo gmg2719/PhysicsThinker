@@ -1073,7 +1073,8 @@ int main(int argc, char *argv[])
     pin_cell_demo();
     nested_lattice_demo();
     large_lattice_demo();
-    full_core_demo();
+    // Because too much time costing, so just to comment it when normal runs, Pingzhou Ming, 2021.7.8
+    // full_core_demo();
     bundled_lattice_demo();
 
     std::cout << "Finished !" << std::endl;
