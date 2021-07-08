@@ -28,7 +28,7 @@
 #include "common/complex_t.h"
 
 template<typename T>
-void fft1_stockham(int n, int s, int q, complex_t *x, complex_t *y);
+void fft1_stockham(int n, int s, int q, complex_t<T> *x, complex_t<T> *y);
 
 // n : sequence length
 // s : stride
@@ -36,7 +36,7 @@ void fft1_stockham(int n, int s, int q, complex_t *x, complex_t *y);
 // x : input/output sequence
 // y : work area
 template<typename T>
-void fft0_stockham(int n, int s, int q, complex_t *x, complex_t *y)
+void fft0_stockham(int n, int s, int q, complex_t<T> *x, complex_t<T> *y)
 {
     const int m = n/2;
     const T theta0 = 2*std::M_PI/n;
@@ -45,9 +45,9 @@ void fft0_stockham(int n, int s, int q, complex_t *x, complex_t *y)
     else {
         for (int p = 0; p < m; p++) {
             // Butterfly operation and composition of even components and odd components
-            const complex_t wp = complex_t(cos(p*theta0), -sin(p*theta0));
-            const complex_t a = x[q + s*(p + 0)];
-            const complex_t b = x[q + s*(p + m)];
+            const complex_t<T> wp = complex_t<T>(cos(p*theta0), -sin(p*theta0));
+            const complex_t<T> a = x[q + s*(p + 0)];
+            const complex_t<T> b = x[q + s*(p + m)];
             y[q + s*(2*p + 0)] =  a + b;
             y[q + s*(2*p + 1)] = (a - b) * wp;
         }
@@ -62,7 +62,7 @@ void fft0_stockham(int n, int s, int q, complex_t *x, complex_t *y)
 // x : input/output sequence
 // y : work area
 template<typename T>
-void fft1_stockham(int n, int s, int q, complex_t *x, complex_t *y)
+void fft1_stockham(int n, int s, int q, complex_t<T> *x, complex_t<T> *y)
 {
     const int m = n/2;
     const T theta0 = 2*std::M_PI/n;
@@ -71,9 +71,9 @@ void fft1_stockham(int n, int s, int q, complex_t *x, complex_t *y)
     else {
         for (int p = 0; p < m; p++) {
             // Butterfly Operation and composition of even components and odd components
-            const complex_t wp = complex_t(cos(p*theta0), -sin(p*theta0));
-            const complex_t a = x[q + s*(p + 0)];
-            const complex_t b = x[q + s*(p + m)];
+            const complex_t<T> wp = complex_t<T>(cos(p*theta0), -sin(p*theta0));
+            const complex_t<T> a = x[q + s*(p + 0)];
+            const complex_t<T> b = x[q + s*(p + m)];
             y[q + s*(2*p + 0)] =  a + b;
             y[q + s*(2*p + 1)] = (a - b) * wp;
         }

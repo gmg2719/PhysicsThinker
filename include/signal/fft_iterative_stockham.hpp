@@ -33,7 +33,7 @@
 // x : input sequence(or output sequence if eo == 0)
 // y : work area(or output sequence if eo == 1)
 template<typename T>
-void fft0_stockham_iterative(int n, int s, bool eo, complex_t *x, complex_t *y)
+void fft0_stockham_iterative(int n, int s, bool eo, complex_t<T> *x, complex_t<T> *y)
 {
     const int m = n/2;
     const T theta0 = 2*std::M_PI/n;
@@ -47,7 +47,7 @@ void fft0_stockham_iterative(int n, int s, bool eo, complex_t *x, complex_t *y)
     } else {
         for (int p = 0; p < m; p++) {
             // Butterfly operation and composition of even components and odd components
-            const complex_t wp = complex_t(cos(p*theta0), -sin(p*theta0));
+            const complex_t<T> wp = complex_t<T>(cos(p*theta0), -sin(p*theta0));
             for (int q = 0; q < s; q++) {
                 const complex_t a = x[q + s*(p + 0)];
                 const complex_t b = x[q + s*(p + m)];

@@ -20,8 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef _INPUT_OUTPUT_H_
-#define _INPUT_OUTPUT_H_            1
+#ifndef _INPUT_OUTPUT_HPP_
+#define _INPUT_OUTPUT_HPP_            1
 
 #include <iostream>
 #include <ostream>

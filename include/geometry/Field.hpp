@@ -20,35 +20,31 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef _GRID_H_
-#define _GRID_H_            1
+#ifndef _FIELD_HPP_
+#define _FIELD_HPP_           1
 
-#include <iostream>
-#include <vector>
-#include <map>
-#include "Cell.h"
+#include "Grid.h"
 
-class Grid_cfd
+class Field_cfd
 {
-private:
-    std::map<int, Cell_cfd> cells_;
-    int ncells_;
-    double length_;
+    const Grid_cfd& grid_;
+    std::vector<double> data_;
 public:
-    Grid_cfd() : ncells_(10000), length_(1.0)
+    Field_cfd(const Grid_cfd& grid) : grid_(grid)
     {
-        for (int i = 1; i <= ncells_; ++i) {
-            cells_.insert(std::pair<int, Cell_cfd>(i, Cell_cfd()));
-        }
-
-        for (int i = 1; i <= ncells_; ++i) {
-            get_cell(i).set_centre((i-0.5)*length_/ncells_);
-        }
+        data_ = std::vector<double>(grid_.ncells()+2);
+        data_[0] = 1;
+        data_[grid_.ncells() + 1] = 2;
     }
-    ~Grid_cfd() {}
-    bool load_grid() { return true; }
-    inline const int& ncells() const { return ncells_; }
-    inline Cell_cfd& get_cell(const int i) { return cells_[i]; }
+    ~Field_cfd() {}
+    double operator [](int i) const
+    {
+        return data_[i];
+    }
+    double& operator [](int i)
+    {
+        return data_[i];
+    }
 };
 
 #endif
