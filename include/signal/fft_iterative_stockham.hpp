@@ -36,8 +36,9 @@ template<typename T>
 void fft0_stockham_iterative(int n, int s, bool eo, complex_t<T> *x, complex_t<T> *y)
 {
     const int m = n/2;
-    const T theta0 = 2*std::M_PI/n;
+    const T theta0 = 2*M_PI/n;
 
+#if 0
     if (n == 1) {
         if (eo) {
             for (int q = 0; q < s; q++) {
@@ -58,6 +59,31 @@ void fft0_stockham_iterative(int n, int s, bool eo, complex_t<T> *x, complex_t<T
 
         fft0_stockham_iterative<T>(n/2, 2*s, !eo, y, x);
     }
+#endif
+    // Substitute a calculation result into the destination array beforehand, so remove this copy
+    // Because n == 1 in fft0 does not calculate anything thus could reduce the accesses to the array
+    if (n == 2) {
+        complex_t<T> *z = eo ? y : x;
+        for (int q = 0; q < s; q++) {
+            const complex_t<T> a = x[q+0];
+            const complex_t<T> b = x[q+s];
+            z[q + 0] = a + b;
+            z[q + s] = a - b;
+        }
+    } else if (n >= 4) {
+        for (int p = 0; p < m; p++) {
+            // Butterfly operation and composition of even components and odd components
+            const complex_t<T> wp = complex_t<T>(cos(p*theta0), -sin(p*theta0));
+            for (int q = 0; q < s; q++) {
+                const complex_t<T> a = x[q + s*(p + 0)];
+                const complex_t<T> b = x[q + s*(p + m)];
+                y[q + s*(2*p + 0)] =  a + b;
+                y[q + s*(2*p + 1)] = (a - b) * wp;
+            }
+        }
+
+        fft0_stockham_iterative<T>(n/2, 2*s, !eo, y, x);
+    }
 }
 
 // Fourier transform
@@ -66,10 +92,10 @@ void fft0_stockham_iterative(int n, int s, bool eo, complex_t<T> *x, complex_t<T
 template<typename T>
 void fft_stockham_iterative(int N, complex_t<T> *x)
 {
-    complex_t* y = new complex_t[N];
+    complex_t<T>* y = new complex_t<T>[N];
     fft0_stockham_iterative<T>(N, 1, 0, x, y);
     delete []y;
-    for (int k = 0; k < n; k++) {
+    for (int k = 0; k < N; k++) {
         x[k] /= N;
     }
 }
@@ -84,7 +110,7 @@ void ifft_stockham_iterative(int N, complex_t<T> *x)
         x[k].conj();
     }
 
-    complex_t *y = new complex_t[N];
+    complex_t<T> *y = new complex_t<T>[N];
     fft0_stockham_iterative<T>(N, 1, 0, x, y);
     delete []y;
 

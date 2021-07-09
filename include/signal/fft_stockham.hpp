@@ -39,7 +39,7 @@ template<typename T>
 void fft0_stockham(int n, int s, int q, complex_t<T> *x, complex_t<T> *y)
 {
     const int m = n/2;
-    const T theta0 = 2*std::M_PI/n;
+    const T theta0 = 2*M_PI/n;
 
     if (n == 1) {}
     else {
@@ -65,7 +65,7 @@ template<typename T>
 void fft1_stockham(int n, int s, int q, complex_t<T> *x, complex_t<T> *y)
 {
     const int m = n/2;
-    const T theta0 = 2*std::M_PI/n;
+    const T theta0 = 2*M_PI/n;
 
     if (n == 1) { y[q] = x[q]; }
     else {
@@ -88,10 +88,10 @@ void fft1_stockham(int n, int s, int q, complex_t<T> *x, complex_t<T> *y)
 template<typename T>
 void fft_stockham(int N, complex_t<T> *x)
 {
-    complex_t* y = new complex_t[N];
+    complex_t<T>* y = new complex_t<T>[N];
     fft0_stockham<T>(N, 1, 0, x, y);
     delete []y;
-    for (int k = 0; k < n; k++) {
+    for (int k = 0; k < N; k++) {
         x[k] /= N;
     }
 }
@@ -106,7 +106,7 @@ void ifft_stockham(int N, complex_t<T> *x)
         x[k].conj();
     }
 
-    complex_t *y = new complex_t[N];
+    complex_t<T> *y = new complex_t<T>[N];
     fft0_stockham<T>(N, 1, 0, x, y);
     delete []y;
 

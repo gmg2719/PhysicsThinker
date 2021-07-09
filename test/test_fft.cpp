@@ -23,16 +23,20 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
-#include "common/complex_t.h1"
+#include "common/complex_t.h"
 #include "signal/fft_cooley_tukey.hpp"
 #include "signal/fft_stockham.hpp"
+#include "signal/fft_iterative_stockham.hpp"
+#include "signal/fft_stockham_r4.hpp"
+#include "my_time.h"
 
-#define RUNNING_STATICS_COUNT       10
+#define RUNNING_STATICS_COUNT       4
 
 enum fft_method_type {
     COOLEY_TUKEY_C = 1,
     STOCKHAM_C = 2,
-    ITERATIVE_STOCKHAM_C = 3
+    ITERATIVE_STOCKHAM_C = 3,
+    STOCKHAM_R4_C = 4
 };
 
 typedef void (*FFT_FWD_FUNC)(int N, complex_t<float> *x);
@@ -58,6 +62,10 @@ float fft_fwd_testor(int type, int N)
         fwd = fft_cooley_tukey<float>;
     } else if (type == STOCKHAM_C) {
         fwd = fft_stockham<float>;
+    } else if (type == ITERATIVE_STOCKHAM_C) {
+        fwd = fft_stockham_iterative<float>;
+    } else if (type == STOCKHAM_R4_C) {
+        fwd = fft_stockham_r4<float>;
     } else {
         fwd = fft_cooley_tukey<float>;
     }
@@ -73,11 +81,11 @@ float fft_fwd_testor(int type, int N)
 
     start = my_us_gettimeofday();
     for (int i = 0; i < 10000; i++) {
-        fft_cooley_tukey<float>(N, x[i]);
+        fwd(N, x[i]);
     }
     end = my_us_gettimeofday();
 
-    ans = float(end - start);
+    ans = float(end - start) / 10000;
 
     for (int i = 0; i < 10000; i++) {
         delete [](x[i]);
@@ -88,9 +96,11 @@ float fft_fwd_testor(int type, int N)
 
 void run_fft_benchmark_app1()
 {
-    int points[12] = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
+    int points[] = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
     float run_time_cooley_tukey[12] = {0.};
     float run_time_stockham[12] = {0.};
+    float run_time_iterstk[12] = {0.};
+    float run_time_r4[12] = {0.};
 
     for (int i = 0; i < 12; i++)
     {
@@ -99,22 +109,31 @@ void run_fft_benchmark_app1()
         {
             run_time_cooley_tukey[i] += fft_fwd_testor(COOLEY_TUKEY_C, fft_points);
             run_time_stockham[i] += fft_fwd_testor(STOCKHAM_C, fft_points);
+            run_time_iterstk[i] += fft_fwd_testor(ITERATIVE_STOCKHAM_C, fft_points);
+            run_time_r4[i] += fft_fwd_testor(STOCKHAM_R4_C, fft_points);
+            printf("points(%d) running %d(%d) done !\n", fft_points, running, RUNNING_STATICS_COUNT);
         }
 
         run_time_cooley_tukey[i] /= RUNNING_STATICS_COUNT;
         run_time_stockham[i] /= RUNNING_STATICS_COUNT;
+        run_time_iterstk[i] /= RUNNING_STATICS_COUNT;
+        run_time_r4[i] /= RUNNING_STATICS_COUNT;
     }
 
     printf("Final results (us) :\n");
     printf("Points are (2 4 6 8 16 32 64 128 256 512 1024 2048 4096)\n");
-    printf_runtime_one_line("C_cooley tukey", 12, run_time_cooley_tukey);
-    printf_runtime_one_line("C_stockham", 12, run_time_stockham);
+    print_runtime_one_line("C_cooley tukey", 12, run_time_cooley_tukey);
+    print_runtime_one_line("C_stockham", 12, run_time_stockham);
+    print_runtime_one_line("C_iterative_stockham", 12, run_time_iterstk);
+    print_runtime_one_line("C_Radix4_stockham", 12, run_time_r4);
 }
 
+// TODO : FFT fwd and backward calibration
 void fft_fwd_back_check(int type, int N)
 {
 }
 
+// TODO : FFT benchmark application2, calibration
 void run_fft_benchmark_app2()
 {
     int points[13] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
@@ -122,8 +141,7 @@ void run_fft_benchmark_app2()
     for (int i = 0; i < 13; i++)
     {
         int n = points[i];
-        printf("Calibration of %d : \n", n);
-        fft_fwd_back_check(n);
+        printf("[TODO] Calibration of %d : \n", n);
     }
 }
 

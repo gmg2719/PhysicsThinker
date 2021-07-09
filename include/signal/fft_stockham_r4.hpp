@@ -40,7 +40,7 @@ void fft0_stockham_r4(int n, int s, bool eo, complex_t<T> *x, complex_t<T> *y)
     const int n1 = n/4;
     const int n2 = n/2;
     const int n3 = n1 + n2;
-    const T theta0 = 2*std::M_PI/n;
+    const T theta0 = 2*M_PI/n;
 
     if (n == 1) { if (eo) for (int q = 0; q < s; q++) y[q] = x[q]; }
     else if (n == 2) {
@@ -50,7 +50,7 @@ void fft0_stockham_r4(int n, int s, bool eo, complex_t<T> *x, complex_t<T> *y)
             y[q + 0] = a + b;
             y[q + s] = a - b;
         }
-        fft0(1, 2*s, !eo, y, x);
+        fft0_stockham_r4(1, 2*s, !eo, y, x);
     }
     else if (n > 2) {
         for (int p = 0; p < n1; p++) {
@@ -72,7 +72,7 @@ void fft0_stockham_r4(int n, int s, bool eo, complex_t<T> *x, complex_t<T> *y)
                 y[q + s*(4*p + 3)] = w3p*(amc + jbmd);
             }
         }
-        fft0(n/4, 4*s, !eo, y, x);
+        fft0_stockham_r4(n/4, 4*s, !eo, y, x);
     }
 }
 
@@ -84,7 +84,7 @@ void ifft0_stockham_r4(int n, int s, bool eo, complex_t<T> *x, complex_t<T> *y)
     const int n1 = n/4;
     const int n2 = n/2;
     const int n3 = n1 + n2;
-    const T theta0 = 2*std::M_PI/n;
+    const T theta0 = 2*M_PI/n;
 
     if (n == 1) { if (eo) for (int q = 0; q < s; q++) y[q] = x[q]; }
     else if (n == 2) {
@@ -94,7 +94,7 @@ void ifft0_stockham_r4(int n, int s, bool eo, complex_t<T> *x, complex_t<T> *y)
             y[q + 0] = a + b;
             y[q + s] = a - b;
         }
-        ifft0(1, 2*s, !eo, y, x);
+        ifft0_stockham_r4(1, 2*s, !eo, y, x);
     }
     else if (n > 2) {
         for (int p = 0; p < n1; p++) {
@@ -116,7 +116,7 @@ void ifft0_stockham_r4(int n, int s, bool eo, complex_t<T> *x, complex_t<T> *y)
                 y[q + s*(4*p + 3)] = w3p*(amc - jbmd);
             }
         }
-        ifft0(n/4, 4*s, !eo, y, x);
+        ifft0_stockham_r4(n/4, 4*s, !eo, y, x);
     }
 }
 
@@ -126,10 +126,10 @@ void ifft0_stockham_r4(int n, int s, bool eo, complex_t<T> *x, complex_t<T> *y)
 template<typename T>
 void fft_stockham_r4(int N, complex_t<T> *x)
 {
-    complex_t* y = new complex_t[N];
+    complex_t<T> *y = new complex_t<T>[N];
     fft0_stockham_r4<T>(N, 1, 0, x, y);
     delete []y;
-    for (int k = 0; k < n; k++) {
+    for (int k = 0; k < N; k++) {
         x[k] /= N;
     }
 }
@@ -140,7 +140,7 @@ void fft_stockham_r4(int N, complex_t<T> *x)
 template<typename T>
 void ifft_stockham_r4(int N, complex_t<T> *x)
 {
-    complex_t *y = new complex_t[N];
+    complex_t<T> *y = new complex_t<T>[N];
     ifft0_stockham_r4<T>(N, 1, 0, x, y);
     delete []y;
 }

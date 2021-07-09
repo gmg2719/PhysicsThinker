@@ -48,7 +48,7 @@ template<typename T>
 void fft_original(int N, int q, complex_t<T> *x)
 {
     const int m = N/2;
-    const T theta0 = 2 * std::M_PI / N;
+    const T theta0 = 2 * M_PI / N;
 
     if (N > 1) {
         for (int p = 0; p < m; p++) {
@@ -60,8 +60,8 @@ void fft_original(int N, int q, complex_t<T> *x)
             x[q+p+m] = (a-b)*wp;
         }
 
-        F(N/2, q, x);       // Even position FFT
-        F(N/2, q+m, x);     // Odd position FFT
+        fft_original(N/2, q, x);       // Even position FFT
+        fft_original(N/2, q+m, x);     // Odd position FFT
     }
 }
 
@@ -100,7 +100,7 @@ template<typename T>
 void fft_original_reversal(int N, int s, int q, int d, complex_t<T> *x)
 {
     const int m = N/2;
-    const T theta0 = 2 * std::M_PI / N;
+    const T theta0 = 2 * M_PI / N;
 
     if (N > 1) {
         for (int p = 0; p < m; p++) {
@@ -112,8 +112,8 @@ void fft_original_reversal(int N, int s, int q, int d, complex_t<T> *x)
             x[q+p+m] = (a-b)*wp;
         }
 
-        F(N/2, 2*s, q, d, x);       // Even position FFT
-        F(N/2, 2*s, q+m, d+s, x);     // Odd position FFT
+        fft_original_reversal(N/2, 2*s, q, d, x);       // Even position FFT
+        fft_original_reversal(N/2, 2*s, q+m, d+s, x);     // Odd position FFT
     } else if (q > d) {
         // Bit reversal sorting
         std::swap(x[q], x[d]);

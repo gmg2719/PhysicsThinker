@@ -36,7 +36,7 @@ int my_socket_create(int proto, int mode, char flags, const char* host, const ch
     struct addrinfo* result, hint = {
         (mode == MY_WRAPPER_BIND) ? AI_PASSIVE : 0, //ai_flags
         AF_UNSPEC, //ai_family
-        (prot == MY_WRAPPER_TCP) ? SOCK_STREAM : SOCK_DGRAM, //ai_socktype
+        (proto == MY_WRAPPER_TCP) ? SOCK_STREAM : SOCK_DGRAM, //ai_socktype
         0, 0, NULL, NULL, NULL};
     //get address info
     if (getaddrinfo(host, serv, &hint, &result)) return -1;
@@ -50,7 +50,7 @@ int my_socket_create(int proto, int mode, char flags, const char* host, const ch
         setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (void*)&no, sizeof(no));
     }
     //set TCP_NODELAY if applicable
-    if (prot == MY_WRAPPER_TCP) {
+    if (proto == MY_WRAPPER_TCP) {
         int nodelay = (flags&MY_WRAPPER_NODELAY);
         setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&nodelay, sizeof(nodelay));
     }

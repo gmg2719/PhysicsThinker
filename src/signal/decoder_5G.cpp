@@ -20,6 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <iostream>
 #include "signal/decoder_5G.h"
 
 int8_t uci_decoder_1bit_decoding(int8_t *llr, uint32_t coded_bit_len, uint32_t uci_bit, int8_t qm)
@@ -85,6 +89,8 @@ int8_t uci_decoder_1bit_decoding(int8_t *llr, uint32_t coded_bit_len, uint32_t u
     }
 
 #if __cplusplus >= 201103L || defined(VC_CONSTEXPR)
+    (void)0;
+#else
     delete []rec;
     for (int i = 0; i < n_size; i++) {
         delete soft_enc[i];
@@ -112,7 +118,7 @@ int8_t uci_decoder_2bits_decoding(int8_t *llr, uint32_t coded_bit_len, uint32_t 
     int8_t decbits = 0;
     uint32_t n_size = 3 * qm;
 
-    if (uci != 2) {
+    if (uci_bit != 2) {
         fprintf(stderr, "wrong input for uci_decoder_2bits_decoding() \n");
         return 0;
     }
@@ -164,14 +170,14 @@ int8_t uci_decoder_2bits_decoding(int8_t *llr, uint32_t coded_bit_len, uint32_t 
 
     for (int i = 0; i < 4; i++) {
         for (uint32_t k = 0; k < n_size; k++) {
-            soft_enc[k][i] = 1 - 2 * soft_enc_msgs[k][i];
+            soft_enc[k][i] = 1 - 2 * soft_enc[k][i];
         }
     }
     // Calculate the euclide distance
     for (int i = 0; i < 4; i++) {
         for (uint32_t k = 0; k < n_size; k++) {
             float m = float(soft_enc[k][i]);
-            float tmp = float(rec[k] - soft_m);
+            float tmp = float(rec[k] - m);
             sum1[i] += fabs(tmp) * fabs(tmp);
             sum2[i] += fabs(m) * fabs(m);
         }
@@ -187,6 +193,8 @@ int8_t uci_decoder_2bits_decoding(int8_t *llr, uint32_t coded_bit_len, uint32_t 
         }
     }
 #if __cplusplus >= 201103L || defined(VC_CONSTEXPR)
+    (void)0;
+#else
     delete []rec;
     for (int i = 0; i < n_size; i++) {
         delete soft_enc[i];

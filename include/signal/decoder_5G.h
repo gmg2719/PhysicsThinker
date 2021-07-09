@@ -23,7 +23,7 @@
 #ifndef _DECODER_5G_H_
 #define _DECODER_5G_H_          1
 
-#include <ctype>
+#include <cstdint>
 
 // These functions are extracted and re-design from the MATLAB Toolbox documents and some papers
 // llr : likely-hood ration when receiver finish demodulate in wireless communication

@@ -24,7 +24,9 @@
 
 #include <ctime>
 #include <sys/time.h>
-#include <asm/unistd.h>
+#ifdef __linux__
+    #include <asm/unistd.h>
+#endif
 
 #if defined(__GNUC__) || defined(__GNUG__)
 static inline uint64_t my_now(void)    __attribute__((always_inline));
