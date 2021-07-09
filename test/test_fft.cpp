@@ -131,17 +131,100 @@ void run_fft_benchmark_app1()
 // TODO : FFT fwd and backward calibration
 void fft_fwd_back_check(int type, int N)
 {
+    FFT_FWD_FUNC fwd;
+    FFT_FWD_FUNC bwd;
+    complex_t<float> *x;
+    complex_t<float> *x_original;
+
+    if (type == COOLEY_TUKEY_C) {
+        fwd = fft_cooley_tukey<float>;
+        bwd = ifft_cooley_tukey<float>;
+    } else if (type == STOCKHAM_C) {
+        fwd = fft_stockham<float>;
+        bwd = ifft_stockham<float>;
+    } else if (type == ITERATIVE_STOCKHAM_C) {
+        fwd = fft_stockham_iterative<float>;
+        bwd = ifft_stockham_iterative<float>;
+    } else if (type == STOCKHAM_R4_C) {
+        fwd = fft_stockham_r4<float>;
+        bwd = ifft_stockham_r4<float>;
+    } else {
+        fwd = fft_cooley_tukey<float>;
+        bwd = ifft_cooley_tukey<float>;
+    }
+
+    x = new complex_t<float>[N];
+    x_original = new complex_t<float>[N];
+    for (int k = 0; k < N; k++)
+    {
+        x[k].Re = cos(4*3.1415926*rand()/N);
+        x[k].Im = sin(2*3.1415926*rand()/N);
+        x_original[k].Re = x[k].Re;  x_original[k].Im = x[k].Im;
+    }
+
+    fwd(N, x);
+    int same_element = 0;
+    for (int k = 0; k < N; k++) {
+        if ((x[k].Re == x_original[k].Re) && (x[k].Im == x_original[k].Im)) {
+            same_element++;
+        }
+    }
+    if (same_element == N) {
+        fprintf(stderr, "FFT result is the same as the input, maybe error !\n");
+    }
+    bwd(N, x);
+    bool result = true;
+    for (int k = 0; k < N; k++) {
+        // Single float precise decides the threshold is 1E-6
+        if ((fabs(x[k].Re-x_original[k].Re)>1E-6) || (fabs(x[k].Im-x_original[k].Im)>1E-6)) {
+            printf("x[%d] (%.6le %.6le) vs (%.6le %.6le)\n", k, x[k].Re, x[k].Im, x_original[k].Re, x_original[k].Im);
+            result = false;
+            break;
+        }
+    }
+    if (result == false) {
+        fprintf(stderr, "IFFT result is error !\n");
+    }
+
+    delete []x_original;
+    delete []x;
 }
 
-// TODO : FFT benchmark application2, calibration
+// FFT benchmark application2, calibration
 void run_fft_benchmark_app2()
 {
-    int points[13] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
+    int points[12] = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
 
-    for (int i = 0; i < 13; i++)
+    printf("Calibration of cooley-tukey algorithm : \n");
+    for (int i = 0; i < 12; i++)
     {
         int n = points[i];
-        printf("[TODO] Calibration of %d : \n", n);
+        printf("%d\n", n);
+        fft_fwd_back_check(COOLEY_TUKEY_C, n);
+    }
+
+    printf("Calibration of stockham algorithm : \n");
+    for (int i = 0; i < 12; i++)
+    {
+        int n = points[i];
+        printf("%d\n", n);
+        fft_fwd_back_check(STOCKHAM_C, n);
+    }
+
+    printf("Calibration of iterative-stockham algorithm : \n");
+    for (int i = 0; i < 12; i++)
+    {
+        int n = points[i];
+        printf("%d\n", n);
+        fft_fwd_back_check(ITERATIVE_STOCKHAM_C, n);
+    }
+
+    printf("Calibration of Radix4-stockham algorithm : \n");
+    for (int i = 0; i < 12; i++)
+    {
+        int n = points[i];
+        printf("%d\n", n);
+        fft_fwd_back_check(STOCKHAM_R4_C, n);
     }
 }
 
