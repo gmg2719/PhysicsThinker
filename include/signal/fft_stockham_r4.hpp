@@ -42,17 +42,31 @@ void fft0_stockham_r4(int n, int s, bool eo, complex_t<T> *x, complex_t<T> *y)
     const int n3 = n1 + n2;
     const T theta0 = 2*M_PI/n;
 
-    if (n == 1) { if (eo) for (int q = 0; q < s; q++) y[q] = x[q]; }
-    else if (n == 2) {
+    if (n == 2) {
+        complex_t<T> *z = eo ? y : x;
         for (int q = 0; q < s; q++) {
             const complex_t<T> a = x[q + 0];
             const complex_t<T> b = x[q + s];
-            y[q + 0] = a + b;
-            y[q + s] = a - b;
+            z[q + 0] = a + b;
+            z[q + s] = a - b;
         }
-        fft0_stockham_r4(1, 2*s, !eo, y, x);
-    }
-    else if (n > 2) {
+    } else if (n == 4) {
+        complex_t<T> *z = eo ? y : x;
+        for (int q = 0; q < s; q++) {
+            const complex_t<T> a = x[q + s*n0];
+            const complex_t<T> b = x[q + s*n1];
+            const complex_t<T> c = x[q + s*n2];
+            const complex_t<T> d = x[q + s*n3];
+            const complex_t<T>  apc =    a + c;
+            const complex_t<T>  amc =    a - c;
+            const complex_t<T>  bpd =    b + d;
+            const complex_t<T> jbmd = j*(b - d);
+            z[q + 0]   = apc +  bpd;
+            z[q + s]   = amc - jbmd;
+            z[q + s*2] = apc -  bpd;
+            z[q + s*3] = amc + jbmd;
+        }
+    } else if (n > 4) {
         for (int p = 0; p < n1; p++) {
             const complex_t<T> w1p = complex_t<T>(cos(p*theta0), -sin(p*theta0));
             const complex_t<T> w2p = w1p*w1p;
@@ -86,17 +100,31 @@ void ifft0_stockham_r4(int n, int s, bool eo, complex_t<T> *x, complex_t<T> *y)
     const int n3 = n1 + n2;
     const T theta0 = 2*M_PI/n;
 
-    if (n == 1) { if (eo) for (int q = 0; q < s; q++) y[q] = x[q]; }
-    else if (n == 2) {
+    if (n == 2) {
+        complex_t<T> *z = eo ? y : x;
         for (int q = 0; q < s; q++) {
             const complex_t<T> a = x[q + 0];
             const complex_t<T> b = x[q + s];
-            y[q + 0] = a + b;
-            y[q + s] = a - b;
+            z[q + 0] = a + b;
+            z[q + s] = a - b;
         }
-        ifft0_stockham_r4(1, 2*s, !eo, y, x);
-    }
-    else if (n > 2) {
+    } else if (n == 4) {
+        complex_t<T> *z = eo ? y : x;
+        for (int q = 0; q < s; q++) {
+            const complex_t<T> a = x[q + s*n0];
+            const complex_t<T> b = x[q + s*n1];
+            const complex_t<T> c = x[q + s*n2];
+            const complex_t<T> d = x[q + s*n3];
+            const complex_t<T>  apc =    a + c;
+            const complex_t<T>  amc =    a - c;
+            const complex_t<T>  bpd =    b + d;
+            const complex_t<T> jbmd = j*(b - d);
+            z[q + 0]   = apc +  bpd;
+            z[q + s]   = amc + jbmd;
+            z[q + s*2] = apc -  bpd;
+            z[q + s*3] = amc - jbmd;
+        }
+    } else if (n > 4) {
         for (int p = 0; p < n1; p++) {
             const complex_t<T> w1p = complex_t<T>(cos(p*theta0), sin(p*theta0));
             const complex_t<T> w2p = w1p*w1p;
