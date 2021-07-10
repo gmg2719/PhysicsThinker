@@ -40,6 +40,7 @@ echo "Start to do test !"
 cd ${PWD_PATH}
 cd test/
 TEST_NAME="test_logger test_list test_thpool test_fft"
+# TEST_NAME="test_fft"
 for name in ${TEST_NAME}
 do
     cd ${PWD_PATH}/test/

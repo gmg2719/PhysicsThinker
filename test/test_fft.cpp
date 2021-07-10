@@ -28,6 +28,7 @@
 #include "signal/fft_stockham.hpp"
 #include "signal/fft_iterative_stockham.hpp"
 #include "signal/fft_stockham_r4.hpp"
+#include "signal/my_fft.hpp"
 #include "my_time.h"
 
 #define RUNNING_STATICS_COUNT       4
@@ -36,7 +37,8 @@ enum fft_method_type {
     COOLEY_TUKEY_C = 1,
     STOCKHAM_C = 2,
     ITERATIVE_STOCKHAM_C = 3,
-    STOCKHAM_R4_C = 4
+    STOCKHAM_R4_C = 4,
+    MY_FFT_C = 5
 };
 
 typedef void (*FFT_FWD_FUNC)(int N, complex_t<float> *x);
@@ -66,6 +68,8 @@ float fft_fwd_testor(int type, int N)
         fwd = fft_stockham_iterative<float>;
     } else if (type == STOCKHAM_R4_C) {
         fwd = fft_stockham_r4<float>;
+    } else if (type == MY_FFT_C) {
+        fwd = my_fft<float>;
     } else {
         fwd = fft_cooley_tukey<float>;
     }
@@ -101,6 +105,7 @@ void run_fft_benchmark_app1()
     float run_time_stockham[12] = {0.};
     float run_time_iterstk[12] = {0.};
     float run_time_r4[12] = {0.};
+    float run_time_myfft[12] = {0.};
 
     for (int i = 0; i < 12; i++)
     {
@@ -111,6 +116,7 @@ void run_fft_benchmark_app1()
             run_time_stockham[i] += fft_fwd_testor(STOCKHAM_C, fft_points);
             run_time_iterstk[i] += fft_fwd_testor(ITERATIVE_STOCKHAM_C, fft_points);
             run_time_r4[i] += fft_fwd_testor(STOCKHAM_R4_C, fft_points);
+            run_time_myfft[i] += fft_fwd_testor(MY_FFT_C, fft_points);
             printf("points(%d) running %d(%d) done !\n", fft_points, running, RUNNING_STATICS_COUNT);
         }
 
@@ -118,6 +124,7 @@ void run_fft_benchmark_app1()
         run_time_stockham[i] /= RUNNING_STATICS_COUNT;
         run_time_iterstk[i] /= RUNNING_STATICS_COUNT;
         run_time_r4[i] /= RUNNING_STATICS_COUNT;
+        run_time_myfft[i] /= RUNNING_STATICS_COUNT;
     }
 
     printf("Final results (us) :\n");
@@ -126,6 +133,7 @@ void run_fft_benchmark_app1()
     print_runtime_one_line("C_stockham", 12, run_time_stockham);
     print_runtime_one_line("C_iterative_stockham", 12, run_time_iterstk);
     print_runtime_one_line("C_Radix4_stockham", 12, run_time_r4);
+    print_runtime_one_line("C_my_fft", 12, run_time_myfft);
 }
 
 // TODO : FFT fwd and backward calibration
@@ -148,6 +156,9 @@ void fft_fwd_back_check(int type, int N)
     } else if (type == STOCKHAM_R4_C) {
         fwd = fft_stockham_r4<float>;
         bwd = ifft_stockham_r4<float>;
+    } else if (type == MY_FFT_C) {
+        fwd = my_fft<float>;
+        bwd = my_ifft<float>;
     } else {
         fwd = fft_cooley_tukey<float>;
         bwd = ifft_cooley_tukey<float>;
@@ -226,12 +237,20 @@ void run_fft_benchmark_app2()
         printf("%d\n", n);
         fft_fwd_back_check(STOCKHAM_R4_C, n);
     }
+
+    printf("Calibration of my-fft algorithm : \n");
+    for (int i = 0; i < 12; i++)
+    {
+        int n = points[i];
+        printf("%d\n", n);
+        fft_fwd_back_check(MY_FFT_C, n);
+    }
 }
 
 int main(void)
 {
     run_fft_benchmark_app2();
-    run_fft_benchmark_app1();
+    // run_fft_benchmark_app1();
 
     return 0;
 }
