@@ -709,9 +709,127 @@ inline void my_fft_2048points(int N, complex_t<T> *x)
 template<typename T>
 inline void my_fft_4096points(int N, complex_t<T> *x)
 {
+    static const complex_t<T> j = complex_t<T>(0, 1);
+    const T theta0 = 2*M_PI/N;
+    const T theta1 = 2*M_PI/1024;
+    const T theta2 = 2*M_PI/256;
+    const T theta3 = 2*M_PI/64;
+    const T theta4 = 2*M_PI/16;
 
+    complex_t<T> y[4096];
+    for (int p = 0; p < 1024; p++) {
+        const complex_t<T> w1p = complex_t<T>(cos(p*theta0), -sin(p*theta0));
+        const complex_t<T> w2p = w1p*w1p;
+        const complex_t<T> w3p = w1p*w2p;
+        const complex_t<T> a = x[p];
+        const complex_t<T> b = x[p + 1024];
+        const complex_t<T> c = x[p + 2048];
+        const complex_t<T> d = x[p + 3072];
+        const complex_t<T>  apc =    a + c;
+        const complex_t<T>  amc =    a - c;
+        const complex_t<T>  bpd =    b + d;
+        const complex_t<T> jbmd = j*(b - d);
+        y[4*p] =      apc +  bpd;
+        y[4*p + 1] = w1p*(amc - jbmd);
+        y[4*p + 2] = w2p*(apc -  bpd);
+        y[4*p + 3] = w3p*(amc + jbmd);
+    }
+
+    for (int p = 0; p < 256; p++) {
+        const complex_t<T> w1p = complex_t<T>(cos(p*theta1), -sin(p*theta1));
+        const complex_t<T> w2p = w1p*w1p;
+        const complex_t<T> w3p = w1p*w2p;
+        for (int q = 0; q < 4; q++) {
+            const complex_t<T> a = y[q + 4*p];
+            const complex_t<T> b = y[q + 4*(p + 256)];
+            const complex_t<T> c = y[q + 4*(p + 512)];
+            const complex_t<T> d = y[q + 4*(p + 768)];
+            const complex_t<T>  apc =    a + c;
+            const complex_t<T>  amc =    a - c;
+            const complex_t<T>  bpd =    b + d;
+            const complex_t<T> jbmd = j*(b - d);
+            x[q + 4*(4*p + 0)] =      apc +  bpd;
+            x[q + 4*(4*p + 1)] = w1p*(amc - jbmd);
+            x[q + 4*(4*p + 2)] = w2p*(apc -  bpd);
+            x[q + 4*(4*p + 3)] = w3p*(amc + jbmd);
+        }
+    }
+
+    for (int p = 0; p < 64; p++) {
+        const complex_t<T> w1p = complex_t<T>(cos(p*theta2), -sin(p*theta2));
+        const complex_t<T> w2p = w1p*w1p;
+        const complex_t<T> w3p = w1p*w2p;
+        for (int q = 0; q < 16; q++) {
+            const complex_t<T> a = x[q + 16*p];
+            const complex_t<T> b = x[q + 16*(p + 64)];
+            const complex_t<T> c = x[q + 16*(p + 128)];
+            const complex_t<T> d = x[q + 16*(p + 192)];
+            const complex_t<T>  apc =    a + c;
+            const complex_t<T>  amc =    a - c;
+            const complex_t<T>  bpd =    b + d;
+            const complex_t<T> jbmd = j*(b - d);
+            y[q + 16*(4*p + 0)] =      apc +  bpd;
+            y[q + 16*(4*p + 1)] = w1p*(amc - jbmd);
+            y[q + 16*(4*p + 2)] = w2p*(apc -  bpd);
+            y[q + 16*(4*p + 3)] = w3p*(amc + jbmd);
+        }
+    }
+
+    for (int p = 0; p < 16; p++) {
+        const complex_t<T> w1p = complex_t<T>(cos(p*theta3), -sin(p*theta3));
+        const complex_t<T> w2p = w1p*w1p;
+        const complex_t<T> w3p = w1p*w2p;
+        for (int q = 0; q < 64; q++) {
+            const complex_t<T> a = y[q + 64*p];
+            const complex_t<T> b = y[q + 64*(p + 16)];
+            const complex_t<T> c = y[q + 64*(p + 32)];
+            const complex_t<T> d = y[q + 64*(p + 48)];
+            const complex_t<T>  apc =    a + c;
+            const complex_t<T>  amc =    a - c;
+            const complex_t<T>  bpd =    b + d;
+            const complex_t<T> jbmd = j*(b - d);
+            x[q + 64*(4*p + 0)] =      apc +  bpd;
+            x[q + 64*(4*p + 1)] = w1p*(amc - jbmd);
+            x[q + 64*(4*p + 2)] = w2p*(apc -  bpd);
+            x[q + 64*(4*p + 3)] = w3p*(amc + jbmd);
+        }
+    }
+
+    for (int p = 0; p < 4; p++) {
+        const complex_t<T> w1p = complex_t<T>(cos(p*theta4), -sin(p*theta4));
+        const complex_t<T> w2p = w1p*w1p;
+        const complex_t<T> w3p = w1p*w2p;
+        for (int q = 0; q < 256; q++) {
+            const complex_t<T> a = x[q + 256*p];
+            const complex_t<T> b = x[q + 256*(p + 4)];
+            const complex_t<T> c = x[q + 256*(p + 8)];
+            const complex_t<T> d = x[q + 256*(p + 12)];
+            const complex_t<T>  apc =    a + c;
+            const complex_t<T>  amc =    a - c;
+            const complex_t<T>  bpd =    b + d;
+            const complex_t<T> jbmd = j*(b - d);
+            y[q + 256*(4*p + 0)] =      apc +  bpd;
+            y[q + 256*(4*p + 1)] = w1p*(amc - jbmd);
+            y[q + 256*(4*p + 2)] = w2p*(apc -  bpd);
+            y[q + 256*(4*p + 3)] = w3p*(amc + jbmd);
+        }
+    }
+
+    for (int q = 0; q < 1024; q++) {
+        const complex_t<T> a = y[q];
+        const complex_t<T> b = y[q + 1024];
+        const complex_t<T> c = y[q + 2048];
+        const complex_t<T> d = y[q + 3072];
+        const complex_t<T>  apc =    a + c;
+        const complex_t<T>  amc =    a - c;
+        const complex_t<T>  bpd =    b + d;
+        const complex_t<T> jbmd = j*(b - d);
+        x[q] = (apc +  bpd)/4096;
+        x[q + 1024] = (amc - jbmd)/4096;
+        x[q + 2048] = (apc - bpd)/4096;
+        x[q + 3072] = (amc + jbmd)/4096;
+    }
 }
-
 
 // Fourier transform
 // N : sequence length
@@ -772,6 +890,9 @@ void my_fft(int N, complex_t<T> *x)
         } break;
     case 2048 : {
             my_fft_2048points<T>(N, x);
+        } break;
+    case 4096 : {
+            my_fft_4096points<T>(N, x);
         } break;
     default : {
             // The other situation
@@ -1467,6 +1588,124 @@ inline void my_ifft_4096points(int N, complex_t<T> *x)
 {
     static const complex_t<T> j = complex_t<T>(0, 1);
     const T theta0 = 2*M_PI/N;
+    const T theta1 = 2*M_PI/1024;
+    const T theta2 = 2*M_PI/256;
+    const T theta3 = 2*M_PI/64;
+    const T theta4 = 2*M_PI/16;
+
+    complex_t<T> y[4096];
+    for (int p = 0; p < 1024; p++) {
+        const complex_t<T> w1p = complex_t<T>(cos(p*theta0), sin(p*theta0));
+        const complex_t<T> w2p = w1p*w1p;
+        const complex_t<T> w3p = w1p*w2p;
+        const complex_t<T> a = x[p];
+        const complex_t<T> b = x[p + 1024];
+        const complex_t<T> c = x[p + 2048];
+        const complex_t<T> d = x[p + 3072];
+        const complex_t<T>  apc =    a + c;
+        const complex_t<T>  amc =    a - c;
+        const complex_t<T>  bpd =    b + d;
+        const complex_t<T> jbmd = j*(b - d);
+        y[4*p] =      apc +  bpd;
+        y[4*p + 1] = w1p*(amc + jbmd);
+        y[4*p + 2] = w2p*(apc -  bpd);
+        y[4*p + 3] = w3p*(amc - jbmd);
+    }
+
+    for (int p = 0; p < 256; p++) {
+        const complex_t<T> w1p = complex_t<T>(cos(p*theta1), sin(p*theta1));
+        const complex_t<T> w2p = w1p*w1p;
+        const complex_t<T> w3p = w1p*w2p;
+        for (int q = 0; q < 4; q++) {
+            const complex_t<T> a = y[q + 4*p];
+            const complex_t<T> b = y[q + 4*(p + 256)];
+            const complex_t<T> c = y[q + 4*(p + 512)];
+            const complex_t<T> d = y[q + 4*(p + 768)];
+            const complex_t<T>  apc =    a + c;
+            const complex_t<T>  amc =    a - c;
+            const complex_t<T>  bpd =    b + d;
+            const complex_t<T> jbmd = j*(b - d);
+            x[q + 4*(4*p + 0)] =      apc +  bpd;
+            x[q + 4*(4*p + 1)] = w1p*(amc + jbmd);
+            x[q + 4*(4*p + 2)] = w2p*(apc -  bpd);
+            x[q + 4*(4*p + 3)] = w3p*(amc - jbmd);
+        }
+    }
+
+    for (int p = 0; p < 64; p++) {
+        const complex_t<T> w1p = complex_t<T>(cos(p*theta2), sin(p*theta2));
+        const complex_t<T> w2p = w1p*w1p;
+        const complex_t<T> w3p = w1p*w2p;
+        for (int q = 0; q < 16; q++) {
+            const complex_t<T> a = x[q + 16*p];
+            const complex_t<T> b = x[q + 16*(p + 64)];
+            const complex_t<T> c = x[q + 16*(p + 128)];
+            const complex_t<T> d = x[q + 16*(p + 192)];
+            const complex_t<T>  apc =    a + c;
+            const complex_t<T>  amc =    a - c;
+            const complex_t<T>  bpd =    b + d;
+            const complex_t<T> jbmd = j*(b - d);
+            y[q + 16*(4*p + 0)] =      apc +  bpd;
+            y[q + 16*(4*p + 1)] = w1p*(amc + jbmd);
+            y[q + 16*(4*p + 2)] = w2p*(apc -  bpd);
+            y[q + 16*(4*p + 3)] = w3p*(amc - jbmd);
+        }
+    }
+
+    for (int p = 0; p < 16; p++) {
+        const complex_t<T> w1p = complex_t<T>(cos(p*theta3), sin(p*theta3));
+        const complex_t<T> w2p = w1p*w1p;
+        const complex_t<T> w3p = w1p*w2p;
+        for (int q = 0; q < 64; q++) {
+            const complex_t<T> a = y[q + 64*p];
+            const complex_t<T> b = y[q + 64*(p + 16)];
+            const complex_t<T> c = y[q + 64*(p + 32)];
+            const complex_t<T> d = y[q + 64*(p + 48)];
+            const complex_t<T>  apc =    a + c;
+            const complex_t<T>  amc =    a - c;
+            const complex_t<T>  bpd =    b + d;
+            const complex_t<T> jbmd = j*(b - d);
+            x[q + 64*(4*p + 0)] =      apc +  bpd;
+            x[q + 64*(4*p + 1)] = w1p*(amc + jbmd);
+            x[q + 64*(4*p + 2)] = w2p*(apc -  bpd);
+            x[q + 64*(4*p + 3)] = w3p*(amc - jbmd);
+        }
+    }
+
+    for (int p = 0; p < 4; p++) {
+        const complex_t<T> w1p = complex_t<T>(cos(p*theta4), sin(p*theta4));
+        const complex_t<T> w2p = w1p*w1p;
+        const complex_t<T> w3p = w1p*w2p;
+        for (int q = 0; q < 256; q++) {
+            const complex_t<T> a = x[q + 256*p];
+            const complex_t<T> b = x[q + 256*(p + 4)];
+            const complex_t<T> c = x[q + 256*(p + 8)];
+            const complex_t<T> d = x[q + 256*(p + 12)];
+            const complex_t<T>  apc =    a + c;
+            const complex_t<T>  amc =    a - c;
+            const complex_t<T>  bpd =    b + d;
+            const complex_t<T> jbmd = j*(b - d);
+            y[q + 256*(4*p + 0)] =      apc +  bpd;
+            y[q + 256*(4*p + 1)] = w1p*(amc + jbmd);
+            y[q + 256*(4*p + 2)] = w2p*(apc -  bpd);
+            y[q + 256*(4*p + 3)] = w3p*(amc - jbmd);
+        }
+    }
+
+    for (int q = 0; q < 1024; q++) {
+        const complex_t<T> a = y[q];
+        const complex_t<T> b = y[q + 1024];
+        const complex_t<T> c = y[q + 2048];
+        const complex_t<T> d = y[q + 3072];
+        const complex_t<T>  apc =    a + c;
+        const complex_t<T>  amc =    a - c;
+        const complex_t<T>  bpd =    b + d;
+        const complex_t<T> jbmd = j*(b - d);
+        x[q] = apc + bpd;
+        x[q + 1024] = amc + jbmd;
+        x[q + 2048] = apc - bpd;
+        x[q + 3072] = amc - jbmd;
+    }
 }
 
 // Inverse Fourier transform
@@ -1528,6 +1767,9 @@ void my_ifft(int N, complex_t<T> *x)
         } break;
     case 2048 : {
             my_ifft_2048points<T>(N, x);
+        } break;
+    case 4096 : {
+            my_ifft_4096points<T>(N, x);
         } break;
     default : {
             // The other situation
