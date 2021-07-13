@@ -900,30 +900,42 @@ void my_fft_avx_whole<T>::my_fft(int N, complex_t<T> *x)
 {
     static const complex_t<T> j = complex_t<T>(0, 1);
 
+    if (sizeof(T) != 4) {
+        fprintf(stderr, "ONLY SUPPORT FLOAT SIMD FFT NOW !\n");
+        exit(-1);
+    }
+
     switch (N)
     {
     case 1 : {
         } return;
     case 2 : {
-            // N = 2 is treated as the special situation
-            const complex_t<T> a = x[0];
-            const complex_t<T> b = x[1];
-            x[0] = (a + b)/2;
-            x[1] = (a - b)/2;
+            const __m128 two = {2.0, 2.0, 2.0, 2.0};
+            // N = 2 is treated as the special situation, the type of float32_t data.
+            __m128 a = _mm_loadu_ps(&x[0].Re);
+            __m128 r = _mm_addsub_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(2, 0, 3, 1)),
+                                     _mm_shuffle_ps(a, a, _MM_SHUFFLE(0, 2, 1, 3)));
+            __m128 res = _mm_div_ps(r, two);
+            _mm_storeu_ps(&x[0].Re, _mm_shuffle_ps(res, res, _MM_SHUFFLE(0, 2, 1, 3)));
         } break;
     case 4 : {
-            const complex_t<T> a = x[0];
-            const complex_t<T> b = x[1];
-            const complex_t<T> c = x[2];
-            const complex_t<T> d = x[3];
-            const complex_t<T>  apc =    a + c;
-            const complex_t<T>  amc =    a - c;
-            const complex_t<T>  bpd =    b + d;
-            const complex_t<T> jbmd = j*(b - d);
-            x[0] = (apc +  bpd)/4;
-            x[1] = (amc - jbmd)/4;
-            x[2] = (apc -  bpd)/4;
-            x[3] = (amc + jbmd)/4;
+            const __m128 zm = {0.0, 0.0, 0.0, -0.0};
+            const __m128 four = {4.0, 4.0, 4.0, 4.0};
+            __m128 ab = _mm_loadu_ps(&x[0].Re);
+            __m128 cd = _mm_loadu_ps(&x[2].Re);
+            __m128 r1 = _mm_add_ps(ab, cd);
+            __m128 xmy = _mm_xor_ps(zm, _mm_sub_ps(ab, cd));
+            __m128 r2 = _mm_shuffle_ps(xmy, xmy, _MM_SHUFFLE(2, 3, 1, 0));
+
+            r1 = _mm_div_ps(r1, four);
+            r2 = _mm_div_ps(r2, four);
+
+            __m128 res1 = _mm_addsub_ps(_mm_shuffle_ps(r1, r1, _MM_SHUFFLE(2, 0, 3, 1)),
+                                        _mm_shuffle_ps(r1, r1, _MM_SHUFFLE(0, 2, 1, 3)));
+            __m128 res2 = _mm_addsub_ps(_mm_shuffle_ps(r2, r2, _MM_SHUFFLE(2, 0, 3, 1)),
+                                        _mm_shuffle_ps(r2, r2, _MM_SHUFFLE(0, 2, 1, 3)));
+            _mm_storeu_ps(&x[0].Re, _mm_shuffle_ps(res1, res2, _MM_SHUFFLE(0, 2, 1, 3)));
+            _mm_storeu_ps(&x[2].Re, _mm_shuffle_ps(res1, res2, _MM_SHUFFLE(1, 3, 0, 2)));
         } break;
     case 8 : {
             my_fft_8points_avx<T>(N, x);

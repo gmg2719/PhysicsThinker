@@ -32,7 +32,7 @@
 #include "signal/my_fft_avx.hpp"
 #include "my_time.h"
 
-#define RUNNING_STATICS_COUNT       20
+#define RUNNING_STATICS_COUNT       4
 
 enum fft_method_type {
     COOLEY_TUKEY_C = 1,

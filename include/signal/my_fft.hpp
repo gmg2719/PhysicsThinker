@@ -63,6 +63,7 @@ struct my_fft_whole
     complex_t<T> w3p4096_fwd[1024];
     my_fft_whole(int N);
     // FFT forward operations
+    inline void my_fft_8points(int N, complex_t<T> *x);
     inline void my_fft_16points(int N, complex_t<T> *x);
     inline void my_fft_32points(int N, complex_t<T> *x);
     inline void my_fft_64points(int N, complex_t<T> *x);
@@ -73,6 +74,7 @@ struct my_fft_whole
     inline void my_fft_2048points(int N, complex_t<T> *x);
     inline void my_fft_4096points(int N, complex_t<T> *x);
     // FFT backward operations
+    inline void my_ifft_8points(int N, complex_t<T> *x);
     inline void my_ifft_16points(int N, complex_t<T> *x);
     inline void my_ifft_32points(int N, complex_t<T> *x);
     inline void my_ifft_64points(int N, complex_t<T> *x);
@@ -159,15 +161,11 @@ my_fft_whole<T>::my_fft_whole(int N)
 }
 
 template<typename T>
-inline void my_fft_8points(int N, complex_t<T> *x)
+inline void my_fft_whole<T>::my_fft_8points(int N, complex_t<T> *x)
 {
     static const complex_t<T> j = complex_t<T>(0, 1);
-    const T theta0 = 2*M_PI/N;
 
     // Pay attention, -sin(theta0)
-    const complex_t<T> w1p = complex_t<T>(cos(theta0), -sin(theta0));
-    const complex_t<T> w2p = w1p*w1p;
-    const complex_t<T> w3p = w1p*w2p;
     complex_t<T> y[8];
     complex_t<T> a = x[0]; complex_t<T> b = x[2]; complex_t<T> c = x[4]; complex_t<T> d = x[6];
     complex_t<T>  apc =    a + c; complex_t<T>  amc =    a - c;
@@ -177,8 +175,8 @@ inline void my_fft_8points(int N, complex_t<T> *x)
     a = x[1]; b = x[3]; c = x[5]; d = x[7];
     apc = a + c; amc = a - c;
     bpd = b + d; jbmd = j*(b - d);
-    y[4] = apc +  bpd; y[5] = w1p * (amc - jbmd);
-    y[6] = w2p * (apc -  bpd); y[7] = w3p * (amc + jbmd);
+    y[4] = apc +  bpd; y[5] = w1p8_fwd * (amc - jbmd);
+    y[6] = w2p8_fwd * (apc -  bpd); y[7] = w3p8_fwd * (amc + jbmd);
     a = y[0]; b = y[4];
     x[0] = (a + b)/8; x[4] = (a - b)/8;
     a = y[1]; b = y[5];
@@ -921,7 +919,7 @@ void my_fft_whole<T>::my_fft(int N, complex_t<T> *x)
             x[3] = (amc + jbmd)/4;
         } break;
     case 8 : {
-            my_fft_8points<T>(N, x);
+            my_fft_8points(N, x);
         } break;
     case 16: {
             // The member function
@@ -967,15 +965,11 @@ void my_fft_whole<T>::my_fft(int N, complex_t<T> *x)
 }
 
 template<typename T>
-inline void my_ifft_8points(int N, complex_t<T> *x)
+inline void my_fft_whole<T>::my_ifft_8points(int N, complex_t<T> *x)
 {
     static const complex_t<T> j = complex_t<T>(0, 1);
-    const T theta0 = 2*M_PI/N;
 
     // Pay attention, sin(theta0)
-    const complex_t<T> w1p = complex_t<T>(cos(theta0), sin(theta0));
-    const complex_t<T> w2p = w1p*w1p;
-    const complex_t<T> w3p = w1p*w2p;
     complex_t<T> y[8];
     complex_t<T> a = x[0]; complex_t<T> b = x[2]; complex_t<T> c = x[4]; complex_t<T> d = x[6];
     complex_t<T>  apc =    a + c; complex_t<T>  amc =    a - c;
@@ -985,8 +979,8 @@ inline void my_ifft_8points(int N, complex_t<T> *x)
     a = x[1]; b = x[3]; c = x[5]; d = x[7];
     apc = a + c; amc = a - c;
     bpd = b + d; jbmd = j*(b - d);
-    y[4] = apc +  bpd; y[5] = w1p * (amc + jbmd);
-    y[6] = w2p * (apc -  bpd); y[7] = w3p * (amc - jbmd);
+    y[4] = apc +  bpd; y[5] = conj(w1p8_fwd) * (amc + jbmd);
+    y[6] = conj(w2p8_fwd) * (apc -  bpd); y[7] = conj(w3p8_fwd) * (amc - jbmd);
     a = y[0]; b = y[4];
     x[0] = a + b; x[4] = a - b;
     a = y[1]; b = y[5];
@@ -1731,7 +1725,7 @@ void my_fft_whole<T>::my_ifft(int N, complex_t<T> *x)
             x[3] = amc - jbmd;
         } break;
     case 8 : {
-            my_ifft_8points<T>(N, x);
+            my_ifft_8points(N, x);
         } break;
     case 16 : {
             // Member function
