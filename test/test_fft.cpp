@@ -58,6 +58,7 @@ float fft_fwd_testor(int type, int N)
     float ans = 0.;
     uint64_t start, end;
     FFT_FWD_FUNC fwd;
+    struct my_fft_whole<float> my_fft_(N);
     complex_t<float> *x[10000];
 
     if (type == COOLEY_TUKEY_C) {
@@ -69,7 +70,7 @@ float fft_fwd_testor(int type, int N)
     } else if (type == STOCKHAM_R4_C) {
         fwd = fft_stockham_r4<float>;
     } else if (type == MY_FFT_C) {
-        fwd = my_fft<float>;
+        (void)0;
     } else {
         fwd = fft_cooley_tukey<float>;
     }
@@ -84,8 +85,14 @@ float fft_fwd_testor(int type, int N)
     }
 
     start = my_us_gettimeofday();
-    for (int i = 0; i < 10000; i++) {
-        fwd(N, x[i]);
+    if (type == MY_FFT_C) {
+        for (int i = 0; i < 10000; i++) {
+            my_fft_.my_fft(N, x[i]);
+        }
+    } else {
+        for (int i = 0; i < 10000; i++) {
+            fwd(N, x[i]);
+        }
     }
     end = my_us_gettimeofday();
 
@@ -143,6 +150,7 @@ void fft_fwd_back_check(int type, int N)
     FFT_FWD_FUNC bwd;
     complex_t<float> *x;
     complex_t<float> *x_original;
+    struct my_fft_whole<float> my_fft_(N);
 
     if (type == COOLEY_TUKEY_C) {
         fwd = fft_cooley_tukey<float>;
@@ -157,8 +165,7 @@ void fft_fwd_back_check(int type, int N)
         fwd = fft_stockham_r4<float>;
         bwd = ifft_stockham_r4<float>;
     } else if (type == MY_FFT_C) {
-        fwd = my_fft<float>;
-        bwd = my_ifft<float>;
+        (void)0;
     } else {
         fwd = fft_cooley_tukey<float>;
         bwd = ifft_cooley_tukey<float>;
@@ -173,7 +180,12 @@ void fft_fwd_back_check(int type, int N)
         x_original[k].Re = x[k].Re;  x_original[k].Im = x[k].Im;
     }
 
-    fwd(N, x);
+    if (type == MY_FFT_C) {
+        my_fft_.my_fft(N, x);
+    } else {
+        fwd(N, x);
+    }
+
     int same_element = 0;
     for (int k = 0; k < N; k++) {
         if ((x[k].Re == x_original[k].Re) && (x[k].Im == x_original[k].Im)) {
@@ -183,7 +195,13 @@ void fft_fwd_back_check(int type, int N)
     if (same_element == N) {
         fprintf(stderr, "FFT result is the same as the input, maybe error !\n");
     }
-    bwd(N, x);
+
+    if (type == MY_FFT_C) {
+        my_fft_.my_ifft(N, x);
+    } else {
+        bwd(N, x);
+    }
+
     bool result = true;
     for (int k = 0; k < N; k++) {
         // Single float precise decides the threshold is 1E-6
