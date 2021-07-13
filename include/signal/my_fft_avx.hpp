@@ -68,6 +68,7 @@ struct my_fft_avx_whole
     // The construct interface
     my_fft_avx_whole(int N);
     // FFT forward operations
+    inline void my_fft_8points(int N, complex_t<T> *x);
     inline void my_fft_16points(int N, complex_t<T> *x);
     inline void my_fft_32points(int N, complex_t<T> *x);
     inline void my_fft_64points(int N, complex_t<T> *x);
@@ -78,6 +79,7 @@ struct my_fft_avx_whole
     inline void my_fft_2048points(int N, complex_t<T> *x);
     inline void my_fft_4096points(int N, complex_t<T> *x);
     // FFT backward operations
+    inline void my_ifft_8points(int N, complex_t<T> *x);
     inline void my_ifft_16points(int N, complex_t<T> *x);
     inline void my_ifft_32points(int N, complex_t<T> *x);
     inline void my_ifft_64points(int N, complex_t<T> *x);
@@ -163,35 +165,59 @@ my_fft_avx_whole<T>::my_fft_avx_whole(int N)
     }
 }
 
-template<typename T>
-inline void my_fft_8points_avx(int N, complex_t<T> *x)
+static inline __m128 v8xpz_f(const __m128 xy)
 {
-    static const complex_t<T> j = complex_t<T>(0, 1);
-    const T theta0 = 2*M_PI/N;
+    const __m128 rr = {1.0, 1.0, 0.70710678118654752440, 0.70710678118654752440};
+    const __m128 zm = {0.0, 0.0, 0.0, -0.0};
+    __m128 xmy_tmp = _mm_xor_ps(zm, xy);
+    __m128 xmy = _mm_shuffle_ps(_mm_setzero_ps(), xmy_tmp, _MM_SHUFFLE(2, 3, 0, 1));
+    return _mm_mul_ps(rr, _mm_add_ps(xy, xmy));
+}
 
-    // Pay attention, -sin(theta0)
-    const complex_t<T> w1p = complex_t<T>(cos(theta0), -sin(theta0));
-    const complex_t<T> w2p = w1p*w1p;
-    const complex_t<T> w3p = w1p*w2p;
-    complex_t<T> y[8];
-    complex_t<T> a = x[0]; complex_t<T> b = x[2]; complex_t<T> c = x[4]; complex_t<T> d = x[6];
-    complex_t<T>  apc =    a + c; complex_t<T>  amc =    a - c;
-    complex_t<T>  bpd =    b + d; complex_t<T> jbmd = j*(b - d);
-    y[0] = apc +  bpd; y[1] = amc - jbmd;
-    y[2] = apc -  bpd; y[3] = amc + jbmd;
-    a = x[1]; b = x[3]; c = x[5]; d = x[7];
-    apc = a + c; amc = a - c;
-    bpd = b + d; jbmd = j*(b - d);
-    y[4] = apc +  bpd; y[5] = w1p * (amc - jbmd);
-    y[6] = w2p * (apc -  bpd); y[7] = w3p * (amc + jbmd);
-    a = y[0]; b = y[4];
-    x[0] = (a + b)/8; x[4] = (a - b)/8;
-    a = y[1]; b = y[5];
-    x[1] = (a + b)/8; x[5] = (a - b)/8;
-    a = y[2]; b = y[6];
-    x[2] = (a + b)/8; x[6] = (a - b)/8;
-    a = y[3]; b = y[7];
-    x[3] = (a + b)/8; x[7] = (a - b)/8;
+static inline __m128 w8xpz_f(const __m128 xy)
+{
+    const __m128 rr = {1.0, 1.0, 0.70710678118654752440, 0.70710678118654752440};
+    const __m128 zm = {0.0, 0.0, 0.0, -0.0};
+    __m128 xmy_tmp = _mm_shuffle_ps(_mm_setzero_ps(), xy, _MM_SHUFFLE(2, 3, 0, 1));
+    __m128 xmy = _mm_xor_ps(zm, xmy_tmp);
+    return _mm_mul_ps(rr, _mm_add_ps(xy, xmy));
+}
+
+template<typename T>
+inline void my_fft_avx_whole<T>::my_fft_8points(int N, complex_t<T> *x)
+{
+    const __m128 zm = {0.0, -0.0, 0.0, -0.0};
+    const __m128 zm1 = {0.0, 0.0, 0.0, -0.0};
+    const __m128 eight = {8.0, 8.0, 8.0, 8.0};
+    __m128 x01 = _mm_loadu_ps(&(x[0].Re));
+    __m128 x23 = _mm_loadu_ps(&(x[2].Re));
+    __m128 x45 = _mm_loadu_ps(&(x[4].Re));
+    __m128 x67 = _mm_loadu_ps(&(x[6].Re));
+    __m128 a1 = _mm_add_ps(x01, x45);
+    __m128 a2 = _mm_add_ps(x23, x67);
+    __m128 a3 = _mm_sub_ps(x01, x45);
+    __m128 xmy = _mm_xor_ps(zm, _mm_sub_ps(x23, x67));
+    __m128 a4 = _mm_shuffle_ps(xmy, xmy, _MM_SHUFFLE(2, 3, 0, 1));
+
+    __m128 pm_a1 = _mm_add_ps(a1, a2);
+    __m128 pm_a2 = v8xpz_f(_mm_add_ps(a3, a4));
+    xmy = _mm_xor_ps(zm1, _mm_sub_ps(a1, a2));
+    __m128 pm_a3 = _mm_shuffle_ps(xmy, xmy, _MM_SHUFFLE(2, 3, 1, 0));
+    __m128 pm_a4 = w8xpz_f(_mm_sub_ps(a3, a4));
+
+    __m128 res1 = _mm_shuffle_ps(pm_a1, pm_a4, _MM_SHUFFLE(1, 0, 1, 0));
+    __m128 res2 = _mm_shuffle_ps(pm_a1, pm_a4, _MM_SHUFFLE(3, 2, 3, 2));
+    __m128 res3 = _mm_shuffle_ps(pm_a3, pm_a2, _MM_SHUFFLE(1, 0, 1, 0));
+    __m128 res4 = _mm_shuffle_ps(pm_a3, pm_a2, _MM_SHUFFLE(3, 2, 3, 2));
+    res1 = _mm_div_ps(res1, eight);
+    res2 = _mm_div_ps(res2, eight);
+    res3 = _mm_div_ps(res3, eight);
+    res4 = _mm_div_ps(res4, eight);
+
+    _mm_storeu_ps(&(x[0].Re), _mm_add_ps(res1, res2));
+    _mm_storeu_ps(&(x[2].Re), _mm_sub_ps(res3, res4));
+    _mm_storeu_ps(&(x[4].Re), _mm_sub_ps(res1, res2));
+    _mm_storeu_ps(&(x[6].Re), _mm_add_ps(res3, res4));
 }
 
 template<typename T>
@@ -938,7 +964,7 @@ void my_fft_avx_whole<T>::my_fft(int N, complex_t<T> *x)
             _mm_storeu_ps(&x[2].Re, _mm_shuffle_ps(res1, res2, _MM_SHUFFLE(1, 3, 0, 2)));
         } break;
     case 8 : {
-            my_fft_8points_avx<T>(N, x);
+            my_fft_8points(N, x);
         } break;
     case 16: {
             // The member function
@@ -984,15 +1010,10 @@ void my_fft_avx_whole<T>::my_fft(int N, complex_t<T> *x)
 }
 
 template<typename T>
-inline void my_ifft_8points_avx(int N, complex_t<T> *x)
+inline void my_fft_avx_whole<T>::my_ifft_8points(int N, complex_t<T> *x)
 {
     static const complex_t<T> j = complex_t<T>(0, 1);
-    const T theta0 = 2*M_PI/N;
 
-    // Pay attention, sin(theta0)
-    const complex_t<T> w1p = complex_t<T>(cos(theta0), sin(theta0));
-    const complex_t<T> w2p = w1p*w1p;
-    const complex_t<T> w3p = w1p*w2p;
     complex_t<T> y[8];
     complex_t<T> a = x[0]; complex_t<T> b = x[2]; complex_t<T> c = x[4]; complex_t<T> d = x[6];
     complex_t<T>  apc =    a + c; complex_t<T>  amc =    a - c;
@@ -1002,8 +1023,8 @@ inline void my_ifft_8points_avx(int N, complex_t<T> *x)
     a = x[1]; b = x[3]; c = x[5]; d = x[7];
     apc = a + c; amc = a - c;
     bpd = b + d; jbmd = j*(b - d);
-    y[4] = apc +  bpd; y[5] = w1p * (amc + jbmd);
-    y[6] = w2p * (apc -  bpd); y[7] = w3p * (amc - jbmd);
+    y[4] = apc +  bpd; y[5] = conj(w1p8_fwd) * (amc + jbmd);
+    y[6] = conj(w2p8_fwd) * (apc -  bpd); y[7] = conj(w3p8_fwd) * (amc - jbmd);
     a = y[0]; b = y[4];
     x[0] = a + b; x[4] = a - b;
     a = y[1]; b = y[5];
@@ -1722,33 +1743,42 @@ void my_fft_avx_whole<T>::my_ifft(int N, complex_t<T> *x)
 {
     static const complex_t<T> j = complex_t<T>(0, 1);
 
+    if (sizeof(T) != 4) {
+        fprintf(stderr, "ONLY SUPPORT FLOAT SIMD INVERSE-FFT NOW !\n");
+        exit(-1);
+    }
+
     switch (N)
     {
     case 1 : {
         } return;
     case 2 : {
             // N = 2 is treated as the special situation
-            const complex_t<T> a = x[0];
-            const complex_t<T> b = x[1];
-            x[0] = a + b;
-            x[1] = a - b;
+            const __m128 two = {2.0, 2.0, 2.0, 2.0};
+            // N = 2 is treated as the special situation, the type of float32_t data.
+            __m128 a = _mm_loadu_ps(&x[0].Re);
+            __m128 r = _mm_addsub_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(2, 0, 3, 1)),
+                                     _mm_shuffle_ps(a, a, _MM_SHUFFLE(0, 2, 1, 3)));
+            _mm_storeu_ps(&x[0].Re, _mm_shuffle_ps(r, r, _MM_SHUFFLE(0, 2, 1, 3)));
         } break;
     case 4 : {
-            const complex_t<T> a = x[0];
-            const complex_t<T> b = x[1];
-            const complex_t<T> c = x[2];
-            const complex_t<T> d = x[3];
-            const complex_t<T>  apc =    a + c;
-            const complex_t<T>  amc =    a - c;
-            const complex_t<T>  bpd =    b + d;
-            const complex_t<T> jbmd = j*(b - d);
-            x[0] = apc +  bpd;
-            x[1] = amc + jbmd;
-            x[2] = apc -  bpd;
-            x[3] = amc - jbmd;
+            const __m128 zm = {0.0, 0.0, 0.0, -0.0};
+            const __m128 four = {4.0, 4.0, 4.0, 4.0};
+            __m128 ab = _mm_loadu_ps(&x[0].Re);
+            __m128 cd = _mm_loadu_ps(&x[2].Re);
+            __m128 r1 = _mm_add_ps(ab, cd);
+            __m128 xmy = _mm_xor_ps(zm, _mm_sub_ps(ab, cd));
+            __m128 r2 = _mm_shuffle_ps(xmy, xmy, _MM_SHUFFLE(2, 3, 1, 0));
+
+            __m128 res1 = _mm_addsub_ps(_mm_shuffle_ps(r1, r1, _MM_SHUFFLE(2, 0, 3, 1)),
+                                        _mm_shuffle_ps(r1, r1, _MM_SHUFFLE(0, 2, 1, 3)));
+            __m128 res2 = _mm_addsub_ps(_mm_shuffle_ps(r2, r2, _MM_SHUFFLE(2, 0, 3, 1)),
+                                        _mm_shuffle_ps(r2, r2, _MM_SHUFFLE(0, 2, 1, 3)));
+            _mm_storeu_ps(&x[0].Re, _mm_shuffle_ps(res1, res2, _MM_SHUFFLE(1, 3, 1, 3)));
+            _mm_storeu_ps(&x[2].Re, _mm_shuffle_ps(res1, res2, _MM_SHUFFLE(0, 2, 0, 2)));
         } break;
     case 8 : {
-            my_ifft_8points_avx<T>(N, x);
+            my_ifft_8points(N, x);
         } break;
     case 16 : {
             // Member function
