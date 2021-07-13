@@ -29,16 +29,18 @@
 #include "signal/fft_iterative_stockham.hpp"
 #include "signal/fft_stockham_r4.hpp"
 #include "signal/my_fft.hpp"
+#include "signal/my_fft_avx.hpp"
 #include "my_time.h"
 
-#define RUNNING_STATICS_COUNT       4
+#define RUNNING_STATICS_COUNT       20
 
 enum fft_method_type {
     COOLEY_TUKEY_C = 1,
     STOCKHAM_C = 2,
     ITERATIVE_STOCKHAM_C = 3,
     STOCKHAM_R4_C = 4,
-    MY_FFT_C = 5
+    MY_FFT_C = 5,
+    MY_FFT_AVX = 6
 };
 
 typedef void (*FFT_FWD_FUNC)(int N, complex_t<float> *x);
@@ -59,6 +61,7 @@ float fft_fwd_testor(int type, int N)
     uint64_t start, end;
     FFT_FWD_FUNC fwd;
     struct my_fft_whole<float> my_fft_(N);
+    struct my_fft_avx_whole<float> my_fft_avx_(N);
     complex_t<float> *x[10000];
 
     if (type == COOLEY_TUKEY_C) {
@@ -69,7 +72,7 @@ float fft_fwd_testor(int type, int N)
         fwd = fft_stockham_iterative<float>;
     } else if (type == STOCKHAM_R4_C) {
         fwd = fft_stockham_r4<float>;
-    } else if (type == MY_FFT_C) {
+    } else if ((type == MY_FFT_C) || (type == MY_FFT_AVX)) {
         (void)0;
     } else {
         fwd = fft_cooley_tukey<float>;
@@ -88,6 +91,10 @@ float fft_fwd_testor(int type, int N)
     if (type == MY_FFT_C) {
         for (int i = 0; i < 10000; i++) {
             my_fft_.my_fft(N, x[i]);
+        }
+    } else if (type == MY_FFT_AVX) {
+        for (int i = 0; i < 10000; i++) {
+            my_fft_avx_.my_fft(N, x[i]);
         }
     } else {
         for (int i = 0; i < 10000; i++) {
@@ -113,6 +120,7 @@ void run_fft_benchmark_app1()
     float run_time_iterstk[12] = {0.};
     float run_time_r4[12] = {0.};
     float run_time_myfft[12] = {0.};
+    float run_time_myfft_avx[12] = {0.};
 
     for (int i = 0; i < 12; i++)
     {
@@ -124,6 +132,7 @@ void run_fft_benchmark_app1()
             run_time_iterstk[i] += fft_fwd_testor(ITERATIVE_STOCKHAM_C, fft_points);
             run_time_r4[i] += fft_fwd_testor(STOCKHAM_R4_C, fft_points);
             run_time_myfft[i] += fft_fwd_testor(MY_FFT_C, fft_points);
+            run_time_myfft_avx[i] += fft_fwd_testor(MY_FFT_AVX, fft_points);
             printf("points(%d) running %d(%d) done !\n", fft_points, running, RUNNING_STATICS_COUNT);
         }
 
@@ -132,6 +141,7 @@ void run_fft_benchmark_app1()
         run_time_iterstk[i] /= RUNNING_STATICS_COUNT;
         run_time_r4[i] /= RUNNING_STATICS_COUNT;
         run_time_myfft[i] /= RUNNING_STATICS_COUNT;
+        run_time_myfft_avx[i] /= RUNNING_STATICS_COUNT;
     }
 
     printf("Final results (us) :\n");
@@ -141,6 +151,7 @@ void run_fft_benchmark_app1()
     print_runtime_one_line("C_iterative_stockham", 12, run_time_iterstk);
     print_runtime_one_line("C_Radix4_stockham", 12, run_time_r4);
     print_runtime_one_line("C_my_fft", 12, run_time_myfft);
+    print_runtime_one_line("AVX_my_fft", 12, run_time_myfft_avx);
 }
 
 // TODO : FFT fwd and backward calibration
@@ -151,6 +162,7 @@ void fft_fwd_back_check(int type, int N)
     complex_t<float> *x;
     complex_t<float> *x_original;
     struct my_fft_whole<float> my_fft_(N);
+    struct my_fft_avx_whole<float> my_fft_avx_(N);
 
     if (type == COOLEY_TUKEY_C) {
         fwd = fft_cooley_tukey<float>;
@@ -164,7 +176,7 @@ void fft_fwd_back_check(int type, int N)
     } else if (type == STOCKHAM_R4_C) {
         fwd = fft_stockham_r4<float>;
         bwd = ifft_stockham_r4<float>;
-    } else if (type == MY_FFT_C) {
+    } else if ((type == MY_FFT_C) || (type == MY_FFT_AVX)) {
         (void)0;
     } else {
         fwd = fft_cooley_tukey<float>;
@@ -182,6 +194,8 @@ void fft_fwd_back_check(int type, int N)
 
     if (type == MY_FFT_C) {
         my_fft_.my_fft(N, x);
+    } else if (type == MY_FFT_AVX) {
+        my_fft_avx_.my_fft(N, x);
     } else {
         fwd(N, x);
     }
@@ -198,6 +212,8 @@ void fft_fwd_back_check(int type, int N)
 
     if (type == MY_FFT_C) {
         my_fft_.my_ifft(N, x);
+    } else if (type == MY_FFT_AVX) {
+        my_fft_avx_.my_ifft(N, x);
     } else {
         bwd(N, x);
     }
@@ -262,6 +278,14 @@ void run_fft_benchmark_app2()
         int n = points[i];
         printf("%d\n", n);
         fft_fwd_back_check(MY_FFT_C, n);
+    }
+
+    printf("Calibration of my-fft-avx algorithm : \n");
+    for (int i = 0; i < 12; i++)
+    {
+        int n = points[i];
+        printf("%d\n", n);
+        fft_fwd_back_check(MY_FFT_AVX, n);
     }
 }
 

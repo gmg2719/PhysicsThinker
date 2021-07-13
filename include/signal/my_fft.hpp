@@ -31,8 +31,6 @@
 template<typename T>
 struct my_fft_whole
 {
-    int n_points;
-    int log_n;
     complex_t<T> w1p8_fwd;
     complex_t<T> w2p8_fwd;
     complex_t<T> w3p8_fwd;
