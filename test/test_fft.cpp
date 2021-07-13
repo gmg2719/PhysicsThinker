@@ -145,7 +145,7 @@ void run_fft_benchmark_app1()
     }
 
     printf("Final results (us) :\n");
-    printf("Points are (2 4 6 8 16 32 64 128 256 512 1024 2048 4096)\n");
+    printf("Points are (2 4 8 16 32 64 128 256 512 1024 2048 4096)\n");
     print_runtime_one_line("C_cooley tukey", 12, run_time_cooley_tukey);
     print_runtime_one_line("C_stockham", 12, run_time_stockham);
     print_runtime_one_line("C_iterative_stockham", 12, run_time_iterstk);

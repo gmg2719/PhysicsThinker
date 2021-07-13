@@ -29,6 +29,28 @@
 #include "my_simd.h"
 
 /////////////////////////////////////////////////
+//      some useful SIMD functions for FFT     //
+/////////////////////////////////////////////////
+
+static inline __m128 v8xpz_f(const __m128 xy)
+{
+    const __m128 rr = {1.0, 1.0, 0.70710678118654752440, 0.70710678118654752440};
+    const __m128 zm = {0.0, 0.0, 0.0, -0.0};
+    __m128 xmy_tmp = _mm_xor_ps(zm, xy);
+    __m128 xmy = _mm_shuffle_ps(_mm_setzero_ps(), xmy_tmp, _MM_SHUFFLE(2, 3, 0, 1));
+    return _mm_mul_ps(rr, _mm_add_ps(xy, xmy));
+}
+
+static inline __m128 w8xpz_f(const __m128 xy)
+{
+    const __m128 rr = {1.0, 1.0, 0.70710678118654752440, 0.70710678118654752440};
+    const __m128 zm = {0.0, 0.0, 0.0, -0.0};
+    __m128 xmy_tmp = _mm_shuffle_ps(_mm_setzero_ps(), xy, _MM_SHUFFLE(2, 3, 0, 1));
+    __m128 xmy = _mm_xor_ps(zm, xmy_tmp);
+    return _mm_mul_ps(rr, _mm_add_ps(xy, xmy));
+}
+
+/////////////////////////////////////////////////
 //    my_fft.hpp AVX or AVX512 optimization    //
 /////////////////////////////////////////////////
 
@@ -163,24 +185,6 @@ my_fft_avx_whole<T>::my_fft_avx_whole(int N)
         w2p4096_fwd[p] = w1p4096_fwd[p] * w1p4096_fwd[p];
         w3p4096_fwd[p] = w1p4096_fwd[p] * w2p4096_fwd[p];
     }
-}
-
-static inline __m128 v8xpz_f(const __m128 xy)
-{
-    const __m128 rr = {1.0, 1.0, 0.70710678118654752440, 0.70710678118654752440};
-    const __m128 zm = {0.0, 0.0, 0.0, -0.0};
-    __m128 xmy_tmp = _mm_xor_ps(zm, xy);
-    __m128 xmy = _mm_shuffle_ps(_mm_setzero_ps(), xmy_tmp, _MM_SHUFFLE(2, 3, 0, 1));
-    return _mm_mul_ps(rr, _mm_add_ps(xy, xmy));
-}
-
-static inline __m128 w8xpz_f(const __m128 xy)
-{
-    const __m128 rr = {1.0, 1.0, 0.70710678118654752440, 0.70710678118654752440};
-    const __m128 zm = {0.0, 0.0, 0.0, -0.0};
-    __m128 xmy_tmp = _mm_shuffle_ps(_mm_setzero_ps(), xy, _MM_SHUFFLE(2, 3, 0, 1));
-    __m128 xmy = _mm_xor_ps(zm, xmy_tmp);
-    return _mm_mul_ps(rr, _mm_add_ps(xy, xmy));
 }
 
 template<typename T>
