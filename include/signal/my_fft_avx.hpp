@@ -72,7 +72,7 @@ static inline __m256 mulpz2(const __m256 ab, const __m256 xy)
     __m256 bb = _mm256_movehdup_ps(ab);
     __m256 yx = _mm256_shuffle_ps(xy, xy, 0xb1);
 #ifdef __FMA__
-    return _mm256_fmaaddsub_ps(aa, xy, _mm256_mul_ps(bb, yx));
+    return _mm256_fmaddsub_ps(aa, xy, _mm256_mul_ps(bb, yx));
 #else
     return _mm256_addsub_ps(_mm256_mul_ps(aa, xy), _mm256_mul_ps(bb, yx));
 #endif
@@ -91,7 +91,7 @@ static inline __m128 mulpz_lh(const __m128 a, const __m128 b)
     __m128 bb = _mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 3, 1, 1));
     __m128 yx = _mm_shuffle_ps(b, b, _MM_SHUFFLE(2, 3, 0, 1));
 #ifdef __FMA__
-    return _mm_fmaaddsub_ps(aa, b, _mm_mul_ps(bb, yx));
+    return _mm_fmaddsub_ps(aa, b, _mm_mul_ps(bb, yx));
 #else
     return _mm_addsub_ps(_mm_mul_ps(aa, b), _mm_mul_ps(bb, yx));
 #endif
@@ -299,10 +299,12 @@ template<typename T>
 inline void my_fft_avx_whole<T>::my_fft_16points(int N, complex_t<T> *x)
 {
     uint8_t wt_index = 0;
+    complex_t<T> y[16];
     __m128 y_avx[8];
 
     for (int p = 0; p < 4; p+=2, wt_index+=1) {
         complex_t<T> *x_p = x + p;
+        complex_t<T> *y_4p = y + 4*p;
         __m128 a = _mm_loadu_ps(&(x_p[0].Re));
         __m128 b = _mm_loadu_ps(&(x_p[4].Re));
         __m128 c = _mm_loadu_ps(&(x_p[8].Re));
@@ -317,31 +319,28 @@ inline void my_fft_avx_whole<T>::my_fft_16points(int N, complex_t<T> *x)
         __m128 cC = mulpz_lh(w2p16_fwd_avx[wt_index], _mm_sub_ps(apc, bpd));
         __m128 dD = mulpz_lh(w3p16_fwd_avx[wt_index], _mm_add_ps(amc, jbmd));
         __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        y_avx[2*p] = ab;
+        _mm_storeu_ps(&(y_4p[0].Re), ab);
         __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        y_avx[1+2*p] = cd;
+        _mm_storeu_ps(&(y_4p[2].Re), cd);
         __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        y_avx[2+2*p] = AB;
+        _mm_storeu_ps(&(y_4p[4].Re), AB);
         __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        y_avx[3+2*p] = CD;
+        _mm_storeu_ps(&(y_4p[6].Re), CD);
     }
 
-    for (int q = 0; q < 4; q+=2) {
-        complex_t<T> *xq = x + q;
-        __m128 a = y_avx[0+q/2];
-        __m128 b = y_avx[2+q/2];
-        __m128 c = y_avx[4+q/2];
-        __m128 d = y_avx[6+q/2];
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
+    __m256 a = _mm256_loadu_ps(&(y[0].Re));
+    __m256 b = _mm256_loadu_ps(&(y[4].Re));
+    __m256 c = _mm256_loadu_ps(&(y[8].Re));
+    __m256 d = _mm256_loadu_ps(&(y[12].Re));
+    __m256 apc = _mm256_add_ps(a, c);
+    __m256 amc = _mm256_sub_ps(a, c);
+    __m256 bpd = _mm256_add_ps(b, d);
+    __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
 
-        _mm_storeu_ps(&(xq[0].Re), _mm_add_ps(apc, bpd));
-        _mm_storeu_ps(&(xq[4].Re), _mm_sub_ps(amc, jbmd));
-        _mm_storeu_ps(&(xq[8].Re), _mm_sub_ps(apc, bpd));
-        _mm_storeu_ps(&(xq[12].Re), _mm_add_ps(amc, jbmd));
-    }
+    _mm256_storeu_ps(&(x[0].Re), _mm256_add_ps(apc, bpd));
+    _mm256_storeu_ps(&(x[4].Re),  _mm256_sub_ps(amc, jbmd));
+    _mm256_storeu_ps(&(x[8].Re), _mm256_sub_ps(apc, bpd));
+    _mm256_storeu_ps(&(x[12].Re), _mm256_add_ps(amc, jbmd));
 }
 
 template<typename T>
@@ -403,13 +402,13 @@ inline void my_fft_avx_whole<T>::my_fft_32points(int N, complex_t<T> *x)
         _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
     }
 
-    for (int q = 0; q < 16; q+=2) {
+    for (int q = 0; q < 16; q+=4) {
         complex_t<T> *xq = x + q;
 
-        __m128 a = _mm_loadu_ps(&(xq[0].Re));
-        __m128 b = _mm_loadu_ps(&(xq[16].Re));
-        _mm_storeu_ps(&(xq[0].Re), _mm_add_ps(a, b));
-        _mm_storeu_ps(&(xq[16].Re), _mm_sub_ps(a, b));
+        __m256 a = _mm256_loadu_ps(&(xq[0].Re));
+        __m256 b = _mm256_loadu_ps(&(xq[16].Re));
+        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(a, b));
+        _mm256_storeu_ps(&(xq[16].Re), _mm256_sub_ps(a, b));
     }
 }
 
