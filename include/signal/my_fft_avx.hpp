@@ -28,13 +28,16 @@
 #include "common/complex_t.h"
 #include "my_simd.h"
 
+#define SQRT2_CONSTANT          1.41421356237309504880  // sqrt(2)
+#define SQRT1_2_CONSTANT        0.70710678118654752440  // 1/sqrt(2)
+
 /////////////////////////////////////////////////
 //      some useful SIMD functions for FFT     //
 /////////////////////////////////////////////////
 
 static inline __m128 v8xpz_f(const __m128 xy)
 {
-    const __m128 rr = {1.0, 1.0, 0.70710678118654752440, 0.70710678118654752440};
+    const __m128 rr = {1.0, 1.0, SQRT1_2_CONSTANT, SQRT1_2_CONSTANT};
     const __m128 zm = {0.0, 0.0, 0.0, -0.0};
     __m128 xmy_tmp = _mm_xor_ps(zm, xy);
     __m128 xmy = _mm_shuffle_ps(_mm_setzero_ps(), xmy_tmp, _MM_SHUFFLE(2, 3, 0, 1));
@@ -43,11 +46,55 @@ static inline __m128 v8xpz_f(const __m128 xy)
 
 static inline __m128 w8xpz_f(const __m128 xy)
 {
-    const __m128 rr = {1.0, 1.0, 0.70710678118654752440, 0.70710678118654752440};
+    const __m128 rr = {1.0, 1.0, SQRT1_2_CONSTANT, SQRT1_2_CONSTANT};
     const __m128 zm = {0.0, 0.0, 0.0, -0.0};
     __m128 xmy_tmp = _mm_shuffle_ps(_mm_setzero_ps(), xy, _MM_SHUFFLE(2, 3, 0, 1));
     __m128 xmy = _mm_xor_ps(zm, xmy_tmp);
     return _mm_mul_ps(rr, _mm_add_ps(xy, xmy));
+}
+
+static inline __m128 jxpz(const __m128 xy)
+{
+    static const __m128 zm = {0.0, -0.0, 0.0, -0.0};
+    __m128 xmy = _mm_xor_ps(zm, xy);
+    return _mm_shuffle_ps(xmy, xmy, _MM_SHUFFLE(2, 3, 0, 1));
+}
+
+static inline __m256 duppz2_lo(const __m128 x)
+{
+    __m128 y = _mm_movelh_ps(x, x);
+    return _mm256_broadcast_ps(&y);
+}
+
+static inline __m256 mulpz2(const __m256 ab, const __m256 xy)
+{
+    __m256 aa = _mm256_moveldup_ps(ab);
+    __m256 bb = _mm256_movehdup_ps(ab);
+    __m256 yx = _mm256_shuffle_ps(xy, xy, 0xb1);
+#ifdef __FMA__
+    return _mm256_fmaaddsub_ps(aa, xy, _mm256_mul_ps(bb, yx));
+#else
+    return _mm256_addsub_ps(_mm256_mul_ps(aa, xy), _mm256_mul_ps(bb, yx));
+#endif
+}
+
+static inline __m256 jxpz2(const __m256 xy)
+{
+    static const __m256 zm = {0.0, -0.0, 0.0, -0.0, 0.0, -0.0, 0.0, -0.0};
+    __m256 xmy = _mm256_xor_ps(zm, xy);
+    return _mm256_shuffle_ps(xmy, xmy, 0xb1); 
+}
+
+static inline __m128 mulpz_lh(const __m128 a, const __m128 b)
+{
+    __m128 aa = _mm_shuffle_ps(a, a, _MM_SHUFFLE(2, 2, 0, 0));
+    __m128 bb = _mm_shuffle_ps(a, a, _MM_SHUFFLE(3, 3, 1, 1));
+    __m128 yx = _mm_shuffle_ps(b, b, _MM_SHUFFLE(2, 3, 0, 1));
+#ifdef __FMA__
+    return _mm_fmaaddsub_ps(aa, b, _mm_mul_ps(bb, yx));
+#else
+    return _mm_addsub_ps(_mm_mul_ps(aa, b), _mm_mul_ps(bb, yx));
+#endif
 }
 
 /////////////////////////////////////////////////
@@ -60,12 +107,21 @@ struct my_fft_avx_whole
     complex_t<T> w1p8_fwd;
     complex_t<T> w2p8_fwd;
     complex_t<T> w3p8_fwd;
+    __m128 w1p8_fwd_avx[2];
+    __m128 w2p8_fwd_avx[2];
+    __m128 w3p8_fwd_avx[2];
     complex_t<T> w1p16_fwd[4];
     complex_t<T> w2p16_fwd[4];
     complex_t<T> w3p16_fwd[4];
+    __m128 w1p16_fwd_avx[2];
+    __m128 w2p16_fwd_avx[2];
+    __m128 w3p16_fwd_avx[2];
     complex_t<T> w1p32_fwd[8];
     complex_t<T> w2p32_fwd[8];
     complex_t<T> w3p32_fwd[8];
+    __m128 w1p32_fwd_avx[4];
+    __m128 w2p32_fwd_avx[4];
+    __m128 w3p32_fwd_avx[4];
     complex_t<T> w1p64_fwd[16];
     complex_t<T> w2p64_fwd[16];
     complex_t<T> w3p64_fwd[16];
@@ -122,6 +178,12 @@ my_fft_avx_whole<T>::my_fft_avx_whole(int N)
     w1p8_fwd = complex_t<T>(cos(theta), -sin(theta));
     w2p8_fwd = w1p8_fwd * w1p8_fwd;
     w3p8_fwd = w1p8_fwd * w2p8_fwd;
+    w1p8_fwd_avx[0] = _mm_set_ps(-0.0, 1.0, -0.0, 1.0);
+    w2p8_fwd_avx[0] = _mm_set_ps(-0.0, 1.0, -0.0, 1.0);
+    w3p8_fwd_avx[0] = _mm_set_ps(-0.0, 1.0, -0.0, 1.0);
+    w1p8_fwd_avx[1] = _mm_set_ps(w1p8_fwd.Im, w1p8_fwd.Re, w1p8_fwd.Im, w1p8_fwd.Re);
+    w2p8_fwd_avx[1] = _mm_set_ps(w2p8_fwd.Im, w2p8_fwd.Re, w2p8_fwd.Im, w2p8_fwd.Re);
+    w3p8_fwd_avx[1] = _mm_set_ps(w3p8_fwd.Im, w3p8_fwd.Re, w3p8_fwd.Im, w3p8_fwd.Re);
 
     const T theta0 = 2*M_PI/16;
     for (int p = 0; p < 4; p++) {
@@ -129,12 +191,22 @@ my_fft_avx_whole<T>::my_fft_avx_whole(int N)
         w2p16_fwd[p] = w1p16_fwd[p] * w1p16_fwd[p];
         w3p16_fwd[p] = w1p16_fwd[p] * w2p16_fwd[p];
     }
+    for (int p = 0; p < 4; p+=2) {
+        w1p16_fwd_avx[p/2] = _mm_loadu_ps(&(w1p16_fwd[p].Re));
+        w2p16_fwd_avx[p/2] = _mm_loadu_ps(&(w2p16_fwd[p].Re));
+        w3p16_fwd_avx[p/2] = _mm_loadu_ps(&(w3p16_fwd[p].Re));
+    }
 
     const T theta1 = 2*M_PI/32;
     for (int p = 0; p < 8; p++) {
         w1p32_fwd[p] = complex_t<T>(cos(p*theta1), -sin(p*theta1));
         w2p32_fwd[p] = w1p32_fwd[p] * w1p32_fwd[p];
         w3p32_fwd[p] = w1p32_fwd[p] * w2p32_fwd[p];
+    }
+    for (int p = 0; p < 8; p+=2) {
+        w1p32_fwd_avx[p/2] = _mm_loadu_ps(&(w1p32_fwd[p].Re));
+        w2p32_fwd_avx[p/2] = _mm_loadu_ps(&(w2p32_fwd[p].Re));
+        w3p32_fwd_avx[p/2] = _mm_loadu_ps(&(w3p32_fwd[p].Re));
     }
 
     const T theta2 = 2*M_PI/64;
@@ -227,36 +299,50 @@ inline void my_fft_avx_whole<T>::my_fft_8points(int N, complex_t<T> *x)
 template<typename T>
 inline void my_fft_avx_whole<T>::my_fft_16points(int N, complex_t<T> *x)
 {
-    static const complex_t<T> j = complex_t<T>(0, 1);
+    __m128 sixteen = {16.0, 16.0, 16.0, 16.0};
+    uint8_t wt_index = 0;
+    __m128 y_avx[8];
 
-    complex_t<T> y[16];
-    for (int p = 0; p < 4; p++) {
-        const complex_t<T> a = x[p];
-        const complex_t<T> b = x[p + 4];
-        const complex_t<T> c = x[p + 8];
-        const complex_t<T> d = x[p + 12];
-        const complex_t<T>  apc =    a + c;
-        const complex_t<T>  amc =    a - c;
-        const complex_t<T>  bpd =    b + d;
-        const complex_t<T> jbmd = j*(b - d);
-        y[4*p] = apc + bpd;
-        y[4*p + 1] = w1p16_fwd[p]*(amc - jbmd);
-        y[4*p + 2] = w2p16_fwd[p]*(apc - bpd);
-        y[4*p + 3] = w3p16_fwd[p]*(amc + jbmd);
+    for (int p = 0; p < 4; p+=2, wt_index+=1) {
+        complex_t<T> *x_p = x + p;
+        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
+        __m128 b = _mm_loadu_ps(&(x_p[4].Re));
+        __m128 c = _mm_loadu_ps(&(x_p[8].Re));
+        __m128 d = _mm_loadu_ps(&(x_p[12].Re));
+        __m128 apc = _mm_add_ps(a, c);
+        __m128 amc = _mm_sub_ps(a, c);
+        __m128 bpd = _mm_add_ps(b, d);
+        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
+
+        __m128 aA = _mm_add_ps(apc, bpd);
+        __m128 bB = mulpz_lh(w1p16_fwd_avx[wt_index], _mm_sub_ps(amc, jbmd));
+        __m128 cC = mulpz_lh(w2p16_fwd_avx[wt_index], _mm_sub_ps(apc, bpd));
+        __m128 dD = mulpz_lh(w3p16_fwd_avx[wt_index], _mm_add_ps(amc, jbmd));
+        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
+        y_avx[2*p] = ab;
+        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
+        y_avx[1+2*p] = cd;
+        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
+        y_avx[2+2*p] = AB;
+        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
+        y_avx[3+2*p] = CD;
     }
-    for (int q = 0; q < 4; q++) {
-        const complex_t<T> a = y[q];
-        const complex_t<T> b = y[q + 4];
-        const complex_t<T> c = y[q + 8];
-        const complex_t<T> d = y[q + 12];
-        const complex_t<T>  apc =    a + c;
-        const complex_t<T>  amc =    a - c;
-        const complex_t<T>  bpd =    b + d;
-        const complex_t<T> jbmd = j*(b - d);
-        x[q] = (apc + bpd) / 16;
-        x[q + 4] = (amc - jbmd) / 16;
-        x[q + 8] = (apc - bpd) / 16;
-        x[q + 12] = (amc + jbmd) / 16;
+
+    for (int q = 0; q < 4; q+=2) {
+        complex_t<T> *xq = x + q;
+        __m128 a = y_avx[0+q/2];
+        __m128 b = y_avx[2+q/2];
+        __m128 c = y_avx[4+q/2];
+        __m128 d = y_avx[6+q/2];
+        __m128 apc = _mm_add_ps(a, c);
+        __m128 amc = _mm_sub_ps(a, c);
+        __m128 bpd = _mm_add_ps(b, d);
+        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
+
+        _mm_storeu_ps(&(xq[0].Re), _mm_div_ps(_mm_add_ps(apc, bpd), sixteen));
+        _mm_storeu_ps(&(xq[4].Re), _mm_div_ps(_mm_sub_ps(amc, jbmd), sixteen));
+        _mm_storeu_ps(&(xq[8].Re), _mm_div_ps(_mm_sub_ps(apc, bpd), sixteen));
+        _mm_storeu_ps(&(xq[12].Re), _mm_div_ps(_mm_add_ps(amc, jbmd), sixteen));
     }
 }
 
@@ -264,59 +350,81 @@ template<typename T>
 inline void my_fft_avx_whole<T>::my_fft_32points(int N, complex_t<T> *x)
 {
     static const complex_t<T> j = complex_t<T>(0, 1);
-
+    __m128 n_coeff = {32.0, 32.0, 32.0, 32.0};
+    uint8_t wt_index = 0;
     complex_t<T> y[32];
-    for (int p = 0; p < 8; p++) {
-        const complex_t<T> a = x[p];
-        const complex_t<T> b = x[p + 8];
-        const complex_t<T> c = x[p + 16];
-        const complex_t<T> d = x[p + 24];
-        const complex_t<T>  apc =    a + c;
-        const complex_t<T>  amc =    a - c;
-        const complex_t<T>  bpd =    b + d;
-        const complex_t<T> jbmd = j*(b - d);
-        y[4*p] =      apc +  bpd;
-        y[4*p + 1] = w1p32_fwd[p]*(amc - jbmd);
-        y[4*p + 2] = w2p32_fwd[p]*(apc -  bpd);
-        y[4*p + 3] = w3p32_fwd[p]*(amc + jbmd);
+
+    for (int p = 0; p < 8; p+=2, wt_index+=1) {
+        complex_t<T> *x_p = x + p;
+        complex_t<T> *y_4p = y + 4*p;
+        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
+        __m128 b = _mm_loadu_ps(&(x_p[8].Re));
+        __m128 c = _mm_loadu_ps(&(x_p[16].Re));
+        __m128 d = _mm_loadu_ps(&(x_p[24].Re));
+        __m128 apc = _mm_add_ps(a, c);
+        __m128 amc = _mm_sub_ps(a, c);
+        __m128 bpd = _mm_add_ps(b, d);
+        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
+
+        __m128 aA = _mm_add_ps(apc, bpd);
+        __m128 bB = mulpz_lh(w1p32_fwd_avx[wt_index], _mm_sub_ps(amc, jbmd));
+        __m128 cC = mulpz_lh(w2p32_fwd_avx[wt_index], _mm_sub_ps(apc, bpd));
+        __m128 dD = mulpz_lh(w3p32_fwd_avx[wt_index], _mm_add_ps(amc, jbmd));
+        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
+        _mm_storeu_ps(&(y_4p[0].Re), ab);
+        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
+        _mm_storeu_ps(&(y_4p[2].Re), cd);
+        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
+        _mm_storeu_ps(&(y_4p[4].Re), AB);
+        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
+        _mm_storeu_ps(&(y_4p[6].Re), CD);
     }
 
-    // p = 0
-    for (int q = 0; q < 4; q++) {
-        const complex_t<T> a = y[q];
-        const complex_t<T> b = y[q + 8];
-        const complex_t<T> c = y[q + 16];
-        const complex_t<T> d = y[q + 24];
-        const complex_t<T>  apc =    a + c;
-        const complex_t<T>  amc =    a - c;
-        const complex_t<T>  bpd =    b + d;
-        const complex_t<T> jbmd = j*(b - d);
-        x[q] =  apc + bpd;
-        x[q + 4] = amc - jbmd;
-        x[q + 8] = apc - bpd;
-        x[q + 12] = amc + jbmd;
-    }
-    // p = 1
-    for (int q = 0; q < 4; q++) {
-        const complex_t<T> a = y[q + 4];
-        const complex_t<T> b = y[q + 12];
-        const complex_t<T> c = y[q + 20];
-        const complex_t<T> d = y[q + 28];
-        const complex_t<T>  apc =    a + c;
-        const complex_t<T>  amc =    a - c;
-        const complex_t<T>  bpd =    b + d;
-        const complex_t<T> jbmd = j*(b - d);
-        x[q + 16] =  apc +  bpd;
-        x[q + 20] = w1p8_fwd*(amc - jbmd);
-        x[q + 24] = w2p8_fwd*(apc -  bpd);
-        x[q + 28] = w3p8_fwd*(amc + jbmd);
+    // n = 8, s = 4
+    for (int p = 0; p < 2; p++) {
+        uint8_t sp = 4 * p;
+        uint8_t s4p = 4 * sp;
+        // Set the weight
+        __m256 w1p = duppz2_lo(w1p8_fwd_avx[p]);
+        __m256 w2p = duppz2_lo(w2p8_fwd_avx[p]);
+        __m256 w3p = duppz2_lo(w3p8_fwd_avx[p]);
+#if 0
+        float ans[8];
+        _mm256_store_ps(ans, w1p);
+        printf("%.8e %.8le %.8le %.8le\n %.8e %.8le %.8le %.8le\n", ans[0], ans[1], ans[2], ans[3],
+                                                                    ans[4], ans[5], ans[6], ans[7]);
+        _mm256_store_ps(ans, w2p);
+        printf("%.8e %.8le %.8le %.8le\n %.8e %.8le %.8le %.8le\n", ans[0], ans[1], ans[2], ans[3],
+                                                                    ans[4], ans[5], ans[6], ans[7]);
+        _mm256_store_ps(ans, w3p);
+        printf("%.8e %.8le %.8le %.8le\n %.8e %.8le %.8le %.8le\n", ans[0], ans[1], ans[2], ans[3],
+                                                                    ans[4], ans[5], ans[6], ans[7]);
+#endif
+        // The 32 points case : q = 1
+        complex_t<T> *yq_sp = y + sp;
+        complex_t<T> *xq_s4p = x + s4p;
+        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
+        __m256 b = _mm256_loadu_ps(&(yq_sp[8].Re));
+        __m256 c = _mm256_loadu_ps(&(yq_sp[16].Re));
+        __m256 d = _mm256_loadu_ps(&(yq_sp[24].Re));
+        __m256 apc = _mm256_add_ps(a, c);
+        __m256 amc = _mm256_sub_ps(a, c);
+        __m256 bpd = _mm256_add_ps(b, d);
+        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
+
+        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
+        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
+        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
+        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
     }
 
-    for (int q = 0; q < 16; q++) {
-        const complex_t<T> a = x[q];
-        const complex_t<T> b = x[q + 16];
-        x[q]  = (a + b)/32;
-        x[q + 16] = (a - b)/32;
+    for (int q = 0; q < 16; q+=2) {
+        complex_t<T> *xq = x + q;
+
+        __m128 a = _mm_loadu_ps(&(xq[0].Re));
+        __m128 b = _mm_loadu_ps(&(xq[16].Re));
+        _mm_storeu_ps(&(xq[0].Re), _mm_div_ps(_mm_add_ps(a, b), n_coeff));
+        _mm_storeu_ps(&(xq[16].Re), _mm_div_ps(_mm_sub_ps(a, b), n_coeff));
     }
 }
 
@@ -1016,27 +1124,36 @@ void my_fft_avx_whole<T>::my_fft(int N, complex_t<T> *x)
 template<typename T>
 inline void my_fft_avx_whole<T>::my_ifft_8points(int N, complex_t<T> *x)
 {
-    static const complex_t<T> j = complex_t<T>(0, 1);
+    const __m128 zm = {0.0, -0.0, 0.0, -0.0};
+    const __m128 zm1 = {0.0, 0.0, 0.0, -0.0};
+    const __m128 eight = {8.0, 8.0, 8.0, 8.0};
+    __m128 x01 = _mm_loadu_ps(&(x[0].Re));
+    __m128 x23 = _mm_loadu_ps(&(x[2].Re));
+    __m128 x45 = _mm_loadu_ps(&(x[4].Re));
+    __m128 x67 = _mm_loadu_ps(&(x[6].Re));
+    __m128 a1 = _mm_add_ps(x01, x45);
+    __m128 a2 = _mm_add_ps(x23, x67);
+    __m128 a3 = _mm_sub_ps(x01, x45);
+    __m128 xmy = _mm_xor_ps(zm, _mm_sub_ps(x23, x67));
+    __m128 a4 = _mm_shuffle_ps(xmy, xmy, _MM_SHUFFLE(2, 3, 0, 1));
 
-    complex_t<T> y[8];
-    complex_t<T> a = x[0]; complex_t<T> b = x[2]; complex_t<T> c = x[4]; complex_t<T> d = x[6];
-    complex_t<T>  apc =    a + c; complex_t<T>  amc =    a - c;
-    complex_t<T>  bpd =    b + d; complex_t<T> jbmd = j*(b - d);
-    y[0] = apc +  bpd; y[1] = amc + jbmd;
-    y[2] = apc -  bpd; y[3] = amc - jbmd;
-    a = x[1]; b = x[3]; c = x[5]; d = x[7];
-    apc = a + c; amc = a - c;
-    bpd = b + d; jbmd = j*(b - d);
-    y[4] = apc +  bpd; y[5] = conj(w1p8_fwd) * (amc + jbmd);
-    y[6] = conj(w2p8_fwd) * (apc -  bpd); y[7] = conj(w3p8_fwd) * (amc - jbmd);
-    a = y[0]; b = y[4];
-    x[0] = a + b; x[4] = a - b;
-    a = y[1]; b = y[5];
-    x[1] = a + b; x[5] = a - b;
-    a = y[2]; b = y[6];
-    x[2] = a + b; x[6] = a - b;
-    a = y[3]; b = y[7];
-    x[3] = a + b; x[7] = a - b;
+    __m128 pm_a1 = _mm_add_ps(a1, a2);
+    __m128 pm_a2 = v8xpz_f(_mm_add_ps(a3, a4));
+    xmy = _mm_xor_ps(zm1, _mm_sub_ps(a1, a2));
+    __m128 pm_a3 = _mm_shuffle_ps(xmy, xmy, _MM_SHUFFLE(2, 3, 1, 0));
+    __m128 pm_a4 = w8xpz_f(_mm_sub_ps(a3, a4));
+
+    __m128 res1 = _mm_shuffle_ps(pm_a1, pm_a2, _MM_SHUFFLE(1, 0, 1, 0));
+    __m128 res2 = _mm_shuffle_ps(pm_a1, pm_a2, _MM_SHUFFLE(3, 2, 3, 2));
+    __m128 res3 = _mm_shuffle_ps(pm_a3, pm_a4, _MM_SHUFFLE(1, 0, 1, 0));
+    __m128 res4 = _mm_shuffle_ps(pm_a3, pm_a4, _MM_SHUFFLE(3, 2, 3, 2));
+    __m128 res5 = _mm_add_ps(res3, res4);
+    __m128 res6 = _mm_sub_ps(res3, res4);
+
+    _mm_storeu_ps(&(x[0].Re), _mm_add_ps(res1, res2));
+    _mm_storeu_ps(&(x[2].Re), _mm_shuffle_ps(res5, res6, _MM_SHUFFLE(3, 2, 1, 0)));
+    _mm_storeu_ps(&(x[4].Re), _mm_sub_ps(res1, res2));
+    _mm_storeu_ps(&(x[6].Re), _mm_shuffle_ps(res6, res5, _MM_SHUFFLE(3, 2, 1, 0)));
 }
 
 template<typename T>
