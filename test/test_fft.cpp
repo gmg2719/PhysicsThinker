@@ -32,7 +32,7 @@
 #include "signal/my_fft_avx.hpp"
 #include "my_time.h"
 
-#define RUNNING_STATICS_COUNT       4
+#define RUNNING_STATICS_COUNT       20
 
 enum fft_method_type {
     COOLEY_TUKEY_C = 1,
@@ -122,7 +122,7 @@ void run_fft_benchmark_app1()
     float run_time_myfft[12] = {0.};
     float run_time_myfft_avx[12] = {0.};
 
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < 6; i++)
     {
         int fft_points = points[i];
         for (int running = 0; running < RUNNING_STATICS_COUNT; running++)
@@ -196,6 +196,9 @@ void fft_fwd_back_check(int type, int N)
         my_fft_.my_fft(N, x);
     } else if (type == MY_FFT_AVX) {
         my_fft_avx_.my_fft(N, x);
+        for (int i = 0; i < N; i++) {
+            x[i] /= N;
+        }
     } else {
         fwd(N, x);
     }
