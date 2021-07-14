@@ -122,7 +122,7 @@ void run_fft_benchmark_app1()
     float run_time_myfft[12] = {0.};
     float run_time_myfft_avx[12] = {0.};
 
-    for (int i = 0; i < 6; i++)
+    for (int i = 0; i < 12; i++)
     {
         int fft_points = points[i];
         for (int running = 0; running < RUNNING_STATICS_COUNT; running++)
