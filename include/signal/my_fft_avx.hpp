@@ -32,6 +32,37 @@
 #define SQRT1_2_CONSTANT        0.70710678118654752440  // 1/sqrt(2)
 
 /////////////////////////////////////////////////
+//          Weight values are designed         //
+/////////////////////////////////////////////////
+inline uint8_t my_position_of_weight(int N)
+{
+    switch (N) {
+    case 8:
+        return 0;
+    case 16:
+        return 1;
+    case 32:
+        return 2;
+    case 64:
+        return 3;
+    case 128:
+        return 4;
+    case 256:
+        return 5;
+    case 512:
+        return 6;
+    case 1024:
+        return 7;
+    case 2048:
+        return 8;
+    case 4096:
+        return 9;
+    default:
+        return 0;
+    }
+}
+
+/////////////////////////////////////////////////
 //      some useful SIMD functions for FFT     //
 /////////////////////////////////////////////////
 
@@ -107,179 +138,26 @@ static inline __m128 mulpz_lh(const __m128 a, const __m128 b)
 template<typename T>
 struct my_fft_avx_whole
 {
-    // Forward usage
-    complex_t<T> w1p8_fwd;
-    complex_t<T> w2p8_fwd;
-    complex_t<T> w3p8_fwd;
-    __m128 w1p8_fwd_nse[2];
-    __m128 w2p8_fwd_nse[2];
-    __m128 w3p8_fwd_nse[2];
-    complex_t<T> w1p16_fwd[4];
-    complex_t<T> w2p16_fwd[4];
-    complex_t<T> w3p16_fwd[4];
-    __m128 w1p16_fwd_avx[2];
-    __m128 w2p16_fwd_avx[2];
-    __m128 w3p16_fwd_avx[2];
-    __m128 w1p16_fwd_nse[4];
-    __m128 w2p16_fwd_nse[4];
-    __m128 w3p16_fwd_nse[4];
-    complex_t<T> w1p32_fwd[8];
-    complex_t<T> w2p32_fwd[8];
-    complex_t<T> w3p32_fwd[8];
-    __m128 w1p32_fwd_avx[4];
-    __m128 w2p32_fwd_avx[4];
-    __m128 w3p32_fwd_avx[4];
-    __m128 w1p32_fwd_nse[8];
-    __m128 w2p32_fwd_nse[8];
-    __m128 w3p32_fwd_nse[8];
-    complex_t<T> w1p64_fwd[16];
-    complex_t<T> w2p64_fwd[16];
-    complex_t<T> w3p64_fwd[16];
-    __m128 w1p64_fwd_avx[8];
-    __m128 w2p64_fwd_avx[8];
-    __m128 w3p64_fwd_avx[8];
-    __m128 w1p64_fwd_nse[16];
-    __m128 w2p64_fwd_nse[16];
-    __m128 w3p64_fwd_nse[16];
-    complex_t<T> w1p128_fwd[32];
-    complex_t<T> w2p128_fwd[32];
-    complex_t<T> w3p128_fwd[32];
-    __m128 w1p128_fwd_avx[16];
-    __m128 w2p128_fwd_avx[16];
-    __m128 w3p128_fwd_avx[16];
-    __m128 w1p128_fwd_nse[32];
-    __m128 w2p128_fwd_nse[32];
-    __m128 w3p128_fwd_nse[32];
-    complex_t<T> w1p256_fwd[64];
-    complex_t<T> w2p256_fwd[64];
-    complex_t<T> w3p256_fwd[64];
-    __m128 w1p256_fwd_avx[32];
-    __m128 w2p256_fwd_avx[32];
-    __m128 w3p256_fwd_avx[32];
-    __m128 w1p256_fwd_nse[64];
-    __m128 w2p256_fwd_nse[64];
-    __m128 w3p256_fwd_nse[64];
-    complex_t<T> w1p512_fwd[128];
-    complex_t<T> w2p512_fwd[128];
-    complex_t<T> w3p512_fwd[128];
-    __m128 w1p512_fwd_avx[64];
-    __m128 w2p512_fwd_avx[64];
-    __m128 w3p512_fwd_avx[64];
-    __m128 w1p512_fwd_nse[128];
-    __m128 w2p512_fwd_nse[128];
-    __m128 w3p512_fwd_nse[128];
-    complex_t<T> w1p1024_fwd[256];
-    complex_t<T> w2p1024_fwd[256];
-    complex_t<T> w3p1024_fwd[256];
-    __m128 w1p1024_fwd_avx[128];
-    __m128 w2p1024_fwd_avx[128];
-    __m128 w3p1024_fwd_avx[128];
-    __m128 w1p1024_fwd_nse[256];
-    __m128 w2p1024_fwd_nse[256];
-    __m128 w3p1024_fwd_nse[256];
-    complex_t<T> w1p2048_fwd[512];
-    complex_t<T> w2p2048_fwd[512];
-    complex_t<T> w3p2048_fwd[512];
-    __m128 w1p2048_fwd_avx[256];
-    __m128 w2p2048_fwd_avx[256];
-    __m128 w3p2048_fwd_avx[256];
-    __m128 w1p2048_fwd_nse[512];
-    __m128 w2p2048_fwd_nse[512];
-    __m128 w3p2048_fwd_nse[512];
-    complex_t<T> w1p4096_fwd[1024];
-    complex_t<T> w2p4096_fwd[1024];
-    complex_t<T> w3p4096_fwd[1024];
-    __m128 w1p4096_fwd_avx[512];
-    __m128 w2p4096_fwd_avx[512];
-    __m128 w3p4096_fwd_avx[512];
-    // Backward usage
-    complex_t<T> w1p8_back;
-    complex_t<T> w2p8_back;
-    complex_t<T> w3p8_back;
-    __m128 w1p8_back_nse[2];
-    __m128 w2p8_back_nse[2];
-    __m128 w3p8_back_nse[2];
-    complex_t<T> w1p16_back[4];
-    complex_t<T> w2p16_back[4];
-    complex_t<T> w3p16_back[4];
-    __m128 w1p16_back_avx[2];
-    __m128 w2p16_back_avx[2];
-    __m128 w3p16_back_avx[2];
-    __m128 w1p16_back_nse[4];
-    __m128 w2p16_back_nse[4];
-    __m128 w3p16_back_nse[4];
-    complex_t<T> w1p32_back[8];
-    complex_t<T> w2p32_back[8];
-    complex_t<T> w3p32_back[8];
-    __m128 w1p32_back_avx[4];
-    __m128 w2p32_back_avx[4];
-    __m128 w3p32_back_avx[4];
-    __m128 w1p32_back_nse[8];
-    __m128 w2p32_back_nse[8];
-    __m128 w3p32_back_nse[8];
-    complex_t<T> w1p64_back[16];
-    complex_t<T> w2p64_back[16];
-    complex_t<T> w3p64_back[16];
-    __m128 w1p64_back_avx[8];
-    __m128 w2p64_back_avx[8];
-    __m128 w3p64_back_avx[8];
-    __m128 w1p64_back_nse[16];
-    __m128 w2p64_back_nse[16];
-    __m128 w3p64_back_nse[16];
-    complex_t<T> w1p128_back[32];
-    complex_t<T> w2p128_back[32];
-    complex_t<T> w3p128_back[32];
-    __m128 w1p128_back_avx[16];
-    __m128 w2p128_back_avx[16];
-    __m128 w3p128_back_avx[16];
-    __m128 w1p128_back_nse[32];
-    __m128 w2p128_back_nse[32];
-    __m128 w3p128_back_nse[32];
-    complex_t<T> w1p256_back[64];
-    complex_t<T> w2p256_back[64];
-    complex_t<T> w3p256_back[64];
-    __m128 w1p256_back_avx[32];
-    __m128 w2p256_back_avx[32];
-    __m128 w3p256_back_avx[32];
-    __m128 w1p256_back_nse[64];
-    __m128 w2p256_back_nse[64];
-    __m128 w3p256_back_nse[64];
-    complex_t<T> w1p512_back[128];
-    complex_t<T> w2p512_back[128];
-    complex_t<T> w3p512_back[128];
-    __m128 w1p512_back_avx[64];
-    __m128 w2p512_back_avx[64];
-    __m128 w3p512_back_avx[64];
-    __m128 w1p512_back_nse[128];
-    __m128 w2p512_back_nse[128];
-    __m128 w3p512_back_nse[128];
-    complex_t<T> w1p1024_back[256];
-    complex_t<T> w2p1024_back[256];
-    complex_t<T> w3p1024_back[256];
-    __m128 w1p1024_back_avx[128];
-    __m128 w2p1024_back_avx[128];
-    __m128 w3p1024_back_avx[128];
-    __m128 w1p1024_back_nse[256];
-    __m128 w2p1024_back_nse[256];
-    __m128 w3p1024_back_nse[256];
-    complex_t<T> w1p2048_back[512];
-    complex_t<T> w2p2048_back[512];
-    complex_t<T> w3p2048_back[512];
-    __m128 w1p2048_back_avx[256];
-    __m128 w2p2048_back_avx[256];
-    __m128 w3p2048_back_avx[256];
-    __m128 w1p2048_back_nse[512];
-    __m128 w2p2048_back_nse[512];
-    __m128 w3p2048_back_nse[512];
-    complex_t<T> w1p4096_back[1024];
-    complex_t<T> w2p4096_back[1024];
-    complex_t<T> w3p4096_back[1024];
-    __m128 w1p4096_back_avx[512];
-    __m128 w2p4096_back_avx[512];
-    __m128 w3p4096_back_avx[512];
+    // Forward FFT usage
+    complex_t<T> *w1p_fwd[10];
+    complex_t<T> *w2p_fwd[10];
+    complex_t<T> *w3p_fwd[10];
+
+    // Backward FFT usage
+    complex_t<T> *w1p_back[10];
+    complex_t<T> *w2p_back[10];
+    complex_t<T> *w3p_back[10];
+
+    uint16_t wp_points[10] = {8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4069};
+
     // The construct interface
     my_fft_avx_whole(int N);
     // FFT forward operations
+    inline void my_fft_first_butterfly(int N, int s, complex_t<T> *x, complex_t<T> *y);
+    inline void my_fft_butterfly_s4(int N, complex_t<T> *x, complex_t<T> *y);
+    inline void my_fft_butterfly(int N, int s, complex_t<T> *x, complex_t<T> *y);
+    inline void my_fft_bottom2_butterfly(int s, complex_t<T> *x, complex_t<T> *y);
+    inline void my_fft_bottom4_butterfly(int s, complex_t<T> *x, complex_t<T> *y);
     inline void my_fft_8points(int N, complex_t<T> *x);
     inline void my_fft_16points(int N, complex_t<T> *x);
     inline void my_fft_32points(int N, complex_t<T> *x);
@@ -291,6 +169,11 @@ struct my_fft_avx_whole
     inline void my_fft_2048points(int N, complex_t<T> *x);
     inline void my_fft_4096points(int N, complex_t<T> *x);
     // FFT backward operations
+    inline void my_ifft_first_butterfly(int N, int s, complex_t<T> *x, complex_t<T> *y);
+    inline void my_ifft_butterfly_s4(int N, complex_t<T> *x, complex_t<T> *y);
+    inline void my_ifft_butterfly(int N, int s, complex_t<T> *x, complex_t<T> *y);
+    inline void my_ifft_bottom2_butterfly(int s, complex_t<T> *x, complex_t<T> *y);
+    inline void my_ifft_bottom4_butterfly(int s, complex_t<T> *x, complex_t<T> *y);
     inline void my_ifft_8points(int N, complex_t<T> *x);
     inline void my_ifft_16points(int N, complex_t<T> *x);
     inline void my_ifft_32points(int N, complex_t<T> *x);
@@ -301,6 +184,8 @@ struct my_fft_avx_whole
     inline void my_ifft_1024points(int N, complex_t<T> *x);
     inline void my_ifft_2048points(int N, complex_t<T> *x);
     inline void my_ifft_4096points(int N, complex_t<T> *x);
+
+    // Provided wrapper interfaces
     void my_fft(int N, complex_t<T> *x);
     void my_ifft(int N, complex_t<T> *x);
 };
@@ -308,281 +193,26 @@ struct my_fft_avx_whole
 template<typename T>
 my_fft_avx_whole<T>::my_fft_avx_whole(int N)
 {
-    // Forward usage
-    const T theta = 2*M_PI/8;
-    w1p8_fwd = complex_t<T>(cos(theta), -sin(theta));
-    w2p8_fwd = w1p8_fwd * w1p8_fwd;
-    w3p8_fwd = w1p8_fwd * w2p8_fwd;
-    w1p8_fwd_nse[0] = _mm_set_ps(-0.0, 1.0, -0.0, 1.0);
-    w2p8_fwd_nse[0] = _mm_set_ps(-0.0, 1.0, -0.0, 1.0);
-    w3p8_fwd_nse[0] = _mm_set_ps(-0.0, 1.0, -0.0, 1.0);
-    w1p8_fwd_nse[1] = _mm_set_ps(w1p8_fwd.Im, w1p8_fwd.Re, w1p8_fwd.Im, w1p8_fwd.Re);
-    w2p8_fwd_nse[1] = _mm_set_ps(w2p8_fwd.Im, w2p8_fwd.Re, w2p8_fwd.Im, w2p8_fwd.Re);
-    w3p8_fwd_nse[1] = _mm_set_ps(w3p8_fwd.Im, w3p8_fwd.Re, w3p8_fwd.Im, w3p8_fwd.Re);
+    // Coefficents initialization
+    for (uint8_t i = 0; i < 10; i++) {
+        uint16_t points = wp_points[i];
+        w1p_fwd[i] = new complex_t<T>[points/4];
+        w2p_fwd[i] = new complex_t<T>[points/4];
+        w3p_fwd[i] = new complex_t<T>[points/4];
+        w1p_back[i] = new complex_t<T>[points/4];
+        w2p_back[i] = new complex_t<T>[points/4];
+        w3p_back[i] = new complex_t<T>[points/4];
+        T theta = 2*M_PI/points;
 
-    const T theta0 = 2*M_PI/16;
-    for (int p = 0; p < 4; p++) {
-        w1p16_fwd[p] = complex_t<T>(cos(p*theta0), -sin(p*theta0));
-        w2p16_fwd[p] = w1p16_fwd[p] * w1p16_fwd[p];
-        w3p16_fwd[p] = w1p16_fwd[p] * w2p16_fwd[p];
-        w1p16_fwd_nse[p] = _mm_set_ps(w1p16_fwd[p].Im, w1p16_fwd[p].Re, w1p16_fwd[p].Im, w1p16_fwd[p].Re);
-        w2p16_fwd_nse[p] = _mm_set_ps(w2p16_fwd[p].Im, w2p16_fwd[p].Re, w2p16_fwd[p].Im, w2p16_fwd[p].Re);
-        w3p16_fwd_nse[p] = _mm_set_ps(w3p16_fwd[p].Im, w3p16_fwd[p].Re, w3p16_fwd[p].Im, w3p16_fwd[p].Re);
-    }
-    for (int p = 0; p < 4; p+=2) {
-        w1p16_fwd_avx[p/2] = _mm_loadu_ps(&(w1p16_fwd[p].Re));
-        w2p16_fwd_avx[p/2] = _mm_loadu_ps(&(w2p16_fwd[p].Re));
-        w3p16_fwd_avx[p/2] = _mm_loadu_ps(&(w3p16_fwd[p].Re));
-    }
+        for (uint16_t p = 0; p < points/4; p++) {
+            w1p_fwd[i][p] = complex_t<T>(cos(p*theta), -sin(p*theta));
+            w2p_fwd[i][p] = w1p_fwd[i][p] * w1p_fwd[i][p];
+            w3p_fwd[i][p] = w1p_fwd[i][p] * w2p_fwd[i][p];
 
-    const T theta1 = 2*M_PI/32;
-    for (int p = 0; p < 8; p++) {
-        w1p32_fwd[p] = complex_t<T>(cos(p*theta1), -sin(p*theta1));
-        w2p32_fwd[p] = w1p32_fwd[p] * w1p32_fwd[p];
-        w3p32_fwd[p] = w1p32_fwd[p] * w2p32_fwd[p];
-        w1p32_fwd_nse[p] = _mm_set_ps(w1p32_fwd[p].Im, w1p32_fwd[p].Re, w1p32_fwd[p].Im, w1p32_fwd[p].Re);
-        w2p32_fwd_nse[p] = _mm_set_ps(w2p32_fwd[p].Im, w2p32_fwd[p].Re, w2p32_fwd[p].Im, w2p32_fwd[p].Re);
-        w3p32_fwd_nse[p] = _mm_set_ps(w3p32_fwd[p].Im, w3p32_fwd[p].Re, w3p32_fwd[p].Im, w3p32_fwd[p].Re);
-    }
-    for (int p = 0; p < 8; p+=2) {
-        w1p32_fwd_avx[p/2] = _mm_loadu_ps(&(w1p32_fwd[p].Re));
-        w2p32_fwd_avx[p/2] = _mm_loadu_ps(&(w2p32_fwd[p].Re));
-        w3p32_fwd_avx[p/2] = _mm_loadu_ps(&(w3p32_fwd[p].Re));
-    }
-
-    const T theta2 = 2*M_PI/64;
-    for (int p = 0; p < 16; p++) {
-        w1p64_fwd[p] = complex_t<T>(cos(p*theta2), -sin(p*theta2));
-        w2p64_fwd[p] = w1p64_fwd[p] * w1p64_fwd[p];
-        w3p64_fwd[p] = w1p64_fwd[p] * w2p64_fwd[p];
-        w1p64_fwd_nse[p] = _mm_set_ps(w1p64_fwd[p].Im, w1p64_fwd[p].Re, w1p64_fwd[p].Im, w1p64_fwd[p].Re);
-        w2p64_fwd_nse[p] = _mm_set_ps(w2p64_fwd[p].Im, w2p64_fwd[p].Re, w2p64_fwd[p].Im, w2p64_fwd[p].Re);
-        w3p64_fwd_nse[p] = _mm_set_ps(w3p64_fwd[p].Im, w3p64_fwd[p].Re, w3p64_fwd[p].Im, w3p64_fwd[p].Re);
-    }
-    for (int p = 0; p < 16; p+=2) {
-        w1p64_fwd_avx[p/2] = _mm_loadu_ps(&(w1p64_fwd[p].Re));
-        w2p64_fwd_avx[p/2] = _mm_loadu_ps(&(w2p64_fwd[p].Re));
-        w3p64_fwd_avx[p/2] = _mm_loadu_ps(&(w3p64_fwd[p].Re));
-    }
-
-    const T theta3 = 2*M_PI/128;
-    for (int p = 0; p < 32; p++) {
-        w1p128_fwd[p] = complex_t<T>(cos(p*theta3), -sin(p*theta3));
-        w2p128_fwd[p] = w1p128_fwd[p] * w1p128_fwd[p];
-        w3p128_fwd[p] = w1p128_fwd[p] * w2p128_fwd[p];
-        w1p128_fwd_nse[p] = _mm_set_ps(w1p128_fwd[p].Im, w1p128_fwd[p].Re, w1p128_fwd[p].Im, w1p128_fwd[p].Re);
-        w2p128_fwd_nse[p] = _mm_set_ps(w2p128_fwd[p].Im, w2p128_fwd[p].Re, w2p128_fwd[p].Im, w2p128_fwd[p].Re);
-        w3p128_fwd_nse[p] = _mm_set_ps(w3p128_fwd[p].Im, w3p128_fwd[p].Re, w3p128_fwd[p].Im, w3p128_fwd[p].Re);
-    }
-    for (int p = 0; p < 32; p+=2) {
-        w1p128_fwd_avx[p/2] = _mm_loadu_ps(&(w1p128_fwd[p].Re));
-        w2p128_fwd_avx[p/2] = _mm_loadu_ps(&(w2p128_fwd[p].Re));
-        w3p128_fwd_avx[p/2] = _mm_loadu_ps(&(w3p128_fwd[p].Re));
-    }
-
-    const T theta4 = 2*M_PI/256;
-    for (int p = 0; p < 64; p++) {
-        w1p256_fwd[p] = complex_t<T>(cos(p*theta4), -sin(p*theta4));
-        w2p256_fwd[p] = w1p256_fwd[p] * w1p256_fwd[p];
-        w3p256_fwd[p] = w1p256_fwd[p] * w2p256_fwd[p];
-        w1p256_fwd_nse[p] = _mm_set_ps(w1p256_fwd[p].Im, w1p256_fwd[p].Re, w1p256_fwd[p].Im, w1p256_fwd[p].Re);
-        w2p256_fwd_nse[p] = _mm_set_ps(w2p256_fwd[p].Im, w2p256_fwd[p].Re, w2p256_fwd[p].Im, w2p256_fwd[p].Re);
-        w3p256_fwd_nse[p] = _mm_set_ps(w3p256_fwd[p].Im, w3p256_fwd[p].Re, w3p256_fwd[p].Im, w3p256_fwd[p].Re);
-    }
-    for (int p = 0; p < 64; p+=2) {
-        w1p256_fwd_avx[p/2] = _mm_loadu_ps(&(w1p256_fwd[p].Re));
-        w2p256_fwd_avx[p/2] = _mm_loadu_ps(&(w2p256_fwd[p].Re));
-        w3p256_fwd_avx[p/2] = _mm_loadu_ps(&(w3p256_fwd[p].Re));
-    }
-
-    const T theta5 = 2*M_PI/512;
-    for (int p = 0; p < 128; p++) {
-        w1p512_fwd[p] = complex_t<T>(cos(p*theta5), -sin(p*theta5));
-        w2p512_fwd[p] = w1p512_fwd[p] * w1p512_fwd[p];
-        w3p512_fwd[p] = w1p512_fwd[p] * w2p512_fwd[p];
-        w1p512_fwd_nse[p] = _mm_set_ps(w1p512_fwd[p].Im, w1p512_fwd[p].Re, w1p512_fwd[p].Im, w1p512_fwd[p].Re);
-        w2p512_fwd_nse[p] = _mm_set_ps(w2p512_fwd[p].Im, w2p512_fwd[p].Re, w2p512_fwd[p].Im, w2p512_fwd[p].Re);
-        w3p512_fwd_nse[p] = _mm_set_ps(w3p512_fwd[p].Im, w3p512_fwd[p].Re, w3p512_fwd[p].Im, w3p512_fwd[p].Re);
-    }
-    for (int p = 0; p < 128; p+=2) {
-        w1p512_fwd_avx[p/2] = _mm_loadu_ps(&(w1p512_fwd[p].Re));
-        w2p512_fwd_avx[p/2] = _mm_loadu_ps(&(w2p512_fwd[p].Re));
-        w3p512_fwd_avx[p/2] = _mm_loadu_ps(&(w3p512_fwd[p].Re));
-    }
-
-    const T theta6 = 2*M_PI/1024;
-    for (int p = 0; p < 256; p++) {
-        w1p1024_fwd[p] = complex_t<T>(cos(p*theta6), -sin(p*theta6));
-        w2p1024_fwd[p] = w1p1024_fwd[p] * w1p1024_fwd[p];
-        w3p1024_fwd[p] = w1p1024_fwd[p] * w2p1024_fwd[p];
-        w1p1024_fwd_nse[p] = _mm_set_ps(w1p1024_fwd[p].Im, w1p1024_fwd[p].Re, w1p1024_fwd[p].Im, w1p1024_fwd[p].Re);
-        w2p1024_fwd_nse[p] = _mm_set_ps(w2p1024_fwd[p].Im, w2p1024_fwd[p].Re, w2p1024_fwd[p].Im, w2p1024_fwd[p].Re);
-        w3p1024_fwd_nse[p] = _mm_set_ps(w3p1024_fwd[p].Im, w3p1024_fwd[p].Re, w3p1024_fwd[p].Im, w3p1024_fwd[p].Re);
-    }
-    for (int p = 0; p < 256; p+=2) {
-        w1p1024_fwd_avx[p/2] = _mm_loadu_ps(&(w1p1024_fwd[p].Re));
-        w2p1024_fwd_avx[p/2] = _mm_loadu_ps(&(w2p1024_fwd[p].Re));
-        w3p1024_fwd_avx[p/2] = _mm_loadu_ps(&(w3p1024_fwd[p].Re));
-    }
-
-    const T theta7 = 2*M_PI/2048;
-    for (int p = 0; p < 512; p++) {
-        w1p2048_fwd[p] = complex_t<T>(cos(p*theta7), -sin(p*theta7));
-        w2p2048_fwd[p] = w1p2048_fwd[p] * w1p2048_fwd[p];
-        w3p2048_fwd[p] = w1p2048_fwd[p] * w2p2048_fwd[p];
-        w1p2048_fwd_nse[p] = _mm_set_ps(w1p2048_fwd[p].Im, w1p2048_fwd[p].Re, w1p2048_fwd[p].Im, w1p2048_fwd[p].Re);
-        w2p2048_fwd_nse[p] = _mm_set_ps(w2p2048_fwd[p].Im, w2p2048_fwd[p].Re, w2p2048_fwd[p].Im, w2p2048_fwd[p].Re);
-        w3p2048_fwd_nse[p] = _mm_set_ps(w3p2048_fwd[p].Im, w3p2048_fwd[p].Re, w3p2048_fwd[p].Im, w3p2048_fwd[p].Re);
-    }
-    for (int p = 0; p < 512; p+=2) {
-        w1p2048_fwd_avx[p/2] = _mm_loadu_ps(&(w1p2048_fwd[p].Re));
-        w2p2048_fwd_avx[p/2] = _mm_loadu_ps(&(w2p2048_fwd[p].Re));
-        w3p2048_fwd_avx[p/2] = _mm_loadu_ps(&(w3p2048_fwd[p].Re));
-    }
-
-    const T theta8 = 2*M_PI/4096;
-    for (int p = 0; p < 1024; p++) {
-        w1p4096_fwd[p] = complex_t<T>(cos(p*theta8), -sin(p*theta8));
-        w2p4096_fwd[p] = w1p4096_fwd[p] * w1p4096_fwd[p];
-        w3p4096_fwd[p] = w1p4096_fwd[p] * w2p4096_fwd[p];
-    }
-    for (int p = 0; p < 1024; p+=2) {
-        w1p4096_fwd_avx[p/2] = _mm_loadu_ps(&(w1p4096_fwd[p].Re));
-        w2p4096_fwd_avx[p/2] = _mm_loadu_ps(&(w2p4096_fwd[p].Re));
-        w3p4096_fwd_avx[p/2] = _mm_loadu_ps(&(w3p4096_fwd[p].Re));
-    }
-    // Backward usage
-    w1p8_back = complex_t<T>(cos(theta), sin(theta));
-    w2p8_back = w1p8_back * w1p8_back;
-    w3p8_back = w1p8_back * w2p8_back;
-    w1p8_back_nse[0] = _mm_set_ps(-0.0, 1.0, -0.0, 1.0);
-    w2p8_back_nse[0] = _mm_set_ps(-0.0, 1.0, -0.0, 1.0);
-    w3p8_back_nse[0] = _mm_set_ps(-0.0, 1.0, -0.0, 1.0);
-    w1p8_back_nse[1] = _mm_set_ps(w1p8_back.Im, w1p8_back.Re, w1p8_back.Im, w1p8_back.Re);
-    w2p8_back_nse[1] = _mm_set_ps(w2p8_back.Im, w2p8_back.Re, w2p8_back.Im, w2p8_back.Re);
-    w3p8_back_nse[1] = _mm_set_ps(w3p8_back.Im, w3p8_back.Re, w3p8_back.Im, w3p8_back.Re);
-
-    for (int p = 0; p < 4; p++) {
-        w1p16_back[p] = complex_t<T>(cos(p*theta0), sin(p*theta0));
-        w2p16_back[p] = w1p16_back[p] * w1p16_back[p];
-        w3p16_back[p] = w1p16_back[p] * w2p16_back[p];
-        w1p16_back_nse[p] = _mm_set_ps(w1p16_back[p].Im, w1p16_back[p].Re, w1p16_back[p].Im, w1p16_back[p].Re);
-        w2p16_back_nse[p] = _mm_set_ps(w2p16_back[p].Im, w2p16_back[p].Re, w2p16_back[p].Im, w2p16_back[p].Re);
-        w3p16_back_nse[p] = _mm_set_ps(w3p16_back[p].Im, w3p16_back[p].Re, w3p16_back[p].Im, w3p16_back[p].Re);
-    }
-    for (int p = 0; p < 4; p+=2) {
-        w1p16_back_avx[p/2] = _mm_loadu_ps(&(w1p16_back[p].Re));
-        w2p16_back_avx[p/2] = _mm_loadu_ps(&(w2p16_back[p].Re));
-        w3p16_back_avx[p/2] = _mm_loadu_ps(&(w3p16_back[p].Re));
-    }
-
-    for (int p = 0; p < 8; p++) {
-        w1p32_back[p] = complex_t<T>(cos(p*theta1), sin(p*theta1));
-        w2p32_back[p] = w1p32_back[p] * w1p32_back[p];
-        w3p32_back[p] = w1p32_back[p] * w2p32_back[p];
-        w1p32_back_nse[p] = _mm_set_ps(w1p32_back[p].Im, w1p32_back[p].Re, w1p32_back[p].Im, w1p32_back[p].Re);
-        w2p32_back_nse[p] = _mm_set_ps(w2p32_back[p].Im, w2p32_back[p].Re, w2p32_back[p].Im, w2p32_back[p].Re);
-        w3p32_back_nse[p] = _mm_set_ps(w3p32_back[p].Im, w3p32_back[p].Re, w3p32_back[p].Im, w3p32_back[p].Re);
-    }
-    for (int p = 0; p < 8; p+=2) {
-        w1p32_back_avx[p/2] = _mm_loadu_ps(&(w1p32_back[p].Re));
-        w2p32_back_avx[p/2] = _mm_loadu_ps(&(w2p32_back[p].Re));
-        w3p32_back_avx[p/2] = _mm_loadu_ps(&(w3p32_back[p].Re));
-    }
-
-    for (int p = 0; p < 16; p++) {
-        w1p64_back[p] = complex_t<T>(cos(p*theta2), sin(p*theta2));
-        w2p64_back[p] = w1p64_back[p] * w1p64_back[p];
-        w3p64_back[p] = w1p64_back[p] * w2p64_back[p];
-        w1p64_back_nse[p] = _mm_set_ps(w1p64_back[p].Im, w1p64_back[p].Re, w1p64_back[p].Im, w1p64_back[p].Re);
-        w2p64_back_nse[p] = _mm_set_ps(w2p64_back[p].Im, w2p64_back[p].Re, w2p64_back[p].Im, w2p64_back[p].Re);
-        w3p64_back_nse[p] = _mm_set_ps(w3p64_back[p].Im, w3p64_back[p].Re, w3p64_back[p].Im, w3p64_back[p].Re);
-    }
-    for (int p = 0; p < 16; p+=2) {
-        w1p64_back_avx[p/2] = _mm_loadu_ps(&(w1p64_back[p].Re));
-        w2p64_back_avx[p/2] = _mm_loadu_ps(&(w2p64_back[p].Re));
-        w3p64_back_avx[p/2] = _mm_loadu_ps(&(w3p64_back[p].Re));
-    }
-
-    for (int p = 0; p < 32; p++) {
-        w1p128_back[p] = complex_t<T>(cos(p*theta3), sin(p*theta3));
-        w2p128_back[p] = w1p128_back[p] * w1p128_back[p];
-        w3p128_back[p] = w1p128_back[p] * w2p128_back[p];
-        w1p128_back_nse[p] = _mm_set_ps(w1p128_back[p].Im, w1p128_back[p].Re, w1p128_back[p].Im, w1p128_back[p].Re);
-        w2p128_back_nse[p] = _mm_set_ps(w2p128_back[p].Im, w2p128_back[p].Re, w2p128_back[p].Im, w2p128_back[p].Re);
-        w3p128_back_nse[p] = _mm_set_ps(w3p128_back[p].Im, w3p128_back[p].Re, w3p128_back[p].Im, w3p128_back[p].Re);
-    }
-    for (int p = 0; p < 32; p+=2) {
-        w1p128_back_avx[p/2] = _mm_loadu_ps(&(w1p128_back[p].Re));
-        w2p128_back_avx[p/2] = _mm_loadu_ps(&(w2p128_back[p].Re));
-        w3p128_back_avx[p/2] = _mm_loadu_ps(&(w3p128_back[p].Re));
-    }
-
-    for (int p = 0; p < 64; p++) {
-        w1p256_back[p] = complex_t<T>(cos(p*theta4), sin(p*theta4));
-        w2p256_back[p] = w1p256_back[p] * w1p256_back[p];
-        w3p256_back[p] = w1p256_back[p] * w2p256_back[p];
-        w1p256_back_nse[p] = _mm_set_ps(w1p256_back[p].Im, w1p256_back[p].Re, w1p256_back[p].Im, w1p256_back[p].Re);
-        w2p256_back_nse[p] = _mm_set_ps(w2p256_back[p].Im, w2p256_back[p].Re, w2p256_back[p].Im, w2p256_back[p].Re);
-        w3p256_back_nse[p] = _mm_set_ps(w3p256_back[p].Im, w3p256_back[p].Re, w3p256_back[p].Im, w3p256_back[p].Re);
-    }
-    for (int p = 0; p < 64; p+=2) {
-        w1p256_back_avx[p/2] = _mm_loadu_ps(&(w1p256_back[p].Re));
-        w2p256_back_avx[p/2] = _mm_loadu_ps(&(w2p256_back[p].Re));
-        w3p256_back_avx[p/2] = _mm_loadu_ps(&(w3p256_back[p].Re));
-    }
-
-    for (int p = 0; p < 128; p++) {
-        w1p512_back[p] = complex_t<T>(cos(p*theta5), sin(p*theta5));
-        w2p512_back[p] = w1p512_back[p] * w1p512_back[p];
-        w3p512_back[p] = w1p512_back[p] * w2p512_back[p];
-        w1p512_back_nse[p] = _mm_set_ps(w1p512_back[p].Im, w1p512_back[p].Re, w1p512_back[p].Im, w1p512_back[p].Re);
-        w2p512_back_nse[p] = _mm_set_ps(w2p512_back[p].Im, w2p512_back[p].Re, w2p512_back[p].Im, w2p512_back[p].Re);
-        w3p512_back_nse[p] = _mm_set_ps(w3p512_back[p].Im, w3p512_back[p].Re, w3p512_back[p].Im, w3p512_back[p].Re);
-    }
-    for (int p = 0; p < 128; p+=2) {
-        w1p512_back_avx[p/2] = _mm_loadu_ps(&(w1p512_back[p].Re));
-        w2p512_back_avx[p/2] = _mm_loadu_ps(&(w2p512_back[p].Re));
-        w3p512_back_avx[p/2] = _mm_loadu_ps(&(w3p512_back[p].Re));
-    }
-
-    for (int p = 0; p < 256; p++) {
-        w1p1024_back[p] = complex_t<T>(cos(p*theta6), sin(p*theta6));
-        w2p1024_back[p] = w1p1024_back[p] * w1p1024_back[p];
-        w3p1024_back[p] = w1p1024_back[p] * w2p1024_back[p];
-        w1p1024_back_nse[p] = _mm_set_ps(w1p1024_back[p].Im, w1p1024_back[p].Re, w1p1024_back[p].Im, w1p1024_back[p].Re);
-        w2p1024_back_nse[p] = _mm_set_ps(w2p1024_back[p].Im, w2p1024_back[p].Re, w2p1024_back[p].Im, w2p1024_back[p].Re);
-        w3p1024_back_nse[p] = _mm_set_ps(w3p1024_back[p].Im, w3p1024_back[p].Re, w3p1024_back[p].Im, w3p1024_back[p].Re);
-    }
-    for (int p = 0; p < 256; p+=2) {
-        w1p1024_back_avx[p/2] = _mm_loadu_ps(&(w1p1024_back[p].Re));
-        w2p1024_back_avx[p/2] = _mm_loadu_ps(&(w2p1024_back[p].Re));
-        w3p1024_back_avx[p/2] = _mm_loadu_ps(&(w3p1024_back[p].Re));
-    }
-
-    for (int p = 0; p < 512; p++) {
-        w1p2048_back[p] = complex_t<T>(cos(p*theta7), sin(p*theta7));
-        w2p2048_back[p] = w1p2048_back[p] * w1p2048_back[p];
-        w3p2048_back[p] = w1p2048_back[p] * w2p2048_back[p];
-        w1p2048_back_nse[p] = _mm_set_ps(w1p2048_back[p].Im, w1p2048_back[p].Re, w1p2048_back[p].Im, w1p2048_back[p].Re);
-        w2p2048_back_nse[p] = _mm_set_ps(w2p2048_back[p].Im, w2p2048_back[p].Re, w2p2048_back[p].Im, w2p2048_back[p].Re);
-        w3p2048_back_nse[p] = _mm_set_ps(w3p2048_back[p].Im, w3p2048_back[p].Re, w3p2048_back[p].Im, w3p2048_back[p].Re);
-    }
-    for (int p = 0; p < 512; p+=2) {
-        w1p2048_back_avx[p/2] = _mm_loadu_ps(&(w1p2048_back[p].Re));
-        w2p2048_back_avx[p/2] = _mm_loadu_ps(&(w2p2048_back[p].Re));
-        w3p2048_back_avx[p/2] = _mm_loadu_ps(&(w3p2048_back[p].Re));
-    }
-
-    for (int p = 0; p < 1024; p++) {
-        w1p4096_back[p] = complex_t<T>(cos(p*theta8), sin(p*theta8));
-        w2p4096_back[p] = w1p4096_back[p] * w1p4096_back[p];
-        w3p4096_back[p] = w1p4096_back[p] * w2p4096_back[p];
-    }
-    for (int p = 0; p < 1024; p+=2) {
-        w1p4096_back_avx[p/2] = _mm_loadu_ps(&(w1p4096_back[p].Re));
-        w2p4096_back_avx[p/2] = _mm_loadu_ps(&(w2p4096_back[p].Re));
-        w3p4096_back_avx[p/2] = _mm_loadu_ps(&(w3p4096_back[p].Re));
+            w1p_back[i][p] = complex_t<T>(cos(p*theta), sin(p*theta));
+            w2p_back[i][p] = w1p_back[i][p] * w1p_back[i][p];
+            w3p_back[i][p] = w1p_back[i][p] * w2p_back[i][p];
+        }
     }
 }
 
@@ -620,27 +250,36 @@ inline void my_fft_avx_whole<T>::my_fft_8points(int N, complex_t<T> *x)
 }
 
 template<typename T>
-inline void my_fft_avx_whole<T>::my_fft_16points(int N, complex_t<T> *x)
+inline void my_fft_avx_whole<T>::my_fft_first_butterfly(int N, int s, complex_t<T> *x, complex_t<T> *y)
 {
-    uint8_t wt_index = 0;
-    complex_t<T> y[16];
+    uint16_t n1 = N/4;
+    uint16_t n2 = N/2;
+    uint16_t n3 = n1 + n2;
+    uint8_t index = my_position_of_weight(N);
+    complex_t<T> *w1 = w1p_fwd[index];
+    complex_t<T> *w2 = w2p_fwd[index];
+    complex_t<T> *w3 = w3p_fwd[index];
 
-    for (int p = 0; p < 4; p+=2, wt_index+=1) {
+    for (uint16_t p = 0; p < n1; p+=2) {
         complex_t<T> *x_p = x + p;
         complex_t<T> *y_4p = y + 4*p;
+        __m128 w1p_avx = _mm_loadu_ps(&(w1[p].Re));
+        __m128 w2p_avx = _mm_loadu_ps(&(w2[p].Re));
+        __m128 w3p_avx = _mm_loadu_ps(&(w3[p].Re));
+
         __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[4].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[8].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[12].Re));
+        __m128 b = _mm_loadu_ps(&(x_p[n1].Re));
+        __m128 c = _mm_loadu_ps(&(x_p[n2].Re));
+        __m128 d = _mm_loadu_ps(&(x_p[n3].Re));
         __m128 apc = _mm_add_ps(a, c);
         __m128 amc = _mm_sub_ps(a, c);
         __m128 bpd = _mm_add_ps(b, d);
         __m128 jbmd = jxpz(_mm_sub_ps(b, d));
 
         __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p16_fwd_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p16_fwd_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p16_fwd_avx[wt_index], _mm_add_ps(amc, jbmd));
+        __m128 bB = mulpz_lh(w1p_avx, _mm_sub_ps(amc, jbmd));
+        __m128 cC = mulpz_lh(w2p_avx, _mm_sub_ps(apc, bpd));
+        __m128 dD = mulpz_lh(w3p_avx, _mm_add_ps(amc, jbmd));
         __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
         _mm_storeu_ps(&(y_4p[0].Re), ab);
         __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
@@ -649,919 +288,260 @@ inline void my_fft_avx_whole<T>::my_fft_16points(int N, complex_t<T> *x)
         _mm_storeu_ps(&(y_4p[4].Re), AB);
         __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
         _mm_storeu_ps(&(y_4p[6].Re), CD);
+#if 0
+        printf("p = %d\n", p);
+        float ans[4];
+        _mm_store_ps(ans, ab);
+        printf("%.8e %.8e %.8e %.8e \n", ans[0], ans[1], ans[2], ans[3]);
+        _mm_store_ps(ans, cd);
+        printf("%.8e %.8e %.8e %.8e \n", ans[0], ans[1], ans[2], ans[3]);
+        _mm_store_ps(ans, AB);
+        printf("%.8e %.8e %.8e %.8e \n", ans[0], ans[1], ans[2], ans[3]);
+#endif
     }
+}
 
-    __m256 a = _mm256_loadu_ps(&(y[0].Re));
-    __m256 b = _mm256_loadu_ps(&(y[4].Re));
-    __m256 c = _mm256_loadu_ps(&(y[8].Re));
-    __m256 d = _mm256_loadu_ps(&(y[12].Re));
-    __m256 apc = _mm256_add_ps(a, c);
-    __m256 amc = _mm256_sub_ps(a, c);
-    __m256 bpd = _mm256_add_ps(b, d);
-    __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
+template<typename T>
+inline void my_fft_avx_whole<T>::my_fft_butterfly_s4(int N, complex_t<T> *x, complex_t<T> *y)
+{
+    uint16_t n = N/4;
+    uint16_t n1 = N;
+    uint16_t n2 = 2*N;
+    uint16_t n3 = n1 + n2;
+    uint8_t index = my_position_of_weight(N);
+    complex_t<T> *w1 = w1p_fwd[index];
+    complex_t<T> *w2 = w2p_fwd[index];
+    complex_t<T> *w3 = w3p_fwd[index];
 
-    _mm256_storeu_ps(&(x[0].Re), _mm256_add_ps(apc, bpd));
-    _mm256_storeu_ps(&(x[4].Re),  _mm256_sub_ps(amc, jbmd));
-    _mm256_storeu_ps(&(x[8].Re), _mm256_sub_ps(apc, bpd));
-    _mm256_storeu_ps(&(x[12].Re), _mm256_add_ps(amc, jbmd));
+    // s = 4
+    for (uint16_t p = 0; p < n; p++) {
+        uint16_t sp = 4 * p;
+        uint16_t s4p = 4 * sp;
+        complex_t<T> *xq_sp = x + sp;
+        complex_t<T> *yq_s4p = y + s4p;
+        __m128 w1p_avx = _mm_set_ps(w1[p].Im, w1[p].Re, w1[p].Im, w1[p].Re);
+        __m128 w2p_avx = _mm_set_ps(w2[p].Im, w2[p].Re, w2[p].Im, w2[p].Re);
+        __m128 w3p_avx = _mm_set_ps(w3[p].Im, w3[p].Re, w3[p].Im, w3[p].Re);
+
+        // Set the weight
+        __m256 w1p = duppz2_lo(w1p_avx);
+        __m256 w2p = duppz2_lo(w2p_avx);
+        __m256 w3p = duppz2_lo(w3p_avx);
+
+        // The points case : q = 1
+        __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
+        __m256 b = _mm256_loadu_ps(&(xq_sp[n1].Re));
+        __m256 c = _mm256_loadu_ps(&(xq_sp[n2].Re));
+        __m256 d = _mm256_loadu_ps(&(xq_sp[n3].Re));
+        __m256 apc = _mm256_add_ps(a, c);
+        __m256 amc = _mm256_sub_ps(a, c);
+        __m256 bpd = _mm256_add_ps(b, d);
+        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
+
+#if 0
+        printf("q = %d %d %d %d\n", 0, n1, n2, n3);
+        float ans[8];
+        _mm256_store_ps(ans, mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
+        printf("%.8e %.8e %.8e %.8e \n%.8e %.8e %.8e %.8e \n", ans[0], ans[1], ans[2], ans[3],
+                                                            ans[4], ans[5], ans[6], ans[7]);
+        _mm256_store_ps(ans, mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
+        printf("%.8e %.8e %.8e %.8e \n%.8e %.8e %.8e %.8e \n", ans[0], ans[1], ans[2], ans[3],
+                                                            ans[4], ans[5], ans[6], ans[7]);
+        _mm256_store_ps(ans, mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
+        printf("%.8e %.8e %.8e %.8e \n%.8e %.8e %.8e %.8e \n", ans[0], ans[1], ans[2], ans[3],
+                                                            ans[4], ans[5], ans[6], ans[7]);
+#endif
+
+        _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
+        _mm256_storeu_ps(&(yq_s4p[4].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
+        _mm256_storeu_ps(&(yq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
+        _mm256_storeu_ps(&(yq_s4p[12].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
+    }
+}
+
+template<typename T>
+inline void my_fft_avx_whole<T>::my_fft_butterfly(int N, int s, complex_t<T> *x, complex_t<T> *y)
+{
+    uint16_t n = N/4;
+    uint16_t n1 = (N*s)/4;
+    uint16_t n2 = (N*s)/2;
+    uint16_t n3 = n1 + n2;
+    uint8_t index = my_position_of_weight(N);
+    complex_t<T> *w1 = w1p_fwd[index];
+    complex_t<T> *w2 = w2p_fwd[index];
+    complex_t<T> *w3 = w3p_fwd[index];
+
+    // s != 4
+    for (uint16_t p = 0; p < n; p++) {
+        uint16_t sp = s * p;
+        uint16_t s4p = 4 * sp;
+        __m128 w1p_avx = _mm_set_ps(w1[p].Im, w1[p].Re, w1[p].Im, w1[p].Re);
+        __m128 w2p_avx = _mm_set_ps(w2[p].Im, w2[p].Re, w2[p].Im, w2[p].Re);
+        __m128 w3p_avx = _mm_set_ps(w3[p].Im, w3[p].Re, w3[p].Im, w3[p].Re);
+        // Set the weight
+        __m256 w1p = duppz2_lo(w1p_avx);
+        __m256 w2p = duppz2_lo(w2p_avx);
+        __m256 w3p = duppz2_lo(w3p_avx);
+
+        for (uint16_t q = 0; q < s; q+=4) {
+            complex_t<T> *xq_sp = x + q + sp;
+            complex_t<T> *yq_s4p = y + q + s4p;
+            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
+            __m256 b = _mm256_loadu_ps(&(xq_sp[n1].Re));
+            __m256 c = _mm256_loadu_ps(&(xq_sp[n2].Re));
+            __m256 d = _mm256_loadu_ps(&(xq_sp[n3].Re));
+            __m256 apc = _mm256_add_ps(a, c);
+            __m256 amc = _mm256_sub_ps(a, c);
+            __m256 bpd = _mm256_add_ps(b, d);
+            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
+#if 0
+            printf("q = %d %d %d %d %d %d\n", q, n1, n2, n3, sp, s4p);
+            float ans[8];
+            _mm256_store_ps(ans, b);
+            printf("%.8e %.8e %.8e %.8e \n%.8e %.8e %.8e %.8e \n", ans[0], ans[1], ans[2], ans[3],
+                                                                ans[4], ans[5], ans[6], ans[7]);
+            _mm256_store_ps(ans, c);
+            printf("%.8e %.8e %.8e %.8e \n%.8e %.8e %.8e %.8e \n", ans[0], ans[1], ans[2], ans[3],
+                                                                ans[4], ans[5], ans[6], ans[7]);
+            _mm256_store_ps(ans, d);
+            printf("%.8e %.8e %.8e %.8e \n%.8e %.8e %.8e %.8e \n", ans[0], ans[1], ans[2], ans[3],
+                                                                ans[4], ans[5], ans[6], ans[7]);
+#endif
+
+            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
+            _mm256_storeu_ps(&(yq_s4p[s].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
+            _mm256_storeu_ps(&(yq_s4p[s*2].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
+            _mm256_storeu_ps(&(yq_s4p[s*3].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
+        }
+    }
+}
+
+template<typename T>
+inline void my_fft_avx_whole<T>::my_fft_bottom2_butterfly(int s, complex_t<T> *x, complex_t<T> *y)
+{
+    for (uint16_t q = 0; q < s; q+=4) {
+        complex_t<T> *xq = x + q;
+        complex_t<T> *yq = y + q;
+
+        __m256 a = _mm256_loadu_ps(&(xq[0].Re));
+        __m256 b = _mm256_loadu_ps(&(xq[s].Re));
+        _mm256_storeu_ps(&(yq[0].Re), _mm256_add_ps(a, b));
+        _mm256_storeu_ps(&(yq[s].Re), _mm256_sub_ps(a, b));
+    }
+}
+
+template<typename T>
+inline void my_fft_avx_whole<T>::my_fft_bottom4_butterfly(int s, complex_t<T> *x, complex_t<T> *y)
+{
+    for (int q = 0; q < s; q+=4) {
+        complex_t<T> *xq = x + q;
+        complex_t<T> *yq = y + q;
+
+        __m256 a = _mm256_loadu_ps(&(xq[0].Re));
+        __m256 b = _mm256_loadu_ps(&(xq[s].Re));
+        __m256 c = _mm256_loadu_ps(&(xq[s*2].Re));
+        __m256 d = _mm256_loadu_ps(&(xq[s*3].Re));
+        __m256 apc = _mm256_add_ps(a, c);
+        __m256 amc = _mm256_sub_ps(a, c);
+        __m256 bpd = _mm256_add_ps(b, d);
+        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
+        _mm256_storeu_ps(&(yq[0].Re), _mm256_add_ps(apc, bpd));
+        _mm256_storeu_ps(&(yq[s].Re), _mm256_sub_ps(amc, jbmd));
+        _mm256_storeu_ps(&(yq[s*2].Re), _mm256_sub_ps(apc, bpd));
+        _mm256_storeu_ps(&(yq[s*3].Re), _mm256_add_ps(amc, jbmd));
+    }
+}
+
+template<typename T>
+inline void my_fft_avx_whole<T>::my_fft_16points(int N, complex_t<T> *x)
+{
+    complex_t<T> y[16];
+    my_fft_first_butterfly(16, 1, x, y);
+    my_fft_bottom4_butterfly(4, y, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_fft_32points(int N, complex_t<T> *x)
 {
-    uint8_t wt_index = 0;
     complex_t<T> y[32];
-
-    for (int p = 0; p < 8; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[8].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[16].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[24].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p32_fwd_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p32_fwd_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p32_fwd_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 8, s = 4
-    for (int p = 0; p < 2; p++) {
-        uint8_t sp = 4 * p;
-        uint8_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p8_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p8_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p8_fwd_nse[p]);
-        // The 32 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[8].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[16].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[24].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-    }
-
-    for (int q = 0; q < 16; q+=4) {
-        complex_t<T> *xq = x + q;
-
-        __m256 a = _mm256_loadu_ps(&(xq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(xq[16].Re));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(a, b));
-        _mm256_storeu_ps(&(xq[16].Re), _mm256_sub_ps(a, b));
-    }
+    my_fft_first_butterfly(32, 1, x, y);
+    my_fft_butterfly_s4(8, y, x);
+    my_fft_bottom2_butterfly(16, x, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_fft_64points(int N, complex_t<T> *x)
 {
-    uint8_t wt_index = 0;
     complex_t<T> y[64];
-
-    for (int p = 0; p < 16; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[16].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[32].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[48].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p64_fwd_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p64_fwd_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p64_fwd_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 16, s = 4
-    for (int p = 0; p < 4; p++) {
-        uint8_t sp = 4 * p;
-        uint8_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p16_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p16_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p16_fwd_nse[p]);
-        // The 64 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[16].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[32].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[48].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-    }
-
-    for (int q = 0; q < 16; q+=4) {
-        complex_t<T> *xq = x + q;
-        __m256 a = _mm256_loadu_ps(&(xq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(xq[16].Re));
-        __m256 c = _mm256_loadu_ps(&(xq[32].Re));
-        __m256 d = _mm256_loadu_ps(&(xq[48].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[16].Re), _mm256_sub_ps(amc, jbmd));
-        _mm256_storeu_ps(&(xq[32].Re), _mm256_sub_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[48].Re), _mm256_add_ps(amc, jbmd));
-    }
+    my_fft_first_butterfly(64, 1, x, y);
+    my_fft_butterfly_s4(16, y, x);
+    my_fft_bottom4_butterfly(16, x, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_fft_128points(int N, complex_t<T> *x)
 {
-    uint8_t wt_index = 0;
     complex_t<T> y[128];
-
-    for (int p = 0; p < 32; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[32].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[64].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[96].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p128_fwd_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p128_fwd_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p128_fwd_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 32, s = 4
-    for (int p = 0; p < 8; p++) {
-        uint8_t sp = 4 * p;
-        uint8_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p32_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p32_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p32_fwd_nse[p]);
-        // The 128 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[32].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[64].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[96].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-    }
-
-    // n = 8, s = 16
-    for (int p = 0; p < 2; p++) {
-        uint8_t sp = 16 * p;
-        uint8_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p8_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p8_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p8_fwd_nse[p]);
-        for (int q = 0; q < 16; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[32].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[64].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[96].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[16].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[32].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[48].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-        }
-    }
-
-    for (int q = 0; q < 64; q+=4) {
-        complex_t<T> *xq = x + q;
-        complex_t<T> *yq = y + q;
-
-        __m256 a = _mm256_loadu_ps(&(yq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq[64].Re));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(a, b));
-        _mm256_storeu_ps(&(xq[64].Re), _mm256_sub_ps(a, b));
-    }
+    my_fft_first_butterfly(128, 1, x, y);
+    my_fft_butterfly_s4(32, y, x);
+    my_fft_butterfly(8, 16, x, y);
+    my_fft_bottom2_butterfly(64, y, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_fft_256points(int N, complex_t<T> *x)
 {
-    uint8_t wt_index = 0;
     complex_t<T> y[256];
-
-    for (int p = 0; p < 64; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[64].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[128].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[192].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p256_fwd_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p256_fwd_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p256_fwd_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 64, s = 4
-    for (int p = 0; p < 16; p++) {
-        uint8_t sp = 4 * p;
-        uint8_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p64_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p64_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p64_fwd_nse[p]);
-        // The 256 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[64].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[128].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[192].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-    }
-
-    // n = 16, s = 16
-    for (int p = 0; p < 4; p++) {
-        uint8_t sp = 16 * p;
-        uint8_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p16_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p16_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p16_fwd_nse[p]);
-        for (int q = 0; q < 16; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[64].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[128].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[192].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[16].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[32].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[48].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-        }
-    }
-
-    for (int q = 0; q < 64; q+=4) {
-        complex_t<T> *xq = x + q;
-        complex_t<T> *yq = y + q;
-
-        __m256 a = _mm256_loadu_ps(&(yq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq[64].Re));
-        __m256 c = _mm256_loadu_ps(&(yq[128].Re));
-        __m256 d = _mm256_loadu_ps(&(yq[192].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[64].Re), _mm256_sub_ps(amc, jbmd));
-        _mm256_storeu_ps(&(xq[128].Re), _mm256_sub_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[192].Re), _mm256_add_ps(amc, jbmd));
-    }
+    my_fft_first_butterfly(256, 1, x, y);
+    my_fft_butterfly_s4(64, y, x);
+    my_fft_butterfly(16, 16, x, y);
+    my_fft_bottom4_butterfly(64, y, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_fft_512points(int N, complex_t<T> *x)
 {
-    uint8_t wt_index = 0;
     complex_t<T> y[512];
-
-    for (int p = 0; p < 128; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[128].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[256].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[384].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p512_fwd_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p512_fwd_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p512_fwd_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 128, s = 4
-    for (int p = 0; p < 32; p++) {
-        uint16_t sp = 4 * p;
-        uint16_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p128_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p128_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p128_fwd_nse[p]);
-        // The 512 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[128].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[256].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[384].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-    }
-
-    // n = 32, s = 16
-    for (int p = 0; p < 8; p++) {
-        uint16_t sp = 16 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p32_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p32_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p32_fwd_nse[p]);
-        for (int q = 0; q < 16; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[128].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[256].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[384].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[16].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[32].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[48].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-        }
-    }
-
-    // n = 8, s = 64
-    for (int p = 0; p < 2; p++) {
-        uint16_t sp = 64 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p8_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p8_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p8_fwd_nse[p]);
-        for (int q = 0; q < 64; q+=4) {
-            complex_t<T> *yq_sp = y + q + sp;
-            complex_t<T> *xq_s4p = x + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(yq_sp[128].Re));
-            __m256 c = _mm256_loadu_ps(&(yq_sp[256].Re));
-            __m256 d = _mm256_loadu_ps(&(yq_sp[384].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(xq_s4p[64].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(xq_s4p[128].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(xq_s4p[192].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-        }
-    }
-
-    for (int q = 0; q < 256; q+=4) {
-        complex_t<T> *xq = x + q;
-
-        __m256 a = _mm256_loadu_ps(&(xq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(xq[256].Re));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(a, b));
-        _mm256_storeu_ps(&(xq[256].Re), _mm256_sub_ps(a, b));
-    }
+    my_fft_first_butterfly(512, 1, x, y);
+    my_fft_butterfly_s4(128, y, x);
+    my_fft_butterfly(32, 16, x, y);
+    my_fft_butterfly(8, 64, y, x);
+    my_fft_bottom2_butterfly(256, x, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_fft_1024points(int N, complex_t<T> *x)
 {
-    uint16_t wt_index = 0;
     complex_t<T> y[1024];
-
-    for (int p = 0; p < 256; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[256].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[512].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[768].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p1024_fwd_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p1024_fwd_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p1024_fwd_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 256, s = 4
-    for (int p = 0; p < 64; p++) {
-        uint16_t sp = 4 * p;
-        uint16_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p256_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p256_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p256_fwd_nse[p]);
-        // The 1024 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[256].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[512].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[768].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-    }
-
-    // n = 64, s = 16
-    for (int p = 0; p < 16; p++) {
-        uint16_t sp = 16 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p64_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p64_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p64_fwd_nse[p]);
-        for (int q = 0; q < 16; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[256].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[512].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[768].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[16].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[32].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[48].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-        }
-    }
-
-    // n = 16, s = 64
-    for (int p = 0; p < 4; p++) {
-        uint16_t sp = 64 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p16_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p16_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p16_fwd_nse[p]);
-        for (int q = 0; q < 64; q+=4) {
-            complex_t<T> *yq_sp = y + q + sp;
-            complex_t<T> *xq_s4p = x + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(yq_sp[256].Re));
-            __m256 c = _mm256_loadu_ps(&(yq_sp[512].Re));
-            __m256 d = _mm256_loadu_ps(&(yq_sp[768].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(xq_s4p[64].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(xq_s4p[128].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(xq_s4p[192].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-        }
-    }
-
-    for (int q = 0; q < 256; q+=4) {
-        complex_t<T> *xq = x + q;
-
-        __m256 a = _mm256_loadu_ps(&(xq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(xq[256].Re));
-        __m256 c = _mm256_loadu_ps(&(xq[512].Re));
-        __m256 d = _mm256_loadu_ps(&(xq[768].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[256].Re), _mm256_sub_ps(amc, jbmd));
-        _mm256_storeu_ps(&(xq[512].Re), _mm256_sub_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[768].Re), _mm256_add_ps(amc, jbmd));
-    }
+    my_fft_first_butterfly(1024, 1, x, y);
+    my_fft_butterfly_s4(256, y, x);
+    my_fft_butterfly(64, 16, x, y);
+    my_fft_butterfly(16, 64, y, x);
+    my_fft_bottom4_butterfly(256, x, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_fft_2048points(int N, complex_t<T> *x)
 {
-    uint16_t wt_index = 0;
     complex_t<T> y[2048];
-
-    for (int p = 0; p < 512; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[512].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[1024].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[1536].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p2048_fwd_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p2048_fwd_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p2048_fwd_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 512, s = 4
-    for (int p = 0; p < 128; p++) {
-        uint16_t sp = 4 * p;
-        uint16_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p512_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p512_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p512_fwd_nse[p]);
-        // The 2048 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[512].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[1024].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[1536].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-    }
-
-    // n = 128, s = 16
-    for (int p = 0; p < 32; p++) {
-        uint16_t sp = 16 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p128_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p128_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p128_fwd_nse[p]);
-        for (int q = 0; q < 16; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[512].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[1024].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[1536].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[16].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[32].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[48].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-        }
-    }
-
-    // n = 32, s = 64
-    for (int p = 0; p < 8; p++) {
-        uint16_t sp = 64 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p32_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p32_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p32_fwd_nse[p]);
-        for (int q = 0; q < 64; q+=4) {
-            complex_t<T> *yq_sp = y + q + sp;
-            complex_t<T> *xq_s4p = x + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(yq_sp[512].Re));
-            __m256 c = _mm256_loadu_ps(&(yq_sp[1024].Re));
-            __m256 d = _mm256_loadu_ps(&(yq_sp[1536].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(xq_s4p[64].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(xq_s4p[128].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(xq_s4p[192].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-        }
-    }
-    // n = 8, s = 256
-    for (int p = 0; p < 2; p++) {
-        uint16_t sp = 256 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p8_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p8_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p8_fwd_nse[p]);
-        for (int q = 0; q < 256; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[512].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[1024].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[1536].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[256].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[512].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[768].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-        }
-    }
-
-    for (int q = 0; q < 1024; q+=4) {
-        complex_t<T> *xq = x + q;
-        complex_t<T> *yq = y + q;
-
-        __m256 a = _mm256_loadu_ps(&(yq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq[1024].Re));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(a, b));
-        _mm256_storeu_ps(&(xq[1024].Re), _mm256_sub_ps(a, b));
-    }
+    my_fft_first_butterfly(2048, 1, x, y);
+    my_fft_butterfly_s4(512, y, x);
+    my_fft_butterfly(128, 16, x, y);
+    my_fft_butterfly(32, 64, y, x);
+    my_fft_butterfly(8, 256, x, y);
+    my_fft_bottom2_butterfly(1024, y, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_fft_4096points(int N, complex_t<T> *x)
 {
-    uint16_t wt_index = 0;
     complex_t<T> y[4096];
-
-    for (int p = 0; p < 1024; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[1024].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[2048].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[3072].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p4096_fwd_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p4096_fwd_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p4096_fwd_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-    // n = 1024, s = 4
-    for (int p = 0; p < 256; p++) {
-        uint16_t sp = 4 * p;
-        uint16_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p1024_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p1024_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p1024_fwd_nse[p]);
-        // The 4096 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[1024].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[2048].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[3072].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-    }
-    // n = 256, s = 16
-    for (int p = 0; p < 64; p++) {
-        uint16_t sp = 16 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p256_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p256_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p256_fwd_nse[p]);
-        for (int q = 0; q < 16; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[1024].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[2048].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[3072].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[16].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[32].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[48].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-        }
-    }
-    // n = 64, s = 64
-    for (int p = 0; p < 16; p++) {
-        uint16_t sp = 64 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p64_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p64_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p64_fwd_nse[p]);
-        for (int q = 0; q < 64; q+=4) {
-            complex_t<T> *yq_sp = y + q + sp;
-            complex_t<T> *xq_s4p = x + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(yq_sp[1024].Re));
-            __m256 c = _mm256_loadu_ps(&(yq_sp[2048].Re));
-            __m256 d = _mm256_loadu_ps(&(yq_sp[3072].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(xq_s4p[64].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(xq_s4p[128].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(xq_s4p[192].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-        }
-    }
-    // n = 16, s = 256
-    for (int p = 0; p < 4; p++) {
-        uint16_t sp = 256 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p16_fwd_nse[p]);
-        __m256 w2p = duppz2_lo(w2p16_fwd_nse[p]);
-        __m256 w3p = duppz2_lo(w3p16_fwd_nse[p]);
-        for (int q = 0; q < 256; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[1024].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[2048].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[3072].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[256].Re), mulpz2(w1p, _mm256_sub_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[512].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[768].Re), mulpz2(w3p, _mm256_add_ps(amc, jbmd)));
-        }
-    }
-
-    for (int q = 0; q < 1024; q+=4) {
-        complex_t<T> *xq = x + q;
-        complex_t<T> *yq = y + q;
-
-        __m256 a = _mm256_loadu_ps(&(yq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq[1024].Re));
-        __m256 c = _mm256_loadu_ps(&(yq[2048].Re));
-        __m256 d = _mm256_loadu_ps(&(yq[3072].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[1024].Re), _mm256_sub_ps(amc, jbmd));
-        _mm256_storeu_ps(&(xq[2048].Re), _mm256_sub_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[3072].Re), _mm256_add_ps(amc, jbmd));
-    }
+    my_fft_first_butterfly(4096, 1, x, y);
+    my_fft_butterfly_s4(1024, y, x);
+    my_fft_butterfly(256, 16, x, y);
+    my_fft_butterfly(64, 64, y, x);
+    my_fft_butterfly(16, 256, x, y);
+    my_fft_bottom4_butterfly(1024, y, x);
 }
 
 // Fourier transform
@@ -1685,937 +665,258 @@ inline void my_fft_avx_whole<T>::my_ifft_8points(int N, complex_t<T> *x)
 }
 
 template<typename T>
+inline void my_fft_avx_whole<T>::my_ifft_first_butterfly(int N, int s, complex_t<T> *x, complex_t<T> *y)
+{
+    uint16_t n1 = N/4;
+    uint16_t n2 = N/2;
+    uint16_t n3 = n1 + n2;
+    uint8_t index = my_position_of_weight(N);
+    complex_t<T> *w1 = w1p_back[index];
+    complex_t<T> *w2 = w2p_back[index];
+    complex_t<T> *w3 = w3p_back[index];
+
+    for (uint16_t p = 0; p < n1; p+=2) {
+        complex_t<T> *x_p = x + p;
+        complex_t<T> *y_4p = y + 4*p;
+        __m128 w1p_avx = _mm_loadu_ps(&(w1[p].Re));
+        __m128 w2p_avx = _mm_loadu_ps(&(w2[p].Re));
+        __m128 w3p_avx = _mm_loadu_ps(&(w3[p].Re));
+
+        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
+        __m128 b = _mm_loadu_ps(&(x_p[n1].Re));
+        __m128 c = _mm_loadu_ps(&(x_p[n2].Re));
+        __m128 d = _mm_loadu_ps(&(x_p[n3].Re));
+        __m128 apc = _mm_add_ps(a, c);
+        __m128 amc = _mm_sub_ps(a, c);
+        __m128 bpd = _mm_add_ps(b, d);
+        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
+
+        __m128 aA = _mm_add_ps(apc, bpd);
+        __m128 bB = mulpz_lh(w1p_avx, _mm_add_ps(amc, jbmd));
+        __m128 cC = mulpz_lh(w2p_avx, _mm_sub_ps(apc, bpd));
+        __m128 dD = mulpz_lh(w3p_avx, _mm_sub_ps(amc, jbmd));
+        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
+        _mm_storeu_ps(&(y_4p[0].Re), ab);
+        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
+        _mm_storeu_ps(&(y_4p[2].Re), cd);
+        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
+        _mm_storeu_ps(&(y_4p[4].Re), AB);
+        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
+        _mm_storeu_ps(&(y_4p[6].Re), CD);
+    }
+}
+
+template<typename T>
+inline void my_fft_avx_whole<T>::my_ifft_butterfly_s4(int N, complex_t<T> *x, complex_t<T> *y)
+{
+    uint16_t n = N/4;
+    uint16_t n1 = N;
+    uint16_t n2 = 2*N;
+    uint16_t n3 = n1 + n2;
+    uint8_t index = my_position_of_weight(N);
+    complex_t<T> *w1 = w1p_back[index];
+    complex_t<T> *w2 = w2p_back[index];
+    complex_t<T> *w3 = w3p_back[index];
+
+    // s = 4
+    for (uint16_t p = 0; p < n; p++) {
+        uint16_t sp = 4 * p;
+        uint16_t s4p = 4 * sp;
+        complex_t<T> *xq_sp = x + sp;
+        complex_t<T> *yq_s4p = y + s4p;
+        __m128 w1p_avx = _mm_set_ps(w1[p].Im, w1[p].Re, w1[p].Im, w1[p].Re);
+        __m128 w2p_avx = _mm_set_ps(w2[p].Im, w2[p].Re, w2[p].Im, w2[p].Re);
+        __m128 w3p_avx = _mm_set_ps(w3[p].Im, w3[p].Re, w3[p].Im, w3[p].Re);
+        // Set the weight
+        __m256 w1p = duppz2_lo(w1p_avx);
+        __m256 w2p = duppz2_lo(w2p_avx);
+        __m256 w3p = duppz2_lo(w3p_avx);
+        // The points case : q = 1
+        __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
+        __m256 b = _mm256_loadu_ps(&(xq_sp[n1].Re));
+        __m256 c = _mm256_loadu_ps(&(xq_sp[n2].Re));
+        __m256 d = _mm256_loadu_ps(&(xq_sp[n3].Re));
+        __m256 apc = _mm256_add_ps(a, c);
+        __m256 amc = _mm256_sub_ps(a, c);
+        __m256 bpd = _mm256_add_ps(b, d);
+        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
+
+        _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
+        _mm256_storeu_ps(&(yq_s4p[4].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
+        _mm256_storeu_ps(&(yq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
+        _mm256_storeu_ps(&(yq_s4p[12].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
+    }
+}
+
+template<typename T>
+inline void my_fft_avx_whole<T>::my_ifft_butterfly(int N, int s, complex_t<T> *x, complex_t<T> *y)
+{
+    uint16_t n = N/4;
+    uint16_t n1 = (N*s)/4;
+    uint16_t n2 = (N*s)/2;
+    uint16_t n3 = n1 + n2;
+    uint8_t index = my_position_of_weight(N);
+    complex_t<T> *w1 = w1p_back[index];
+    complex_t<T> *w2 = w2p_back[index];
+    complex_t<T> *w3 = w3p_back[index];
+
+    // s != 4
+    for (uint16_t p = 0; p < n; p++) {
+        uint16_t sp = s * p;
+        uint16_t s4p = 4 * sp;
+        __m128 w1p_avx = _mm_set_ps(w1[p].Im, w1[p].Re, w1[p].Im, w1[p].Re);
+        __m128 w2p_avx = _mm_set_ps(w2[p].Im, w2[p].Re, w2[p].Im, w2[p].Re);
+        __m128 w3p_avx = _mm_set_ps(w3[p].Im, w3[p].Re, w3[p].Im, w3[p].Re);
+        // Set the weight
+        __m256 w1p = duppz2_lo(w1p_avx);
+        __m256 w2p = duppz2_lo(w2p_avx);
+        __m256 w3p = duppz2_lo(w3p_avx);
+        for (uint16_t q = 0; q < s; q+=4) {
+            complex_t<T> *xq_sp = x + q + sp;
+            complex_t<T> *yq_s4p = y + q + s4p;
+            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
+            __m256 b = _mm256_loadu_ps(&(xq_sp[n1].Re));
+            __m256 c = _mm256_loadu_ps(&(xq_sp[n2].Re));
+            __m256 d = _mm256_loadu_ps(&(xq_sp[n3].Re));
+            __m256 apc = _mm256_add_ps(a, c);
+            __m256 amc = _mm256_sub_ps(a, c);
+            __m256 bpd = _mm256_add_ps(b, d);
+            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
+
+            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
+            _mm256_storeu_ps(&(yq_s4p[s].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
+            _mm256_storeu_ps(&(yq_s4p[s*2].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
+            _mm256_storeu_ps(&(yq_s4p[s*3].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
+        }
+    }
+}
+
+template<typename T>
+inline void my_fft_avx_whole<T>::my_ifft_bottom2_butterfly(int s, complex_t<T> *x, complex_t<T> *y)
+{
+    for (uint16_t q = 0; q < s; q+=4) {
+        complex_t<T> *xq = x + q;
+        complex_t<T> *yq = y + q;
+
+        __m256 a = _mm256_loadu_ps(&(xq[0].Re));
+        __m256 b = _mm256_loadu_ps(&(xq[s].Re));
+        _mm256_storeu_ps(&(yq[0].Re), _mm256_add_ps(a, b));
+        _mm256_storeu_ps(&(yq[s].Re), _mm256_sub_ps(a, b));
+    }
+}
+
+template<typename T>
+inline void my_fft_avx_whole<T>::my_ifft_bottom4_butterfly(int s, complex_t<T> *x, complex_t<T> *y)
+{
+    for (int q = 0; q < s; q+=4) {
+        complex_t<T> *xq = x + q;
+        complex_t<T> *yq = y + q;
+
+        __m256 a = _mm256_loadu_ps(&(xq[0].Re));
+        __m256 b = _mm256_loadu_ps(&(xq[s].Re));
+        __m256 c = _mm256_loadu_ps(&(xq[s*2].Re));
+        __m256 d = _mm256_loadu_ps(&(xq[s*3].Re));
+        __m256 apc = _mm256_add_ps(a, c);
+        __m256 amc = _mm256_sub_ps(a, c);
+        __m256 bpd = _mm256_add_ps(b, d);
+        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
+        _mm256_storeu_ps(&(yq[0].Re), _mm256_add_ps(apc, bpd));
+        _mm256_storeu_ps(&(yq[s].Re), _mm256_add_ps(amc, jbmd));
+        _mm256_storeu_ps(&(yq[s*2].Re), _mm256_sub_ps(apc, bpd));
+        _mm256_storeu_ps(&(yq[s*3].Re), _mm256_sub_ps(amc, jbmd));
+    }
+}
+
+template<typename T>
 inline void my_fft_avx_whole<T>::my_ifft_16points(int N, complex_t<T> *x)
 {
-    static const complex_t<T> j = complex_t<T>(0, 1);
-
     complex_t<T> y[16];
-    for (int p = 0; p < 4; p++) {
-        const complex_t<T> a = x[p];
-        const complex_t<T> b = x[p + 4];
-        const complex_t<T> c = x[p + 8];
-        const complex_t<T> d = x[p + 12];
-        const complex_t<T>  apc =    a + c;
-        const complex_t<T>  amc =    a - c;
-        const complex_t<T>  bpd =    b + d;
-        const complex_t<T> jbmd = j*(b - d);
-        y[4*p] = apc + bpd;
-        y[4*p + 1] = conj(w1p16_fwd[p])*(amc + jbmd);
-        y[4*p + 2] = conj(w2p16_fwd[p])*(apc - bpd);
-        y[4*p + 3] = conj(w3p16_fwd[p])*(amc - jbmd);
-    }
-    for (int q = 0; q < 4; q++) {
-        const complex_t<T> a = y[q];
-        const complex_t<T> b = y[q + 4];
-        const complex_t<T> c = y[q + 8];
-        const complex_t<T> d = y[q + 12];
-        const complex_t<T>  apc =    a + c;
-        const complex_t<T>  amc =    a - c;
-        const complex_t<T>  bpd =    b + d;
-        const complex_t<T> jbmd = j*(b - d);
-        x[q] = apc + bpd;
-        x[q + 4] = amc + jbmd;
-        x[q + 8] = apc - bpd;
-        x[q + 12] = amc - jbmd;
-    }
+    my_ifft_first_butterfly(16, 1, x, y);
+    my_ifft_bottom4_butterfly(4, y, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_ifft_32points(int N, complex_t<T> *x)
 {
-    uint8_t wt_index = 0;
     complex_t<T> y[32];
-
-    for (int p = 0; p < 8; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[8].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[16].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[24].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p32_back_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p32_back_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p32_back_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 8, s = 4
-    for (int p = 0; p < 2; p++) {
-        uint8_t sp = 4 * p;
-        uint8_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p8_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p8_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p8_back_nse[p]);
-        // The 32 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[8].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[16].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[24].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-    }
-
-    for (int q = 0; q < 16; q+=4) {
-        complex_t<T> *xq = x + q;
-
-        __m256 a = _mm256_loadu_ps(&(xq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(xq[16].Re));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(a, b));
-        _mm256_storeu_ps(&(xq[16].Re), _mm256_sub_ps(a, b));
-    }
+    my_ifft_first_butterfly(32, 1, x, y);
+    my_ifft_butterfly_s4(8, y, x);
+    my_ifft_bottom2_butterfly(16, x, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_ifft_64points(int N, complex_t<T> *x)
 {
-    uint8_t wt_index = 0;
     complex_t<T> y[64];
-
-    for (int p = 0; p < 16; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[16].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[32].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[48].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p64_back_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p64_back_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p64_back_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 16, s = 4
-    for (int p = 0; p < 4; p++) {
-        uint8_t sp = 4 * p;
-        uint8_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p16_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p16_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p16_back_nse[p]);
-        // The 64 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[16].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[32].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[48].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-    }
-
-    for (int q = 0; q < 16; q+=4) {
-        complex_t<T> *xq = x + q;
-        __m256 a = _mm256_loadu_ps(&(xq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(xq[16].Re));
-        __m256 c = _mm256_loadu_ps(&(xq[32].Re));
-        __m256 d = _mm256_loadu_ps(&(xq[48].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[16].Re), _mm256_add_ps(amc, jbmd));
-        _mm256_storeu_ps(&(xq[32].Re), _mm256_sub_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[48].Re), _mm256_sub_ps(amc, jbmd));
-    }
+    my_ifft_first_butterfly(64, 1, x, y);
+    my_ifft_butterfly_s4(16, y, x);
+    my_ifft_bottom4_butterfly(16, x, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_ifft_128points(int N, complex_t<T> *x)
 {
-    uint8_t wt_index = 0;
     complex_t<T> y[128];
-
-    for (int p = 0; p < 32; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[32].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[64].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[96].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p128_back_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p128_back_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p128_back_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 32, s = 4
-    for (int p = 0; p < 8; p++) {
-        uint8_t sp = 4 * p;
-        uint8_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p32_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p32_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p32_back_nse[p]);
-        // The 128 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[32].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[64].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[96].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-    }
-
-    // n = 8, s = 16
-    for (int p = 0; p < 2; p++) {
-        uint8_t sp = 16 * p;
-        uint8_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p8_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p8_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p8_back_nse[p]);
-        for (int q = 0; q < 16; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[32].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[64].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[96].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[16].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[32].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[48].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-        }
-    }
-
-    for (int q = 0; q < 64; q+=4) {
-        complex_t<T> *xq = x + q;
-        complex_t<T> *yq = y + q;
-
-        __m256 a = _mm256_loadu_ps(&(yq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq[64].Re));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(a, b));
-        _mm256_storeu_ps(&(xq[64].Re), _mm256_sub_ps(a, b));
-    }
+    my_ifft_first_butterfly(128, 1, x, y);
+    my_ifft_butterfly_s4(32, y, x);
+    my_ifft_butterfly(8, 16, x, y);
+    my_ifft_bottom2_butterfly(64, y, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_ifft_256points(int N, complex_t<T> *x)
 {
-    uint8_t wt_index = 0;
     complex_t<T> y[256];
-
-    for (int p = 0; p < 64; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[64].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[128].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[192].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p256_back_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p256_back_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p256_back_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 64, s = 4
-    for (int p = 0; p < 16; p++) {
-        uint8_t sp = 4 * p;
-        uint8_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p64_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p64_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p64_back_nse[p]);
-        // The 256 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[64].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[128].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[192].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-    }
-
-    // n = 16, s = 16
-    for (int p = 0; p < 4; p++) {
-        uint8_t sp = 16 * p;
-        uint8_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p16_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p16_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p16_back_nse[p]);
-        for (int q = 0; q < 16; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[64].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[128].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[192].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[16].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[32].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[48].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-        }
-    }
-
-    for (int q = 0; q < 64; q+=4) {
-        complex_t<T> *xq = x + q;
-        complex_t<T> *yq = y + q;
-
-        __m256 a = _mm256_loadu_ps(&(yq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq[64].Re));
-        __m256 c = _mm256_loadu_ps(&(yq[128].Re));
-        __m256 d = _mm256_loadu_ps(&(yq[192].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[64].Re), _mm256_add_ps(amc, jbmd));
-        _mm256_storeu_ps(&(xq[128].Re), _mm256_sub_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[192].Re), _mm256_sub_ps(amc, jbmd));
-    }
+    my_ifft_first_butterfly(256, 1, x, y);
+    my_ifft_butterfly_s4(64, y, x);
+    my_ifft_butterfly(16, 16, x, y);
+    my_ifft_bottom4_butterfly(64, y, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_ifft_512points(int N, complex_t<T> *x)
 {
-    uint8_t wt_index = 0;
     complex_t<T> y[512];
-
-    for (int p = 0; p < 128; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[128].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[256].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[384].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p512_back_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p512_back_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p512_back_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 128, s = 4
-    for (int p = 0; p < 32; p++) {
-        uint16_t sp = 4 * p;
-        uint16_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p128_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p128_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p128_back_nse[p]);
-        // The 512 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[128].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[256].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[384].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-    }
-
-    // n = 32, s = 16
-    for (int p = 0; p < 8; p++) {
-        uint16_t sp = 16 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p32_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p32_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p32_back_nse[p]);
-        for (int q = 0; q < 16; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[128].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[256].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[384].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[16].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[32].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[48].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-        }
-    }
-
-    // n = 8, s = 64
-    for (int p = 0; p < 2; p++) {
-        uint16_t sp = 64 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p8_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p8_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p8_back_nse[p]);
-        for (int q = 0; q < 64; q+=4) {
-            complex_t<T> *yq_sp = y + q + sp;
-            complex_t<T> *xq_s4p = x + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(yq_sp[128].Re));
-            __m256 c = _mm256_loadu_ps(&(yq_sp[256].Re));
-            __m256 d = _mm256_loadu_ps(&(yq_sp[384].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(xq_s4p[64].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(xq_s4p[128].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(xq_s4p[192].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-        }
-    }
-
-    for (int q = 0; q < 256; q+=4) {
-        complex_t<T> *xq = x + q;
-
-        __m256 a = _mm256_loadu_ps(&(xq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(xq[256].Re));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(a, b));
-        _mm256_storeu_ps(&(xq[256].Re), _mm256_sub_ps(a, b));
-    }
+    my_ifft_first_butterfly(512, 1, x, y);
+    my_ifft_butterfly_s4(128, y, x);
+    my_ifft_butterfly(32, 16, x, y);
+    my_ifft_butterfly(8, 64, y, x);
+    my_ifft_bottom2_butterfly(256, x, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_ifft_1024points(int N, complex_t<T> *x)
 {
-    uint16_t wt_index = 0;
     complex_t<T> y[1024];
-
-    for (int p = 0; p < 256; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[256].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[512].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[768].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p1024_back_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p1024_back_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p1024_back_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 256, s = 4
-    for (int p = 0; p < 64; p++) {
-        uint16_t sp = 4 * p;
-        uint16_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p256_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p256_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p256_back_nse[p]);
-        // The 1024 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[256].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[512].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[768].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-    }
-
-    // n = 64, s = 16
-    for (int p = 0; p < 16; p++) {
-        uint16_t sp = 16 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p64_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p64_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p64_back_nse[p]);
-        for (int q = 0; q < 16; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[256].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[512].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[768].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[16].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[32].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[48].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-        }
-    }
-
-    // n = 16, s = 64
-    for (int p = 0; p < 4; p++) {
-        uint16_t sp = 64 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p16_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p16_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p16_back_nse[p]);
-        for (int q = 0; q < 64; q+=4) {
-            complex_t<T> *yq_sp = y + q + sp;
-            complex_t<T> *xq_s4p = x + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(yq_sp[256].Re));
-            __m256 c = _mm256_loadu_ps(&(yq_sp[512].Re));
-            __m256 d = _mm256_loadu_ps(&(yq_sp[768].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(xq_s4p[64].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(xq_s4p[128].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(xq_s4p[192].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-        }
-    }
-
-    for (int q = 0; q < 256; q+=4) {
-        complex_t<T> *xq = x + q;
-
-        __m256 a = _mm256_loadu_ps(&(xq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(xq[256].Re));
-        __m256 c = _mm256_loadu_ps(&(xq[512].Re));
-        __m256 d = _mm256_loadu_ps(&(xq[768].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[256].Re), _mm256_add_ps(amc, jbmd));
-        _mm256_storeu_ps(&(xq[512].Re), _mm256_sub_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[768].Re), _mm256_sub_ps(amc, jbmd));
-    }
+    my_ifft_first_butterfly(1024, 1, x, y);
+    my_ifft_butterfly_s4(256, y, x);
+    my_ifft_butterfly(64, 16, x, y);
+    my_ifft_butterfly(16, 64, y, x);
+    my_ifft_bottom4_butterfly(256, x, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_ifft_2048points(int N, complex_t<T> *x)
 {
-    uint16_t wt_index = 0;
     complex_t<T> y[2048];
-
-    for (int p = 0; p < 512; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[512].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[1024].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[1536].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p2048_back_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p2048_back_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p2048_back_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-
-    // n = 512, s = 4
-    for (int p = 0; p < 128; p++) {
-        uint16_t sp = 4 * p;
-        uint16_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p512_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p512_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p512_back_nse[p]);
-        // The 2048 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[512].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[1024].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[1536].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-    }
-
-    // n = 128, s = 16
-    for (int p = 0; p < 32; p++) {
-        uint16_t sp = 16 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p128_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p128_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p128_back_nse[p]);
-        for (int q = 0; q < 16; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[512].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[1024].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[1536].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[16].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[32].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[48].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-        }
-    }
-
-    // n = 32, s = 64
-    for (int p = 0; p < 8; p++) {
-        uint16_t sp = 64 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p32_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p32_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p32_back_nse[p]);
-        for (int q = 0; q < 64; q+=4) {
-            complex_t<T> *yq_sp = y + q + sp;
-            complex_t<T> *xq_s4p = x + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(yq_sp[512].Re));
-            __m256 c = _mm256_loadu_ps(&(yq_sp[1024].Re));
-            __m256 d = _mm256_loadu_ps(&(yq_sp[1536].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(xq_s4p[64].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(xq_s4p[128].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(xq_s4p[192].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-        }
-    }
-    // n = 8, s = 256
-    for (int p = 0; p < 2; p++) {
-        uint16_t sp = 256 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p8_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p8_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p8_back_nse[p]);
-        for (int q = 0; q < 256; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[512].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[1024].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[1536].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[256].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[512].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[768].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-        }
-    }
-
-    for (int q = 0; q < 1024; q+=4) {
-        complex_t<T> *xq = x + q;
-        complex_t<T> *yq = y + q;
-
-        __m256 a = _mm256_loadu_ps(&(yq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq[1024].Re));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(a, b));
-        _mm256_storeu_ps(&(xq[1024].Re), _mm256_sub_ps(a, b));
-    }
+    my_ifft_first_butterfly(2048, 1, x, y);
+    my_ifft_butterfly_s4(512, y, x);
+    my_ifft_butterfly(128, 16, x, y);
+    my_ifft_butterfly(32, 64, y, x);
+    my_ifft_butterfly(8, 256, x, y);
+    my_ifft_bottom2_butterfly(1024, y, x);
 }
 
 template<typename T>
 inline void my_fft_avx_whole<T>::my_ifft_4096points(int N, complex_t<T> *x)
 {
-    uint16_t wt_index = 0;
     complex_t<T> y[4096];
-
-    for (int p = 0; p < 1024; p+=2, wt_index+=1) {
-        complex_t<T> *x_p = x + p;
-        complex_t<T> *y_4p = y + 4*p;
-        __m128 a = _mm_loadu_ps(&(x_p[0].Re));
-        __m128 b = _mm_loadu_ps(&(x_p[1024].Re));
-        __m128 c = _mm_loadu_ps(&(x_p[2048].Re));
-        __m128 d = _mm_loadu_ps(&(x_p[3072].Re));
-        __m128 apc = _mm_add_ps(a, c);
-        __m128 amc = _mm_sub_ps(a, c);
-        __m128 bpd = _mm_add_ps(b, d);
-        __m128 jbmd = jxpz(_mm_sub_ps(b, d));
-
-        __m128 aA = _mm_add_ps(apc, bpd);
-        __m128 bB = mulpz_lh(w1p4096_back_avx[wt_index], _mm_add_ps(amc, jbmd));
-        __m128 cC = mulpz_lh(w2p4096_back_avx[wt_index], _mm_sub_ps(apc, bpd));
-        __m128 dD = mulpz_lh(w3p4096_back_avx[wt_index], _mm_sub_ps(amc, jbmd));
-        __m128 ab = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[0].Re), ab);
-        __m128 cd = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(1, 0, 1, 0));
-        _mm_storeu_ps(&(y_4p[2].Re), cd);
-        __m128 AB = _mm_shuffle_ps(aA, bB, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[4].Re), AB);
-        __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
-        _mm_storeu_ps(&(y_4p[6].Re), CD);
-    }
-    // n = 1024, s = 4
-    for (int p = 0; p < 256; p++) {
-        uint16_t sp = 4 * p;
-        uint16_t s4p = 4 * sp;
-        complex_t<T> *yq_sp = y + sp;
-        complex_t<T> *xq_s4p = x + s4p;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p1024_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p1024_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p1024_back_nse[p]);
-        // The 4096 points case : q = 1
-        __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq_sp[1024].Re));
-        __m256 c = _mm256_loadu_ps(&(yq_sp[2048].Re));
-        __m256 d = _mm256_loadu_ps(&(yq_sp[3072].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-        _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq_s4p[4].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-        _mm256_storeu_ps(&(xq_s4p[8].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-        _mm256_storeu_ps(&(xq_s4p[12].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-    }
-    // n = 256, s = 16
-    for (int p = 0; p < 64; p++) {
-        uint16_t sp = 16 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p256_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p256_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p256_back_nse[p]);
-        for (int q = 0; q < 16; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[1024].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[2048].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[3072].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[16].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[32].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[48].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-        }
-    }
-    // n = 64, s = 64
-    for (int p = 0; p < 16; p++) {
-        uint16_t sp = 64 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p64_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p64_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p64_back_nse[p]);
-        for (int q = 0; q < 64; q+=4) {
-            complex_t<T> *yq_sp = y + q + sp;
-            complex_t<T> *xq_s4p = x + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(yq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(yq_sp[1024].Re));
-            __m256 c = _mm256_loadu_ps(&(yq_sp[2048].Re));
-            __m256 d = _mm256_loadu_ps(&(yq_sp[3072].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(xq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(xq_s4p[64].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(xq_s4p[128].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(xq_s4p[192].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-        }
-    }
-    // n = 16, s = 256
-    for (int p = 0; p < 4; p++) {
-        uint16_t sp = 256 * p;
-        uint16_t s4p = 4 * sp;
-        // Set the weight
-        __m256 w1p = duppz2_lo(w1p16_back_nse[p]);
-        __m256 w2p = duppz2_lo(w2p16_back_nse[p]);
-        __m256 w3p = duppz2_lo(w3p16_back_nse[p]);
-        for (int q = 0; q < 256; q+=4) {
-            complex_t<T> *xq_sp = x + q + sp;
-            complex_t<T> *yq_s4p = y + q + s4p;
-            __m256 a = _mm256_loadu_ps(&(xq_sp[0].Re));
-            __m256 b = _mm256_loadu_ps(&(xq_sp[1024].Re));
-            __m256 c = _mm256_loadu_ps(&(xq_sp[2048].Re));
-            __m256 d = _mm256_loadu_ps(&(xq_sp[3072].Re));
-            __m256 apc = _mm256_add_ps(a, c);
-            __m256 amc = _mm256_sub_ps(a, c);
-            __m256 bpd = _mm256_add_ps(b, d);
-            __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-
-            _mm256_storeu_ps(&(yq_s4p[0].Re), _mm256_add_ps(apc, bpd));
-            _mm256_storeu_ps(&(yq_s4p[256].Re), mulpz2(w1p, _mm256_add_ps(amc, jbmd)));
-            _mm256_storeu_ps(&(yq_s4p[512].Re), mulpz2(w2p, _mm256_sub_ps(apc, bpd)));
-            _mm256_storeu_ps(&(yq_s4p[768].Re), mulpz2(w3p, _mm256_sub_ps(amc, jbmd)));
-        }
-    }
-
-    for (int q = 0; q < 1024; q+=4) {
-        complex_t<T> *xq = x + q;
-        complex_t<T> *yq = y + q;
-
-        __m256 a = _mm256_loadu_ps(&(yq[0].Re));
-        __m256 b = _mm256_loadu_ps(&(yq[1024].Re));
-        __m256 c = _mm256_loadu_ps(&(yq[2048].Re));
-        __m256 d = _mm256_loadu_ps(&(yq[3072].Re));
-        __m256 apc = _mm256_add_ps(a, c);
-        __m256 amc = _mm256_sub_ps(a, c);
-        __m256 bpd = _mm256_add_ps(b, d);
-        __m256 jbmd = jxpz2(_mm256_sub_ps(b, d));
-        _mm256_storeu_ps(&(xq[0].Re), _mm256_add_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[1024].Re), _mm256_add_ps(amc, jbmd));
-        _mm256_storeu_ps(&(xq[2048].Re), _mm256_sub_ps(apc, bpd));
-        _mm256_storeu_ps(&(xq[3072].Re), _mm256_sub_ps(amc, jbmd));
-    }
+    my_ifft_first_butterfly(4096, 1, x, y);
+    my_ifft_butterfly_s4(1024, y, x);
+    my_ifft_butterfly(256, 16, x, y);
+    my_ifft_butterfly(64, 64, y, x);
+    my_ifft_butterfly(16, 256, x, y);
+    my_ifft_bottom4_butterfly(1024, y, x);
 }
 
 // Inverse Fourier transform
