@@ -28,8 +28,8 @@
 #include "common/complex_t.h"
 #include "my_simd.h"
 
-#define SQRT2_CONSTANT          1.41421356237309504880  // sqrt(2)
-#define SQRT1_2_CONSTANT        0.70710678118654752440  // 1/sqrt(2)
+#define SQRT2_CONSTANT          1.41421356237309504876378807303183294  // sqrt(2)
+#define SQRT1_2_CONSTANT        0.707106781186547524400844362104849039  // 1/sqrt(2)
 
 /////////////////////////////////////////////////
 //          Weight values are designed         //
@@ -148,10 +148,11 @@ struct my_fft_avx_whole
     complex_t<T> *w2p_back[10];
     complex_t<T> *w3p_back[10];
 
-    uint16_t wp_points[10] = {8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4069};
+    uint16_t wp_points[10] = {8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
 
     // The construct interface
     my_fft_avx_whole(int N);
+    ~my_fft_avx_whole();
     // FFT forward operations
     inline void my_fft_first_butterfly(int N, int s, complex_t<T> *x, complex_t<T> *y);
     inline void my_fft_butterfly_s4(int N, complex_t<T> *x, complex_t<T> *y);
@@ -203,7 +204,6 @@ my_fft_avx_whole<T>::my_fft_avx_whole(int N)
         w2p_back[i] = new complex_t<T>[points/4];
         w3p_back[i] = new complex_t<T>[points/4];
         T theta = 2*M_PI/points;
-
         for (uint16_t p = 0; p < points/4; p++) {
             w1p_fwd[i][p] = complex_t<T>(cos(p*theta), -sin(p*theta));
             w2p_fwd[i][p] = w1p_fwd[i][p] * w1p_fwd[i][p];
@@ -213,6 +213,19 @@ my_fft_avx_whole<T>::my_fft_avx_whole(int N)
             w2p_back[i][p] = w1p_back[i][p] * w1p_back[i][p];
             w3p_back[i][p] = w1p_back[i][p] * w2p_back[i][p];
         }
+    }
+}
+
+template<typename T>
+my_fft_avx_whole<T>::~my_fft_avx_whole()
+{
+    for (uint8_t i = 0; i < 10; i++) {
+        delete [](w1p_fwd[i]);
+        delete [](w2p_fwd[i]);
+        delete [](w3p_fwd[i]);
+        delete [](w1p_back[i]);
+        delete [](w2p_back[i]);
+        delete [](w3p_back[i]);
     }
 }
 
@@ -289,13 +302,13 @@ inline void my_fft_avx_whole<T>::my_fft_first_butterfly(int N, int s, complex_t<
         __m128 CD = _mm_shuffle_ps(cC, dD, _MM_SHUFFLE(3, 2, 3, 2));
         _mm_storeu_ps(&(y_4p[6].Re), CD);
 #if 0
-        printf("p = %d\n", p);
+        printf("p = %d %d %d %d\n", p, n1, n2, n3);
         float ans[4];
-        _mm_store_ps(ans, ab);
+        _mm_store_ps(ans, w1p_avx);
         printf("%.8e %.8e %.8e %.8e \n", ans[0], ans[1], ans[2], ans[3]);
-        _mm_store_ps(ans, cd);
+        _mm_store_ps(ans, w2p_avx);
         printf("%.8e %.8e %.8e %.8e \n", ans[0], ans[1], ans[2], ans[3]);
-        _mm_store_ps(ans, AB);
+        _mm_store_ps(ans, w3p_avx);
         printf("%.8e %.8e %.8e %.8e \n", ans[0], ans[1], ans[2], ans[3]);
 #endif
     }
