@@ -33,4 +33,13 @@
 int8_t uci_decoder_1bit_decoding(int8_t *llr, uint32_t coded_bit_len, uint32_t uci_bit, int8_t qm);
 int8_t uci_decoder_2bits_decoding(int8_t *llr, uint32_t coded_bit_len, uint32_t uci_bit, int8_t qm);
 
+// Polar decoder for PUCCH and PUSCH of 3GPP NR, as defined in section 6.3 of TS 38.212. Implements 
+// the code block segmentation and CRC attachment of sections 6.3.1.2.1 and 6.3.2.2.1, the channel 
+// coding of sections 6.3.1.3.1 and 6.3.2.3.2, the rate matching of sections 6.3.1.4.1 and 6.3.2.4.1, 
+// as well as the code block concatenation of sections 6.3.1.5.1 and 6.3.2.5.1.
+// LLR : should be a real row vector comprising G number of Logarithmic Likelihood Ratios, each having
+//       a value obtained as LLR=ln(P(bit=0)/P(bit=1)), where G should be no greater than 8192 if 
+//       A<360 from sections 6.3.1.5 and 6.3.2.5 of TS 38.212, while the last LLR corresponds to g_G-1.
+void polar_decoder_decoding(int8_t *a_hat, int8_t *llr, uint32_t coded_bit_len, uint32_t uci_bit, int8_t list_size);
+
 #endif

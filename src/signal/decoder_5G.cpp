@@ -26,6 +26,8 @@
 #include <iostream>
 #include "signal/decoder_5G.h"
 
+using namespace std;
+
 int8_t uci_decoder_1bit_decoding(int8_t *llr, uint32_t coded_bit_len, uint32_t uci_bit, int8_t qm)
 {
     int8_t value_decoded[2] = {0, 1};
@@ -203,4 +205,107 @@ int8_t uci_decoder_2bits_decoding(int8_t *llr, uint32_t coded_bit_len, uint32_t 
 #endif
 
     return pos;
+}
+
+uint32_t get_3gpp_n(uint32_t K, uint32_t E, uint32_t n_max)
+{
+    uint32_t n1, r_min, n_min, n2, n;
+
+    if ((E <= (9.0/8)*pow(2, (ceil(log2(E))-1))) && ((double)K/E < 9.0/16))
+    {
+        n1 = ceil(log2(E)) - 1;
+    }
+    else
+    {
+        n1 = ceil(log2(E));
+    }
+
+    r_min = 1.0/8;
+    n_min = 5;
+    n2 = ceil(log2(K/r_min));
+    // Find the minimum of (n1, n2, n_max), then find the bigger between the result and n_min
+    n = std::max(n_min, std::min(std::min(n1, n2), n_max));
+
+    return pow(2, n);
+}
+
+void polar_decoder_decoding(int8_t *a_hat, int8_t *llr, uint32_t coded_bit_len, uint32_t uci_bit, int8_t list_size)
+{
+    uint32_t c = 0, p, p2;
+    uint32_t K, E_r, N;
+    // D^6+D^5+1
+    int8_t crc_polynomial_pattern1[7] = {1, 1, 0, 0, 0, 0, 1};
+    // D^11+D^10+D^9+D^5+1
+    int8_t crc_polynomial_pattern2[12] = {1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1};
+    int8_t *crc_polynomial_pattern = NULL;
+
+    if (uci_bit < 12) {
+        fprintf(stderr, "polar_3gpp un-supported block length, A should be no less than 12 !\n");
+        return;
+    } else if (uci_bit > 1706) {
+        fprintf(stderr, "polar_3gpp un-supported block length, A should be no greater than 1706 !\n");
+        return;
+    } else if (uci_bit <= 19) {
+        // Use PCCA-Polar
+        c = 1;
+        crc_polynomial_pattern = crc_polynomial_pattern1;
+        p = 6;
+    } else {
+        // Use CA-Polar
+        crc_polynomial_pattern = crc_polynomial_pattern2;
+        if ((uci_bit >= 360 && coded_bit_len >= 1088) || (uci_bit >= 1013)) {
+            c = 2;
+        } else {
+            c = 1;
+        }
+        p = 11;
+    }
+    
+    p2 = 3;
+    // Determine the number of information and CRC bits
+    K = ceil(uci_bit/c) + p;
+    E_r = floor(coded_bit_len/c);
+
+    if (E_r > 8192) {
+        fprintf(stderr, "polar_3gpp unsupported block length, G is too long !\n");
+    }
+
+    // Determine the number of bits used at the input and output of the polar encoder kernel
+    N = get_3gpp_n(K, E_r, 10);
+
+    // Get a rate matching pattern
+
+    // Get a sequence pattern
+
+    // Get the channel interleaving pattern
+
+    if (uci_bit <= 19) {
+        // Use PCCA-polar
+        // Perform channel interleaving
+
+        // Use 3 PC bits
+
+        // Get an information bit pattern
+
+        // Get a PC bit pattern
+
+        // Perform polar decoding
+    } else {
+        // Use CA-Polar
+        // Get an information bit pattern
+
+        if (c == 2)
+        {
+            // Perform channel interleaving for first segment
+
+            // Perform polar decoding for first segment
+
+        }
+        else
+        {
+            // Perform channel interleaving
+
+            // Perform polar decoding
+        }
+    }
 }
