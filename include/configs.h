@@ -19,16 +19,51 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-#ifndef _LINEAR_SOLVER_H_
-#define _LINEAR_SOLVER_H_       1
 
-#include "my_vector.h"
-#include "my_matrix.h"
+#ifndef _CONFIGS_H_
+#define _CONFIGS_H_         1
 
-// Direct methods
-void na_linear_solver_gauss(Matrix<float> &A, float *x, float *b);
-void na_linear_solver_gauss(Matrix<double> &A, double *x, double *b);
+// OS-related
+#ifdef _WIN32
+    // Windows
+#elif __unix__
+    // Unix
+#elif __linux__
+    // Linux
+#elif __APPLE__
+    // Mac OS
+#endif
 
-// Iterative methods
+// Hardware-related
+#if defined(__i386__) || defined(__INTEL__)
+#elif __amd_64
+#elif __arm__
+#ifdef __ARM_ARCH_6__
+    // ARM 6 CPU
+#elif __ARM_ARCH_7__
+    // ARM 7 CPU
+#else __aarch64__
+    // ARM 64-bits CPU
+#endif
+#elif __powerpc__
+#endif
+
+// Check bits of the platform
+#if _WIN32 || _WIN64
+    #if _WIN64
+        // 64 bits
+    #else
+        // 32 bits
+    #endif
+#endif
+
+#if __GNUC__
+    #if __x86_64__ || __ppc64__
+        // 64 bits
+    #else
+        // 32 bits
+    #endif
+#endif
 
 #endif
+

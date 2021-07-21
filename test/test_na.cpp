@@ -19,16 +19,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-#ifndef _LINEAR_SOLVER_H_
-#define _LINEAR_SOLVER_H_       1
 
-#include "my_vector.h"
-#include "my_matrix.h"
+#include <iostream>
+#include "na/linear_solver.h"
 
-// Direct methods
-void na_linear_solver_gauss(Matrix<float> &A, float *x, float *b);
-void na_linear_solver_gauss(Matrix<double> &A, double *x, double *b);
+int main(void)
+{
+    float a[] = {
+        1.00, 0.00, 0.00,  0.00,  0.00, 0.00,
+        1.00, 0.63, 0.39,  0.25,  0.16, 0.10,
+        1.00, 1.26, 1.58,  1.98,  2.49, 3.13,
+        1.00, 1.88, 3.55,  6.70, 12.62, 23.80,
+        1.00, 2.51, 6.32, 15.88, 39.90, 100.28,
+        1.00, 3.14, 9.87, 31.01, 97.41, 306.02
+    };
+    float b[] = {-0.01, 0.61, 0.91, 0.99, 0.60, 0.02};
+    float x[6] = {0.0};
 
-// Iterative methods
+    Matrix<float> A(6, 6, a);
+    A.print();
 
-#endif
+    na_linear_solver_gauss(A, x, b);
+
+    for (size_t i = 0; i < 6; i++) {
+        printf("%.8e\n", x[i]);
+    }
+
+    return 0;
+}
+

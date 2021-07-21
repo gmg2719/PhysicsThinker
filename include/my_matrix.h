@@ -24,11 +24,13 @@
 
 #include <cstdio>
 #include <cstring>
+#include <cmath>
 #include <cassert>
 
 template<typename T, size_t M, size_t N>
 class MatrixFixed
 {
+public:
     T _m[M][N];
 
 public:
@@ -475,6 +477,7 @@ public:
 template<typename T>
 class Matrix
 {
+public:
     T *_m;
     size_t M;
     size_t N;
@@ -482,32 +485,42 @@ class Matrix
 public:
     Matrix()
     {
-        _m = nullptr;
         M = 0;
         N = 0;
+        _m = nullptr;
     }
 
     explicit Matrix(size_t m, size_t n)
     {
-        _m = new T[m * n];
         M = m;
         N = n;
+        _m = new T[m * n];
     }
 
-    explicit Matrix(const T *x)
+    explicit Matrix(size_t m, size_t n, const T *x)
     {
+        M = m;
+        N = n;
+        _m = new T[m * n];
         for (size_t i = 0; i < M; i++) {
             for (size_t j = 0; j < N; j++) {
-                _m[i][j] = x[N*i + j];
+                _m[i*N + j] = x[i*N + j];
             }
         }
     }
 
-    Matrix(const Matrix &other)
+    Matrix(const Matrix<T> &other)
     {
+        if (_m != NULL) {
+            delete []_m;
+        }
+
+        M = other.M;
+        N = other.N;
+        _m = new T[M * N];
         for (size_t i = 0; i < M; i++) {
             for (size_t j = 0; j < N; j++) {
-                _m[i][j] = other(i, j);
+                _m[i*N + j] = other(i, j);
             }
         }
     }
@@ -516,14 +529,14 @@ public:
     {
         assert((i < M) && (i >= 0));
         assert((j < N) && (j >= 0));
-        return _m[i][j];
+        return _m[i*N + j];
     }
 
     inline T &operator()(size_t i, size_t j)
     {
         assert((i < M) && (i >= 0));
         assert((j < N) && (j >= 0));
-        return _m[i][j];
+        return _m[i*N + j];
     }
 
     Matrix<T> & operator=(const Matrix<T> &other)
@@ -532,7 +545,7 @@ public:
             Matrix<T> &p = *this;
             for (size_t i = 0; i < M; i++) {
                 for (size_t j = 0; j < N; j++) {
-                    p[i][j] = other(i, j);
+                    p(i, j) = other(i, j);
                 }
             }
         }
@@ -753,7 +766,7 @@ public:
         const Matrix<T> &p = *this;
         for (size_t i = 0; i < M; i++) {
             for (size_t j = 0; j < N; j++) {
-                snprintf(buf + strlen(buf), n - strlen(buf), "\t%8.8g", double(p(i, j)));
+                snprintf(buf + strlen(buf), n - strlen(buf), "%10.6g", double(p(i, j)));
             }
             snprintf(buf + strlen(buf), n - strlen(buf), "\n");
         }
@@ -764,6 +777,8 @@ public:
         // element: tab, point, 8 digits, 4 scientific notation chars; row: newline; string: \0 end
         static const size_t n = 15*N*M + M + 1;
         char * buf = new char[n];
+
+        printf("matrix size = (%d, %d)\n", M, N);
         write_string(buf, n);
         printf("%s\n", buf);
         delete[] buf;
