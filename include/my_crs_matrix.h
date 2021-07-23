@@ -70,7 +70,7 @@ public:
     {
         val_ = NULL;
         rowptr_ = NULL;
-        col_ind = NULL;
+        colind_ = NULL;
         base_ = 0;
         nz_ = 0;
         dim_[0] = 0; dim_[1] = 0;
@@ -78,13 +78,16 @@ public:
 
     CrsMatrix(const CrsMatrix<T> &other)
     {
-        // Shallow copy
-        val_ = other.val_;
-        rowptr_ = other.rowptr_;
-        colind_ = other.colind_;
-        base_ = other.base_;
-        nz_ = other.nz_;
-        dim_[0] = other.dim_[0]; dim_[1] = other.dim_[1];
+        newsize(other.dim_[0], other.dim_[1], other.nz_);
+        for (int i = 0; i < nz_; i++)
+        {
+            val_[i] = other.val_[i];
+            colind_[i] = other.colind_[i];
+        }
+        for (int i = 0; i <= dim_[0]; i++)
+        {
+            rowptr_[i] = other.rowptr_[i];
+        }
     }
 
     CrsMatrix(int m, int n, int nz, T *val, int *r, int *c, int base=0)
@@ -134,6 +137,7 @@ public:
         base_ = other.base_;
         nz_ = other.nz_;
         dim_[0] = other.dim_[0]; dim_[1] = other.dim_[1];
+        return *this;
     }
 
     CrsMatrix<T>& newsize(int m, int n, int nz)
