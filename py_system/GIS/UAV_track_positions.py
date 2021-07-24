@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('Qt5Agg')
+# matplotlib.use('Agg')
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 import matplotlib.animation as animation
 
@@ -40,7 +41,7 @@ class UAVsTrack(object):
             self.ax.add_artist(ab)
         self.scat = self.ax.scatter(self.xx, self.yy, zorder=20, s=0)
         # Then setup FuncAnimation. (3 minutes, interval = 1000 ms)
-        self.ani = animation.FuncAnimation(self.fig, self.update, interval=1000)
+        self.ani = animation.FuncAnimation(self.fig, self.update, frames=20, interval=500)
 
     def update(self, i):
         """Update the scatter plot."""
@@ -73,15 +74,25 @@ class UAVsTrack(object):
             if (self.yy[i] >= high):
                 self.yy[i] = high - 1.0
 
-        # data = np.stack((self.xx, self.yy), axis=1)
+        data = np.stack((self.xx, self.yy), axis=1)
 
         # Set x and y data...
-        if len(self.ax.artists) > 0:
-            for i in range(len(self.ax.artists)):
-                self.ax.artists[i].xy = [self.xx[i], self.yy[i]]
-                print('change position ', self.xx[i], self.yy[i])
+        for ann in self.ax.artists:
+            ann.remove()
+        self.ax.artists = []
         print('Frame : ', self.frames)
-        self.scat = self.ax.scatter(self.xx, self.yy, zorder=20, s=0)
+        # Draw the UAVs
+        image = plt.imread('./uav.jpg')
+        im = OffsetImage(image, zoom=0.05)
+        for i in range(len(self.xx)):
+            x0 = self.xx[i]
+            y0 = self.yy[i]
+            ab = AnnotationBbox(im, (x0, y0), frameon=False)
+            self.ax.add_artist(ab)
+            print('add one UAV !')
+        # self.scat.set_offsets(data[:, :2])
+        plt.pause(0.25)
+        self.fig.canvas.draw()
         # We need to return the updated artist for FuncAnimation to draw..
         # Note that it expects a sequence of artists, thus the trailing comma.
         return self.scat, self.ax.artists,
@@ -94,4 +105,6 @@ if __name__ == "__main__":
     print("Unit test")
     a = UAVsTrack(2)
     plt.show()
+    # ani = a.get_ani()
+    # ani.save('uav.gif', writer='imagemagick', fps=4)
 
