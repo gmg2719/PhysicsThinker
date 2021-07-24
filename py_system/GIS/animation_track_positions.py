@@ -4,15 +4,13 @@
 import os
 import sys
 import random
-import itertools
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-# matplotlib.use('Qt5Agg')
-matplotlib.use('Agg')
+matplotlib.use('Qt5Agg')
+# matplotlib.use('Agg')
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 import matplotlib.animation as animation
-from IPython import display
 from track_positions import track_randomWalk_UEs
 
 _RADIO_SCALE = 100
@@ -21,10 +19,10 @@ y = [50, 250, 50]
 xx = []
 yy = []
 
-class AnimatedScatter(object):
+class AnimatedUEsTrack(object):
     """An animated scatter plot using matplotlib.animations.FuncAnimation."""
     def __init__(self, numpoints=50):
-        self.numpoints = 100
+        self.numpoints = numpoints
 
         # Setup the figure and axes...
         self.fig, self.ax = plt.subplots()
@@ -36,8 +34,8 @@ class AnimatedScatter(object):
         """Initial drawing of the scatter plot."""
         global x, y
         global xx, yy
-        xx = [random.uniform(0, 500) for i in range(100)]
-        yy = [random.uniform(0, 500) for i in range(100)]
+        xx = [random.uniform(0, 500) for i in range(self.numpoints)]
+        yy = [random.uniform(0, 500) for i in range(self.numpoints)]
         self.scat = self.ax.scatter(x, y, zorder=10, s=0)
         self.ax.axis([-150, 650, -150, 650])
         # Set the BSs icon
@@ -68,10 +66,10 @@ class AnimatedScatter(object):
         return self.ani
 
 def animation_track_UEs():
-    a = AnimatedScatter()
+    a = AnimatedUEsTrack(1)
     plt.show()
-    ani = a.get_ani()
-    ani.save('track.gif', writer='imagemagick', fps=2)
+    #ani = a.get_ani()
+    #ani.save('track.gif', writer='imagemagick', fps=2)
 
 if __name__ == "__main__":
     print("Unit test")
