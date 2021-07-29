@@ -25,7 +25,7 @@ def toa_positioning(bs, t):
 
 def toa_positioning_3bs(bs1, bs2, bs3, t1, t2, t3):
     position = Sim2DCord(0.0, 0.0)
-
+    light_speed = spy_constants.speed_of_light
     r1 = t1 * light_speed
     r2 = t2 * light_speed
     r3 = t3 * light_speed
