@@ -33,6 +33,16 @@ Prepare to think about the software products and make decisions.
 ## 2021-07-20
 Make the basic software structure work well.
 
+## 2021-07-30
+Total : 109 files,  19133 codes, 7836 comments, 5189 blanks, all 32158 lines<br>
+Languages<br>
+| language | files | code | comment | blank | total |
+| :--- | ---: | ---: | ---: | ---: | ---: |
+| C++ | 88 | 17,937 | 7,689 | 5,044 | 30,670 |
+| Python | 16 | 937 | 133 | 124 | 1,194 |
+| Shell Script | 4 | 228 | 14 | 11 | 253 |
+| Markdown | 1 | 31 | 0 | 10 | 41 |
+
 ## 2021-08-03
 Reach the codes of 20K-LOC.
 
