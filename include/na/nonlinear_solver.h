@@ -22,4 +22,23 @@
 #ifndef _NONLINEAR_SOLVER_H_
 #define _NONLINEAR_SOLVER_H_       1
 
+#include "my_vector.h"
+#include "my_matrix.h"
+
+#define MAX_ITERS_NLSOLVER          1000
+
+// The callback function is : x = F(x)
+typedef void (*NL_Func_double)(int16_t n, double *x);
+typedef void (*NL_Func_float)(int16_t n, float *x);
+// The callback function is : G(x) = F(x) - x = 0, D(x) = G'(x), the 1-order derivative function
+typedef void (*NL_DeriveFunc_double)(int16_t n, double *x);
+typedef void (*NL_DeriveFunc_float)(int16_t n, float *x);
+
+// Iterative methods
+void na_nonlinear_solver_fixedpoint(NL_Func_double func, int16_t n, double *x);
+void na_nonlinear_solver_fixedpoint(NL_Func_float func, int16_t n, float *x);
+
+void na_nonlinear_solver_newton(NL_DeriveFunc_double func, int16_t n, double *x);
+void na_nonlinear_solver_newton(NL_DeriveFunc_float func, int16_t n, float *x);
+
 #endif

@@ -938,4 +938,16 @@ public:
     }
 };
 
+template<typename T>
+inline void my_matrix_2x2inv(T& a11, T& a12, T& a21, T& a22)
+{
+    T det = a11 * a22 - a12 * a21;
+    T t11 = a11;
+    T t22 = a22;
+    a11 = t22 / det;
+    a12 = -a12 / det;
+    a21 = -a21 / det;
+    a22 = t11 / det;
+}
+
 #endif

@@ -22,8 +22,9 @@
 
 #include <iostream>
 #include "na/linear_solver.h"
+#include "na/nonlinear_solver.h"
 
-int main(void)
+void linear_system_testing()
 {
     float a[] = {
         1.00, 0.00, 0.00,  0.00,  0.00, 0.00,
@@ -44,6 +45,63 @@ int main(void)
     for (size_t i = 0; i < 6; i++) {
         printf("%.8e\n", x[i]);
     }
+}
+
+// When use non-linear solver, you should write your own x = F(x)
+// F(x) is easy to write !!!
+static void equation(int16_t n, double *x)
+{
+    if (n != 2) {
+        return;
+    }
+
+    double r1_x = x[0] - 1000.0;
+    double r1_y = x[1] - 1999.0;
+    double r1 = sqrt(r1_x*r1_x + r1_y * r1_y);
+    x[0] = -0.9889300396346599 * r1 + 2207.2860879738914;
+    x[1] = -0.6110111606089454 * r1 + 1367.4624639174315;
+}
+
+// Input : x, return the dx = G'(x) = (F(x) - x)'
+static void derivative_f(int16_t n, double *x)
+{
+    if (n != 2) {
+        return;
+    }
+
+    double r1_x = x[0] - 1000.0;
+    double r1_y = x[1] - 1999.0;
+    double r1 = sqrt(r1_x*r1_x + r1_y * r1_y);
+    double b1 = -0.9889300396346599 * r1 + 2207.2860879738914 - x[0];
+    double b2 = -0.6110111606089454 * r1 + 1367.4624639174315 - x[1];
+    double f11 = (-0.9889300396346599) * (1.0 / r1) * r1_x - 1.0;
+    double f12 = (-0.9889300396346599) * (1.0 / r1) * r1_y;
+    double f21 = (-0.6110111606089454) * (1.0 / r1) * r1_x;
+    double f22 = (-0.6110111606089454) * (1.0 / r1) * r1_y - 1.0;
+    my_matrix_2x2inv<double>(f11, f12, f21, f22);
+    x[0] = f11 * (-b1) + f12 * (-b2);
+    x[1] = f21 * (-b1) + f22 * (-b2);
+}
+
+void nonlinear_system_testing()
+{
+    double x[2] = {0.0, 0.0};
+    na_nonlinear_solver_fixedpoint(equation, 2, x);
+
+    printf("Results are :\n");
+    printf("(%.6f, %.6f)\n", x[0], x[1]);
+
+    double y[2] = {0.0, 0.0};
+    na_nonlinear_solver_newton(derivative_f, 2, y);
+
+    printf("Results are :\n");
+    printf("(%.6f, %.6f)\n", y[0], y[1]);
+}
+
+int main(void)
+{
+    linear_system_testing();
+    nonlinear_system_testing();
 
     return 0;
 }
