@@ -5,9 +5,11 @@ import os
 import sys
 import math
 import random
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy.linalg import inv
 import scipy.constants as spy_constants
+from scipy.optimize import fsolve
 
 class Sim2DCord(object):
     def __init__(self, x, y):
@@ -68,9 +70,19 @@ def tdoa_positioning_3bs(bs_basic, bs2, bs3, dt1, dt2):
     B = np.matmul(P1, P3)
     x_est = 0.0
     y_est = 0.0
-    itr = 0
+    
+    def equations(p):
+        x0, x1 = p
+        r1_x = x0 - bs_basic.x
+        r1_y = x1 - bs_basic.y
+        r1 = math.sqrt(r1_x * r1_x + r1_y * r1_y)
+        return (A[0, 0] * r1 + B[0, 0] - x0, A[1, 0] * r1 + B[1, 0] - x1)
+    x_est, y_est = fsolve(equations, (0.0, 0.0))
+    
     # Use Newton iterative method to estimate the non-linear system results
     # Iterate 100 times mostly
+    """
+    itr = 0
     while itr < 100:
         itr += 1
         x_est_before = x_est
@@ -80,9 +92,10 @@ def tdoa_positioning_3bs(bs_basic, bs2, bs3, dt1, dt2):
         r1 = math.sqrt(r1_x*r1_x + r1_y*r1_y)
         x_est = A[0, 0] * r1 + B[0, 0]
         y_est = A[1, 0] * r1 + B[1, 0]
-        print("Estimate(%d) : (%.8f %.8f)" % (itr, x_est, y_est))
+        # print("Estimate(%d) : (%.8f %.8f)" % (itr, x_est, y_est))
         if (abs(x_est - x_est_before) < 1E-6) and (abs(y_est - y_est_before) < 1E-6):
             break
+    """
     print("Estimate : ", x_est, y_est)
     position.x = x_est
     position.y = y_est
@@ -129,4 +142,34 @@ if __name__ == "__main__":
     print('TDOA algorithm for 3 BSs in 2D plane :')
     pos = tdoa_positioning_3bs(bs1, bs2, bs3, r2/light_speed - r1/light_speed, r3/light_speed - r1/light_speed)
     pos.debug_print()
+    print("Scheme 3:")
+    error_results = []
+    np.random.seed(1)
+    for i in range(1000):
+        print('ITR %d' % (i))
+        uav = Sim2DCord(np.random.uniform(0, 2000), np.random.uniform(0, 2000))
+        bs1 = Sim2DCord(1000, 1999)
+        bs2 = Sim2DCord(1, 1)
+        bs3 = Sim2DCord(1999, 1)
+        uav.debug_print()
+        r1 = calc_2D_distance(uav, bs1)
+        print(r1)
+        r2 = calc_2D_distance(uav, bs2)
+        print(r2)
+        r3 = calc_2D_distance(uav, bs3)
+        print(r3)
+        print('TOA algorithm for 3 BSs in 2D plane :')
+        pos = toa_positioning_3bs(bs1, bs2, bs3, r1/light_speed, r2/light_speed, r3/light_speed)
+        pos.debug_print()
+        print('TDOA algorithm for 3 BSs in 2D plane :')
+        pos = tdoa_positioning_3bs(bs1, bs2, bs3, r2/light_speed - r1/light_speed, r3/light_speed - r1/light_speed)
+        print('max positioning error is %.4f' % (max(pos.x - uav.x, pos.y - uav.y)))
+        if max(abs(pos.x - uav.x), abs(pos.y - uav.y)) > 10:
+            error_results.append(10.0)
+        else:
+            error_results.append(max(abs(pos.x - uav.x), abs(pos.y - uav.y)))
+    # fig, ax = plt.subplots()
+    # x = np.array(range(1000))
+    # y = np.array(error_results)
+    # ax.plot(x, y)
 
