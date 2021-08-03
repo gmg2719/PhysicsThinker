@@ -11,6 +11,7 @@ from numpy.linalg import inv
 import scipy.constants as spy_constants
 from uav_tdoa import Sim2DCord
 from scipy.optimize import fsolve
+from scipy.optimize import leastsq
 
 class Sim3DCord(Sim2DCord):
     def __init__(self, x, y, z=0):
@@ -120,7 +121,7 @@ def tdoa_4bs_search_initbest(bs1, bs2, bs3, bs4):
                         x_est, y_est, z_est = fsolve(equations_3d, (x_init, y_init, z_init))
                         return x_est, y_est, z_est
                     x_est, y_est, z_est = scipy_3d_solver()
-                    if max(abs(x_est - anchor.x), abs(y_est - anchor.y), abs(z_est - anchor.z)) < 1.0:
+                    if (max(abs(x_est - anchor.x), abs(y_est - anchor.y)) < 1.0) and (abs(z_est - anchor.z) < 1.0):
                         counter += 1
                 print('init (%.4f, %.4f, %.4f) search done !' % (x_init, y_init, z_init))
                 cdf_results.append(counter / 1000)
@@ -130,7 +131,7 @@ def tdoa_4bs_search_initbest(bs1, bs2, bs3, bs4):
 # dt21 : UE to bs2 and bs1 TOA difference
 # dt31 : UE to bs3 and bs1 TOA difference
 # dt41 : UE to bs4 and bs1 TOA difference
-def tdoa_positioning_4bs_improve(bs1, bs2, bs3, bs4, dt21, dt31, dt41, x_init, y_init, z_init):
+def tdoa_positioning_4bs_improve(bs1, bs2, bs3, bs4, dt21, dt31, dt41, x_init, y_init, z_init, method='newton'):
     position = Sim3DCord(0.0, 0.0, 0.0)
     light_speed = spy_constants.speed_of_light
     def equations_3d(p):
@@ -141,10 +142,40 @@ def tdoa_positioning_4bs_improve(bs1, bs2, bs3, bs4, dt21, dt31, dt41, x_init, y
         r4 = math.sqrt((x-bs4.x)**2 + (y-bs4.y)**2 + (z-bs4.z)**2)
         return (r2 - r1 - light_speed*dt21, r3 - r1 - light_speed*dt31, r4 - r1 - light_speed*dt41)
     def scipy_3d_solver():
-        x_est, y_est, z_est = fsolve(equations_3d, (x_init, y_init, z_init), maxfev=1000)
+        if method.lower() == 'newton':
+            x_est, y_est, z_est = fsolve(equations_3d, (x_init, y_init, z_init), maxfev=1000)
+        else:
+            x = leastsq(equations_3d, (x_init, y_init, z_init))
+            x_est = x[0][0]
+            y_est = x[0][1]
+            z_est = x[0][2]
         print("scipy_solver() results : (%.6f, %.6f, %.6f)" % (x_est, y_est, z_est))
         return x_est, y_est, z_est
     x_est, y_est, z_est = scipy_3d_solver()
+    position.x = x_est
+    position.y = y_est
+    position.z = z_est
+    return position
+
+def tdoa_positioning_5bs(bs1, bs2, bs3, bs4, bs5, dt21, dt31, dt41, dt51, x_init, y_init, z_init):
+    position = Sim3DCord(0.0, 0.0, 0.0)
+    light_speed = spy_constants.speed_of_light
+    def equations_3d(p):
+        x, y, z = p
+        r1 = math.sqrt((x-bs1.x)**2 + (y-bs1.y)**2 + (z-bs1.z)**2)
+        r2 = math.sqrt((x-bs2.x)**2 + (y-bs2.y)**2 + (z-bs2.z)**2)
+        r3 = math.sqrt((x-bs3.x)**2 + (y-bs3.y)**2 + (z-bs3.z)**2)
+        r4 = math.sqrt((x-bs4.x)**2 + (y-bs4.y)**2 + (z-bs4.z)**2)
+        r5 = math.sqrt((x-bs5.x)**2 + (y-bs5.y)**2 + (z-bs5.z)**2)
+        return (r2 - r1 - light_speed*dt21, r3 - r1 - light_speed*dt31, r4 - r1 - light_speed*dt41, r5 - r1 - light_speed*dt51)
+    def least_3d_solver():
+        x = leastsq(equations_3d, (x_init, y_init, z_init))
+        x_est = x[0][0]
+        y_est = x[0][1]
+        z_est = x[0][2]
+        print("scipy_solver() results : (%.6f, %.6f, %.6f)" % (x_est, y_est, z_est))
+        return x_est, y_est, z_est
+    x_est, y_est, z_est = least_3d_solver()
     position.x = x_est
     position.y = y_est
     position.z = z_est
@@ -189,14 +220,18 @@ if __name__ == "__main__":
     # bs3 = Sim3DCord(1999, 1, 20)
     # bs4 = Sim3DCord(500, 1000, 10)
     # cdf_probility = tdoa_4bs_search_initbest(bs1, bs2, bs3, bs4)
+    # sys.exit(0)
     # Where indoor  : the initial position achieve the best CDF is (4.0, 8.0, 8.0)
-    # Where outdoor : the initial position achieve the best CDF is (400.0, 800.0, 160.0)
+    # Where outdoor : the initial position achieve the best CDF is (400.0, 900.0, 180.0)
     x_init = 400.0
-    y_init = 800.0
-    z_init = 160.0
+    y_init = 900.0
+    z_init = 180.0
 
     error_horizon_results = []
     error_vertica_results = []
+    dt21_results = []
+    dt31_results = []
+    dt41_results = []
     np.random.seed(1)
     for i in range(1000):
         print('ITR %d' % (i))
@@ -211,6 +246,11 @@ if __name__ == "__main__":
         bs2 = Sim3DCord(1, 1, 18)
         bs3 = Sim3DCord(1999, 1, 20)
         bs4 = Sim3DCord(500, 1000, 10)
+        
+        # Additional base station is used for the estimation
+        bs5 = Sim3DCord(200, 800, 8)
+        r5 = uav.calc_distance(bs5)
+
         uav.debug_print()
         r1 = uav.calc_distance(bs1)
         r2 = uav.calc_distance(bs2)
@@ -219,9 +259,70 @@ if __name__ == "__main__":
         print('Distances : ', r1, r2, r3, r4)
         print('TDOA algorithm for 4 BSs in 3D plane :')
         pos = tdoa_positioning_4bs_improve(bs1, bs2, bs3, bs4, (r2-r1)/light_speed, (r3-r1)/light_speed,
-                                           (r4-r1)/light_speed, x_init, y_init, z_init)
+                                           (r4-r1)/light_speed, x_init, y_init, z_init, method='Least')
+        #pos = tdoa_positioning_5bs(bs1, bs2, bs3, bs4, bs5, (r2-r1)/light_speed, (r3-r1)/light_speed,
+        #                                   (r4-r1)/light_speed, (r5-r1)/light_speed, x_init, y_init, z_init)
         pos.debug_print()
+
+        est_horizon = max(abs(pos.x - uav.x), abs(pos.y - uav.y))
+        est_vertica = abs(pos.z - uav.z)
+        x_modify = pos.x
+        y_modify = pos.y
+        z_modify = pos.z
+        
+        if max(abs(pos.x - uav.x), abs(pos.y - uav.y)) > 1.0 or abs(pos.z - uav.z) > 1.0:
+            print("The iterate %d results should be modified !" % (i))
+            pos_tmp = tdoa_positioning_4bs_improve(bs1, bs2, bs3, bs4, (r2-r1)/light_speed, (r3-r1)/light_speed,
+                                               (r4-r1)/light_speed, bs1.x, bs1.y, bs1.z, method='Least')
+            pos_tmp.debug_print()
+            if max(abs(pos_tmp.x - uav.x), abs(pos_tmp.y - uav.y)) < est_horizon:
+                x_modify = pos_tmp.x
+                y_modify = pos_tmp.y
+                est_horizon = max(abs(pos_tmp.x - uav.x), abs(pos_tmp.y - uav.y))
+            if abs(pos_tmp.z - uav.z) < est_vertica:
+                z_modify = pos_tmp.z
+                est_vertica = abs(pos_tmp.z - uav.z)
+            
+            pos_tmp = tdoa_positioning_4bs_improve(bs1, bs2, bs3, bs4, (r2-r1)/light_speed, (r3-r1)/light_speed,
+                                               (r4-r1)/light_speed, bs2.x, bs2.y, bs2.z, method='Least')
+            pos_tmp.debug_print()
+            if max(abs(pos_tmp.x - uav.x), abs(pos_tmp.y - uav.y)) < est_horizon:
+                x_modify = pos_tmp.x
+                y_modify = pos_tmp.y
+                est_horizon = max(abs(pos_tmp.x - uav.x), abs(pos_tmp.y - uav.y))
+            if abs(pos_tmp.z - uav.z) < est_vertica:
+                z_modify = pos_tmp.z
+                est_vertica = abs(pos_tmp.z - uav.z)
+            
+            pos_tmp = tdoa_positioning_4bs_improve(bs1, bs2, bs3, bs4, (r2-r1)/light_speed, (r3-r1)/light_speed,
+                                               (r4-r1)/light_speed, bs3.x, bs3.y, bs3.z, method='Least')
+            pos_tmp.debug_print()
+            if max(abs(pos_tmp.x - uav.x), abs(pos_tmp.y - uav.y)) < est_horizon:
+                x_modify = pos_tmp.x
+                y_modify = pos_tmp.y
+                est_horizon = max(abs(pos_tmp.x - uav.x), abs(pos_tmp.y - uav.y))
+            if abs(pos_tmp.z - uav.z) < est_vertica:
+                z_modify = pos_tmp.z
+                est_vertica = abs(pos_tmp.z - uav.z)
+            
+            pos_tmp = tdoa_positioning_4bs_improve(bs1, bs2, bs3, bs4, (r2-r1)/light_speed, (r3-r1)/light_speed,
+                                               (r4-r1)/light_speed, bs4.x, bs4.y, bs4.z, method='Least')
+            pos_tmp.debug_print()
+            if max(abs(pos_tmp.x - uav.x), abs(pos_tmp.y - uav.y)) < est_horizon:
+                x_modify = pos_tmp.x
+                y_modify = pos_tmp.y
+                est_horizon = max(abs(pos_tmp.x - uav.x), abs(pos_tmp.y - uav.y))
+            if abs(pos_tmp.z - uav.z) < est_vertica:
+                z_modify = pos_tmp.z
+                est_vertica = abs(pos_tmp.z - uav.z)
+            print('After modification, the coordinate is (%.6f, %.6f, %.6f)' % (x_modify, y_modify, z_modify))
+
+        pos.x = x_modify
+        pos.y = y_modify
+        pos.z = z_modify
+
         print('max positioning error is %.4f' % (max(pos.x - uav.x, pos.y - uav.y, pos.z - uav.z)))
+
         if max(abs(pos.x - uav.x), abs(pos.y - uav.y)) > 10:
             error_horizon_results.append(10.0)
         else:
@@ -230,6 +331,10 @@ if __name__ == "__main__":
             error_vertica_results.append(10.0)
         else:
             error_vertica_results.append(abs(pos.z - uav.z))
+        dt21_results.append(r2/light_speed - r1/light_speed)
+        dt31_results.append(r3/light_speed - r1/light_speed)
+        dt41_results.append(r3/light_speed - r1/light_speed)
+        
     error_horizon_results = np.array(error_horizon_results)
     error_vertica_results = np.array(error_vertica_results)
     print('Error < 1m(horizontal) CDF = %.4f' % (np.size(np.where(error_horizon_results < 1)) / 1000))

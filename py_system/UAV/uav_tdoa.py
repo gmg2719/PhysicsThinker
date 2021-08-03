@@ -53,7 +53,7 @@ def tdoa_positioning(bs_basic, bs, dt):
 
 # dt1 : UE to bs2 and bs_basic TOA difference
 # dt2 : UE to bs3 and bs_basic TOA difference
-def tdoa_positioning_3bs(bs_basic, bs2, bs3, dt1, dt2):
+def tdoa_positioning_3bs(bs_basic, bs2, bs3, dt1, dt2, method='newton'):
     position = Sim2DCord(0.0, 0.0)
     light_speed = spy_constants.speed_of_light
     tmp = np.array([[bs2.x - bs_basic.x, bs2.y - bs_basic.y], [bs3.x - bs_basic.x, bs3.y - bs_basic.y]])
@@ -71,13 +71,72 @@ def tdoa_positioning_3bs(bs_basic, bs2, bs3, dt1, dt2):
     x_est = 0.0
     y_est = 0.0
     
+    def direct_solver():
+        x0 = bs_basic.x
+        y0 = bs_basic.y
+        x = 0.0
+        y = 0.0
+        
+        if (A[0, 0] == 0) and (A[1, 0] == 0):
+            x = B[0, 0]
+            y = B[1, 0]
+            return x, y
+        
+        if (A[0, 0] == 0) and (A[1, 0] != 0):
+            x = B[0, 0]
+            a = A[1, 0]**2 - 1
+            b = A[1, 0]**2*(-2*y0) + 2 * B[1, 0]
+            c = A[1, 0]**2*((x-x0)**2 + y0**2) - B[1, 0]**2
+            y1 = (-b + np.sqrt(b*b-4*a*c))/(2*a)
+            y2 = (-b - np.sqrt(b*b-4*a*c))/(2*a)
+            r_ref = math.sqrt((x-x0)**2+(y1-y0)**2)
+            r2_ref = math.sqrt((x-bs2.x)**2+(y1-bs2.y)**2)
+            r3_ref = math.sqrt((x-bs3.x)**2+(y1-bs3.y)**2)
+            if abs((r2_ref - r_ref) - r21) < 1E-4 and abs((r3_ref - r_ref) - r31) < 1E-4 and (y1 >= 0) and (y1 <= 2000) and (y1 <= 2000):
+                y = y1
+            else:
+                y = y2
+            print("direct_solver() TDOA results (%.6f, %.6f)" % (x, y1))
+            print("direct_solver() TDOA results (%.6f, %.6f)" % (x, y2))
+            return x, y
+        
+        alpha = A[1, 0] / A[0, 0]
+        beta = -(A[1, 0]/A[0, 0])*B[0, 0] + B[1, 0]
+        a = (A[0, 0]**2) * (1 + alpha**2) - 1.0
+        b = (A[0, 0]**2) * (2*alpha*beta-2*alpha*y0-2*x0) + 2*B[0, 0]
+        c = (A[0, 0]**2) * (x0**2+beta**2+y0**2-2*y0*beta) - B[0, 0]**2
+        print('Middle result is %.6f' % (b*b-4*a*c))
+        x1 = (-b + np.sqrt(b*b-4*a*c))/(2*a)
+        x2 = (-b - np.sqrt(b*b-4*a*c))/(2*a)
+        y1 = alpha * x1 + beta
+        y2 = alpha * x2 + beta
+
+        r_ref = math.sqrt((x1-x0)**2+(y1-y0)**2)
+        r2_ref = math.sqrt((x1-bs2.x)**2+(y1-bs2.y)**2)
+        r3_ref = math.sqrt((x1-bs3.x)**2+(y1-bs3.y)**2)
+
+        if abs((r2_ref - r_ref) - r21) < 1E-4 and abs((r3_ref - r_ref) - r31) < 1E-4 and (x1 >= 0) and (
+           y1 >= 0) and (x1 <= 2000) and (y1 <= 2000):
+            x = x1
+            y = y1
+        else:
+            x = x2
+            y = y2
+        print("direct_solver() TDOA results (%.6f, %.6f)" % (x1, y1))
+        print("direct_solver() TDOA results (%.6f, %.6f)" % (x2, y2))
+        return x, y
+    
     def equations(p):
         x0, x1 = p
         r1_x = x0 - bs_basic.x
         r1_y = x1 - bs_basic.y
         r1 = math.sqrt(r1_x * r1_x + r1_y * r1_y)
         return (A[0, 0] * r1 + B[0, 0] - x0, A[1, 0] * r1 + B[1, 0] - x1)
-    x_est, y_est = fsolve(equations, (0.0, 0.0))
+    
+    if method.lower() == 'direct':
+        x_est, y_est = direct_solver()
+    else:
+        x_est, y_est = fsolve(equations, (0.0, 0.0))
     
     # Use Newton iterative method to estimate the non-linear system results
     # Iterate 100 times mostly
@@ -144,6 +203,8 @@ if __name__ == "__main__":
     pos.debug_print()
     print("Scheme 3:")
     error_results = []
+    dt21_results = []
+    dt31_results = []
     np.random.seed(1)
     for i in range(1000):
         print('ITR %d' % (i))
@@ -163,11 +224,19 @@ if __name__ == "__main__":
         pos.debug_print()
         print('TDOA algorithm for 3 BSs in 2D plane :')
         pos = tdoa_positioning_3bs(bs1, bs2, bs3, r2/light_speed - r1/light_speed, r3/light_speed - r1/light_speed)
+
         print('max positioning error is %.4f' % (max(pos.x - uav.x, pos.y - uav.y)))
         if max(abs(pos.x - uav.x), abs(pos.y - uav.y)) > 10:
             error_results.append(10.0)
         else:
             error_results.append(max(abs(pos.x - uav.x), abs(pos.y - uav.y)))
+        dt21_results.append(r2/light_speed - r1/light_speed)
+        dt31_results.append(r3/light_speed - r1/light_speed)
+
+    error_results = np.array(error_results)
+    print('Error < 1m(horizontal) CDF = %.4f' % (np.size(np.where(error_results < 1)) / 1000))
+    print('Error < 2m(horizontal) CDF = %.4f' % (np.size(np.where(error_results < 2)) / 1000))
+    print('Error < 4m(horizontal) CDF = %.4f' % (np.size(np.where(error_results < 4)) / 1000))
     # fig, ax = plt.subplots()
     # x = np.array(range(1000))
     # y = np.array(error_results)
