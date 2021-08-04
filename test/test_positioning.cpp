@@ -48,9 +48,9 @@ int main(void)
         double r2 = uav_est.calc_distance(bs2);
         double r3 = uav_est.calc_distance(bs3);
         double r4 = uav_est.calc_distance(bs4);
-        double dt21 = (r2 - r1) / MY_LIGHT_SPEED;
-        double dt31 = (r3 - r1) / MY_LIGHT_SPEED;
-        double dt41 = (r4 - r1) / MY_LIGHT_SPEED;
+        double dt21 = (r2 - r1) / SPEED_OF_LIGHT;
+        double dt31 = (r3 - r1) / SPEED_OF_LIGHT;
+        double dt41 = (r4 - r1) / SPEED_OF_LIGHT;
 
         start = my_us_gettimeofday();
         position = tdoa_positioning_4bs(NEWTON_ITER_METHOD, bs1, bs2, bs3, bs4, dt21, dt31, dt41);

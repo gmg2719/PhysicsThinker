@@ -28,7 +28,7 @@ Sim3DCord& tdoa_positioning_4bs(int type, Sim3DCord& bs1, Sim3DCord& bs2, Sim3DC
                                 double dt21, double dt31, double dt41)
 {
     Sim3DCord *position = new Sim3DCord(0.0, 0.0, 0.0);
-    double light_speed = MY_LIGHT_SPEED;
+    double light_speed = SPEED_OF_LIGHT;
     double L = light_speed * dt21;
     double R = light_speed * dt31;
     double U = light_speed * dt41;

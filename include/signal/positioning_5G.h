@@ -23,9 +23,9 @@
 #ifndef _POSITIONING_5G_H_
 #define _POSITIONING_5G_H_          1
 
+#include "my_physics_constants.h"
 #include "geometry/Sim3DCord.hpp"
 
-#define MY_LIGHT_SPEED              (299792458.0d)
 #define TAYLOR_DIRECT_METHOD        1
 #define NEWTON_ITER_METHOD          2
 #define NEWTON_ITER_MAXTIME         15
