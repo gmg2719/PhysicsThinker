@@ -28,6 +28,8 @@
 
 #define TAYLOR_DIRECT_METHOD        1
 #define NEWTON_ITER_METHOD          2
+#define NEWTON_FREE_ITER_METHOD     3
+#define FIXED_ITER_METHOD           4
 #define NEWTON_ITER_MAXTIME         15
 
 Sim3DCord& tdoa_positioning_4bs(int type, Sim3DCord& bs1, Sim3DCord& bs2, Sim3DCord& bs3, Sim3DCord& bs4,

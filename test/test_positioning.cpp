@@ -42,7 +42,6 @@ int main(void)
     {
         Sim3DCord uav_est((double(rand()) / (double(RAND_MAX) + 1.0)) * 2000.0, (double(rand()) / (double(RAND_MAX) + 1.0)) * 2000.0,
                           (double(rand()) / (double(RAND_MAX) + 1.0)) * 200.0);
-        printf("Outter %d for estimating the coordinate (%.4f, %.4f, %.4f)\n", itr, uav_est.x_, uav_est.y_, uav_est.z_);
 
         double r1 = uav_est.calc_distance(bs1);
         double r2 = uav_est.calc_distance(bs2);
@@ -53,7 +52,7 @@ int main(void)
         double dt41 = (r4 - r1) / SPEED_OF_LIGHT;
 
         start = my_us_gettimeofday();
-        position = tdoa_positioning_4bs(NEWTON_ITER_METHOD, bs1, bs2, bs3, bs4, dt21, dt31, dt41);
+        position = tdoa_positioning_4bs(TAYLOR_DIRECT_METHOD, bs1, bs2, bs3, bs4, dt21, dt31, dt41);
         end = my_us_gettimeofday();
         total_ticks += (end - start);
 
@@ -61,6 +60,8 @@ int main(void)
         if (err1 < 1.0) {
             counter += 1;
         }
+
+        printf("Outter %d for estimating (%.4f, %.4f, %.4f), error = %.4f\n", itr, uav_est.x_, uav_est.y_, uav_est.z_, err1);
     }
 
     printf("Average run time is %.6f us !\n", float(total_ticks)/2000);

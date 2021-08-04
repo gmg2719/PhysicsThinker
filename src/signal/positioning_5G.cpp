@@ -190,6 +190,83 @@ Sim3DCord& tdoa_positioning_4bs(int type, Sim3DCord& bs1, Sim3DCord& bs2, Sim3DC
         position->y_ = y_est;
         position->z_ = z_est;
     }
+    else if (type == NEWTON_FREE_ITER_METHOD)
+    {
+        double x_est = 400.;
+        double y_est = 900.;
+        double z_est = 180.;
+        double delta_x = 0.;
+        double delta_y = 0.;
+        double delta_z = 0.;
+
+        int itr = 0;
+        while (itr < NEWTON_ITER_MAXTIME)
+        {
+            itr += 1;
+
+            double r1 = sqrt((x_est-bs1.x_)*(x_est-bs1.x_)+(y_est-bs1.y_)*(y_est-bs1.y_)+(z_est-bs1.z_)*(z_est-bs1.z_));
+            double r2 = sqrt((x_est-bs2.x_)*(x_est-bs2.x_)+(y_est-bs2.y_)*(y_est-bs2.y_)+(z_est-bs2.z_)*(z_est-bs2.z_));
+            double r3 = sqrt((x_est-bs3.x_)*(x_est-bs3.x_)+(y_est-bs3.y_)*(y_est-bs3.y_)+(z_est-bs3.z_)*(z_est-bs3.z_));
+            double r4 = sqrt((x_est-bs4.x_)*(x_est-bs4.x_)+(y_est-bs4.y_)*(y_est-bs4.y_)+(z_est-bs4.z_)*(z_est-bs4.z_));
+            double b1 = r2 - r1 - light_speed * dt21;
+            double b2 = r3 - r1 - light_speed * dt31;
+            double b3 = r4 - r1 - light_speed * dt41;
+
+            // Jacobi matrix approximation
+            double delta = 1E-6;
+            double x_est_jacobi = x_est + delta;
+            double y_est_jacobi = y_est + delta;
+            double z_est_jacobi = z_est + delta;
+
+            double f11 = (sqrt((x_est_jacobi-bs2.x_)*(x_est_jacobi-bs2.x_)+(y_est-bs2.y_)*(y_est-bs2.y_)+(z_est-bs2.z_)*(z_est-bs2.z_)) - 
+                          sqrt((x_est_jacobi-bs1.x_)*(x_est_jacobi-bs1.x_)+(y_est-bs1.y_)*(y_est-bs1.y_)+(z_est-bs1.z_)*(z_est-bs1.z_)) - light_speed*dt21 -b1) / delta;
+            double f12 = (sqrt((x_est-bs2.x_)*(x_est-bs2.x_)+(y_est_jacobi-bs2.y_)*(y_est_jacobi-bs2.y_)+(z_est-bs2.z_)*(z_est-bs2.z_)) - 
+                          sqrt((x_est-bs1.x_)*(x_est-bs1.x_)+(y_est_jacobi-bs1.y_)*(y_est_jacobi-bs1.y_)+(z_est-bs1.z_)*(z_est-bs1.z_)) - light_speed*dt21 -b1) / delta;
+            double f13 = (sqrt((x_est-bs2.x_)*(x_est-bs2.x_)+(y_est-bs2.y_)*(y_est-bs2.y_)+(z_est_jacobi-bs2.z_)*(z_est_jacobi-bs2.z_)) - 
+                          sqrt((x_est-bs1.x_)*(x_est-bs1.x_)+(y_est-bs1.y_)*(y_est-bs1.y_)+(z_est_jacobi-bs1.z_)*(z_est_jacobi-bs1.z_)) - light_speed*dt21 -b1) / delta;
+
+            double f21 = (sqrt((x_est_jacobi-bs3.x_)*(x_est_jacobi-bs3.x_)+(y_est-bs3.y_)*(y_est-bs3.y_)+(z_est-bs3.z_)*(z_est-bs3.z_)) -
+                          sqrt((x_est_jacobi-bs1.x_)*(x_est_jacobi-bs1.x_)+(y_est-bs1.y_)*(y_est-bs1.y_)+(z_est-bs1.z_)*(z_est-bs1.z_)) - light_speed*dt31 - b2) / delta;
+            double f22 = (sqrt((x_est-bs3.x_)*(x_est-bs3.x_)+(y_est_jacobi-bs3.y_)*(y_est_jacobi-bs3.y_)+(z_est-bs3.z_)*(z_est-bs3.z_)) -
+                          sqrt((x_est-bs1.x_)*(x_est-bs1.x_)+(y_est_jacobi-bs1.y_)*(y_est_jacobi-bs1.y_)+(z_est-bs1.z_)*(z_est-bs1.z_)) - light_speed*dt31 - b2) / delta;
+            double f23 = (sqrt((x_est-bs3.x_)*(x_est-bs3.x_)+(y_est-bs3.y_)*(y_est-bs3.y_)+(z_est_jacobi-bs3.z_)*(z_est_jacobi-bs3.z_)) -
+                          sqrt((x_est-bs1.x_)*(x_est-bs1.x_)+(y_est-bs1.y_)*(y_est-bs1.y_)+(z_est_jacobi-bs1.z_)*(z_est_jacobi-bs1.z_)) - light_speed*dt31 - b2) / delta;
+
+            double f31 = (sqrt((x_est_jacobi-bs4.x_)*(x_est_jacobi-bs4.x_)+(y_est-bs4.y_)*(y_est-bs4.y_)+(z_est-bs4.z_)*(z_est-bs4.z_)) -
+                          sqrt((x_est_jacobi-bs1.x_)*(x_est_jacobi-bs1.x_)+(y_est-bs1.y_)*(y_est-bs1.y_)+(z_est-bs1.z_)*(z_est-bs1.z_)) - light_speed*dt41 - b3) / delta;
+            double f32 = (sqrt((x_est-bs4.x_)*(x_est-bs4.x_)+(y_est_jacobi-bs4.y_)*(y_est_jacobi-bs4.y_)+(z_est-bs4.z_)*(z_est-bs4.z_)) -
+                          sqrt((x_est-bs1.x_)*(x_est-bs1.x_)+(y_est_jacobi-bs1.y_)*(y_est_jacobi-bs1.y_)+(z_est-bs1.z_)*(z_est-bs1.z_)) - light_speed*dt41 - b3) / delta;
+            double f33 = (sqrt((x_est-bs4.x_)*(x_est-bs4.x_)+(y_est-bs4.y_)*(y_est-bs4.y_)+(z_est_jacobi-bs4.z_)*(z_est_jacobi-bs4.z_)) -
+                          sqrt((x_est-bs1.x_)*(x_est-bs1.x_)+(y_est-bs1.y_)*(y_est-bs1.y_)+(z_est_jacobi-bs1.z_)*(z_est_jacobi-bs1.z_)) - light_speed*dt41 - b3) / delta;
+
+            double det_f = f11*f22*f33+f12*f23*f31+f13*f21*f32-f31*f22*f13-f32*f23*f11-f33*f21*f12;
+            double a11 = (f22*f33-f23*f32)/det_f;
+            double a12 = (f32*f13-f33*f12)/det_f;
+            double a13 = (f12*f23-f13*f22)/det_f;
+            double a21 = (f31*f23-f21*f33)/det_f;
+            double a22 = (f11*f33-f31*f13)/det_f;
+            double a23 = (f21*f13-f11*f23)/det_f;
+            double a31 = (f21*f32-f31*f22)/det_f;
+            double a32 = (f31*f12-f11*f32)/det_f;
+            double a33 = (f11*f22-f21*f12)/det_f;
+            delta_x = a11*(-b1) + a12 *(-b2) + a13*(-b3);
+            delta_y = a21*(-b1) + a22 *(-b2) + a23*(-b3);
+            delta_z = a31*(-b1) + a32 *(-b2) + a33*(-b3);
+
+            if (std::max(std::max(fabs(delta_x), fabs(delta_y)), fabs(delta_z)) < 1E-6) {
+                break;
+            }
+
+            x_est += delta_x;
+            y_est += delta_y;
+            z_est += delta_z;
+            // printf("Itr %d : (%.6f %.6f %.6f) ---> (%.6f %.6f %.6f)\n", itr, delta_x, delta_y, delta_z, x_est, y_est, z_est);
+        }
+
+        position->x_ = x_est;
+        position->y_ = y_est;
+        position->z_ = z_est;
+    }
     else
     {
         fprintf(stderr, "Not supported method for tdoa_positioning_4bs() !\n");
