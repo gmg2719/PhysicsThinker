@@ -22,6 +22,7 @@
 #ifndef _MY_TIME_H_
 #define _MY_TIME_H_     1
 
+#include <cstdint>
 #include <ctime>
 #include <sys/time.h>
 #ifdef __linux__
