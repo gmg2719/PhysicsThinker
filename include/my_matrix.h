@@ -820,6 +820,7 @@ public:
 
     void inverse()
     {
+        fprintf(stderr, "Not supported now !\n");
     }
 
     void set_zero()
