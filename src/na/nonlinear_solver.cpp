@@ -224,3 +224,111 @@ void na_nonlinear_solver_newton(NL_DeriveFunc_float func, int16_t n, float *x)
     delete []delta_x;
 }
 
+void na_nonlinear_solver_newtonfree(NL_Func_double func, int16_t n, double *x)
+{
+    if ((n <= 0) || (x == NULL) || (func == NULL)) {
+        return;
+    }
+
+    for (int16_t i = 0; i < n; i++) {
+        x[i] = 0.0;
+    }
+
+    int8_t conv;
+    int16_t itr = 0;
+    int16_t total_iters = MAX_ITERS_NLSOLVER;
+    double *delta_x = new double[n];
+
+    while (itr < total_iters)
+    {
+        itr += 1;
+
+        // Calculation dx = D(x) = G'(x) = (F(x) - x)' of the non-linear system
+        for (int16_t i = 0; i < n; i++) {
+            // Use forward difference to calculate the Jacobi matrix
+            delta_x[i] = x[i];
+        }
+
+        func(n, delta_x);
+
+        conv = 1;
+        for (int16_t i = 0; i < n; i++) {
+            if (fabs(delta_x[i]) >= 1E-6)
+            {
+                conv = 0;
+            }
+        }
+
+        if (conv == 1) {
+            for (int16_t i = 0; i < n; i++) {
+                x[i] += delta_x[i];
+            }
+            break;
+        }
+
+        for (int16_t i = 0; i < n; i++) {
+            x[i] += delta_x[i];
+        }
+#ifdef DEBUG_PRINT_ITERS
+        printf("Itr %d : (%.6f, ...) ---> (%.6f, ...)\n", itr, delta_x[0], x[0]);
+#endif
+    }
+    printf("Itr %d : newton FREE method is convergence !\n", itr);
+
+    delete []delta_x;
+}
+
+void na_nonlinear_solver_newtonfree(NL_Func_float func, int16_t n, float *x)
+{
+    if ((n <= 0) || (x == NULL) || (func == NULL)) {
+        return;
+    }
+
+    for (int16_t i = 0; i < n; i++) {
+        x[i] = 0.0;
+    }
+
+    int8_t conv;
+    int16_t itr = 0;
+    int16_t total_iters = MAX_ITERS_NLSOLVER;
+    float *delta_x = new float[n];
+
+    while (itr < total_iters)
+    {
+        itr += 1;
+
+        // Calculation dx = D(x) = G'(x) = (F(x) - x)' of the non-linear system
+        for (int16_t i = 0; i < n; i++) {
+            // Use forward difference to calculate the Jacobi matrix
+            delta_x[i] = x[i];
+        }
+
+        func(n, delta_x);
+
+        conv = 1;
+        for (int16_t i = 0; i < n; i++) {
+            if (fabs(delta_x[i]) >= 1E-6)
+            {
+                conv = 0;
+            }
+        }
+
+        if (conv == 1) {
+            for (int16_t i = 0; i < n; i++) {
+                x[i] += delta_x[i];
+            }
+            break;
+        }
+
+        for (int16_t i = 0; i < n; i++) {
+            x[i] += delta_x[i];
+        }
+#ifdef DEBUG_PRINT_ITERS
+        printf("Itr %d : (%.6f, ...) ---> (%.6f, ...)\n", itr, delta_x[0], x[0]);
+#endif
+    }
+    printf("Itr %d : newton FREE method is convergence !\n", itr);
+
+    delete []delta_x;
+}
+

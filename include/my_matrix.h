@@ -495,6 +495,7 @@ public:
         M = m;
         N = n;
         _m = new T[m * n];
+        memset(_m, 0, sizeof(T)*M*N);
     }
 
     explicit Matrix(size_t m, size_t n, const T *x)
@@ -551,6 +552,20 @@ public:
         }
 
         return *this;
+    }
+
+    void resize(size_t m, size_t n)
+    {
+        if (_m != nullptr) {
+            delete []_m;
+            M = 0;
+            N = 0;
+        }
+
+        M = m;
+        N = n;
+        _m = new T[m * n];
+        memset(_m, 0, sizeof(T)*M*N);
     }
 
     void copy_to(T *dst) const
@@ -803,6 +818,10 @@ public:
         return transpose();
     }
 
+    void inverse()
+    {
+    }
+
     void set_zero()
     {
         memset(_m, 0, sizeof(_m));
@@ -950,4 +969,25 @@ inline void my_matrix_2x2inv(T& a11, T& a12, T& a21, T& a22)
     a22 = t11 / det;
 }
 
+template<typename T>
+inline void my_matrix_3x3inv(T& f11, T& f12, T& f13, T& f21, T& f22, T& f23,
+                             T& f31, T& f32, T& f33)
+{
+    T det_f = f11*f22*f33+f12*f23*f31+f13*f21*f32-f31*f22*f13-f32*f23*f11-f33*f21*f12;
+    T a11 = (f22*f33-f23*f32)/det_f;
+    T a12 = (f32*f13-f33*f12)/det_f;
+    T a13 = (f12*f23-f13*f22)/det_f;
+    T a21 = (f31*f23-f21*f33)/det_f;
+    T a22 = (f11*f33-f31*f13)/det_f;
+    T a23 = (f21*f13-f11*f23)/det_f;
+    T a31 = (f21*f32-f31*f22)/det_f;
+    T a32 = (f31*f12-f11*f32)/det_f;
+    T a33 = (f11*f22-f21*f12)/det_f;
+
+    f11 = a11;  f12 = a12;  f13 = a13;
+    f21 = a21;  f22 = a22;  f23 = a23;
+    f31 = a31;  f32 = a32;  f33 = a33;
+}
+
 #endif
+

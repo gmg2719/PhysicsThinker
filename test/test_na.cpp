@@ -83,6 +83,29 @@ static void derivative_f(int16_t n, double *x)
     x[1] = f21 * (-b1) + f22 * (-b2);
 }
 
+// Jacobi matrix aaproximation through forward difference
+static void equation_f(int16_t n, double *x)
+{
+    if (n != 2) {
+        return;
+    }
+
+    double r1_x = x[0] - 1000.0;
+    double r1_y = x[1] - 1999.0;
+    double r1 = sqrt(r1_x*r1_x + r1_y * r1_y);
+    double b1 = -0.9889300396346599 * r1 + 2207.2860879738914 - x[0];
+    double b2 = -0.6110111606089454 * r1 + 1367.4624639174315 - x[1];
+
+    double f11 = ((-0.9889300396346599) * sqrt((r1_x+1E-4)*(r1_x+1E-4) + r1_y * r1_y) - (-0.9889300396346599 * r1) - 1E-4) / 1E-4;
+    double f12 = ((-0.9889300396346599) * sqrt(r1_x*r1_x + (r1_y+1E-4) * (r1_y+1E-4)) - (-0.9889300396346599 * r1)) / 1E-4;
+    double f21 = ((-0.6110111606089454) * sqrt((r1_x+1E-4)*(r1_x+1E-4) + r1_y * r1_y) - (-0.6110111606089454 * r1)) / 1E-4;
+    double f22 = ((-0.6110111606089454) * sqrt(r1_x*r1_x + (r1_y+1E-4) * (r1_y+1E-4)) - (-0.6110111606089454 * r1) - 1E-4) / 1E-4;
+
+    my_matrix_2x2inv<double>(f11, f12, f21, f22);
+    x[0] = f11 * (-b1) + f12 * (-b2);
+    x[1] = f21 * (-b1) + f22 * (-b2);
+}
+
 void nonlinear_system_testing()
 {
     double x[2] = {0.0, 0.0};
@@ -96,6 +119,12 @@ void nonlinear_system_testing()
 
     printf("Results are :\n");
     printf("(%.6f, %.6f)\n", y[0], y[1]);
+
+    double z[2] = {0.0, 0.0};
+    na_nonlinear_solver_newtonfree(equation_f, 2, z);
+
+    printf("Results are :\n");
+    printf("(%.6f, %.6f)\n", z[0], z[1]);
 }
 
 int main(void)

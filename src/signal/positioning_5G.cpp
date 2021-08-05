@@ -23,6 +23,7 @@
 #include <cstdlib>
 #include <algorithm>
 #include "signal/positioning_5G.h"
+#include "my_matrix.h"
 
 Sim3DCord& tdoa_positioning_4bs(int type, Sim3DCord& bs1, Sim3DCord& bs2, Sim3DCord& bs3, Sim3DCord& bs4,
                                 double dt21, double dt31, double dt41)
@@ -162,19 +163,11 @@ Sim3DCord& tdoa_positioning_4bs(int type, Sim3DCord& bs1, Sim3DCord& bs2, Sim3DC
             double f32 = (1/r4) * (y_est - bs4.y_) - (1/r1)*(y_est - bs1.y_);
             double f33 = (1/r4) * (z_est - bs4.z_) - (1/r1)*(z_est - bs1.z_);
 
-            double det_f = f11*f22*f33+f12*f23*f31+f13*f21*f32-f31*f22*f13-f32*f23*f11-f33*f21*f12;
-            double a11 = (f22*f33-f23*f32)/det_f;
-            double a12 = (f32*f13-f33*f12)/det_f;
-            double a13 = (f12*f23-f13*f22)/det_f;
-            double a21 = (f31*f23-f21*f33)/det_f;
-            double a22 = (f11*f33-f31*f13)/det_f;
-            double a23 = (f21*f13-f11*f23)/det_f;
-            double a31 = (f21*f32-f31*f22)/det_f;
-            double a32 = (f31*f12-f11*f32)/det_f;
-            double a33 = (f11*f22-f21*f12)/det_f;
-            delta_x = a11*(-b1) + a12 *(-b2) + a13*(-b3);
-            delta_y = a21*(-b1) + a22 *(-b2) + a23*(-b3);
-            delta_z = a31*(-b1) + a32 *(-b2) + a33*(-b3);
+            my_matrix_3x3inv<double>(f11, f12, f13, f21, f22, f23, f31, f32, f33);
+
+            delta_x = f11*(-b1) + f12 *(-b2) + f13*(-b3);
+            delta_y = f21*(-b1) + f22 *(-b2) + f23*(-b3);
+            delta_z = f31*(-b1) + f32 *(-b2) + f33*(-b3);
 
             if (std::max(std::max(fabs(delta_x), fabs(delta_y)), fabs(delta_z)) < 1E-6) {
                 break;
@@ -239,19 +232,11 @@ Sim3DCord& tdoa_positioning_4bs(int type, Sim3DCord& bs1, Sim3DCord& bs2, Sim3DC
             double f33 = (sqrt((x_est-bs4.x_)*(x_est-bs4.x_)+(y_est-bs4.y_)*(y_est-bs4.y_)+(z_est_jacobi-bs4.z_)*(z_est_jacobi-bs4.z_)) -
                           sqrt((x_est-bs1.x_)*(x_est-bs1.x_)+(y_est-bs1.y_)*(y_est-bs1.y_)+(z_est_jacobi-bs1.z_)*(z_est_jacobi-bs1.z_)) - light_speed*dt41 - b3) / delta;
 
-            double det_f = f11*f22*f33+f12*f23*f31+f13*f21*f32-f31*f22*f13-f32*f23*f11-f33*f21*f12;
-            double a11 = (f22*f33-f23*f32)/det_f;
-            double a12 = (f32*f13-f33*f12)/det_f;
-            double a13 = (f12*f23-f13*f22)/det_f;
-            double a21 = (f31*f23-f21*f33)/det_f;
-            double a22 = (f11*f33-f31*f13)/det_f;
-            double a23 = (f21*f13-f11*f23)/det_f;
-            double a31 = (f21*f32-f31*f22)/det_f;
-            double a32 = (f31*f12-f11*f32)/det_f;
-            double a33 = (f11*f22-f21*f12)/det_f;
-            delta_x = a11*(-b1) + a12 *(-b2) + a13*(-b3);
-            delta_y = a21*(-b1) + a22 *(-b2) + a23*(-b3);
-            delta_z = a31*(-b1) + a32 *(-b2) + a33*(-b3);
+            my_matrix_3x3inv<double>(f11, f12, f13, f21, f22, f23, f31, f32, f33);
+
+            delta_x = f11*(-b1) + f12 *(-b2) + f13*(-b3);
+            delta_y = f21*(-b1) + f22 *(-b2) + f23*(-b3);
+            delta_z = f31*(-b1) + f32 *(-b2) + f33*(-b3);
 
             if (std::max(std::max(fabs(delta_x), fabs(delta_y)), fabs(delta_z)) < 1E-6) {
                 break;

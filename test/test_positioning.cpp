@@ -27,7 +27,7 @@
 #include "signal/positioning_5G.h"
 #include "my_time.h"
 
-int main(void)
+void test_positioning_each(int type)
 {
     uint64_t start, end;
     uint64_t total_ticks = 0;
@@ -52,7 +52,7 @@ int main(void)
         double dt41 = (r4 - r1) / SPEED_OF_LIGHT;
 
         start = my_us_gettimeofday();
-        position = tdoa_positioning_4bs(TAYLOR_DIRECT_METHOD, bs1, bs2, bs3, bs4, dt21, dt31, dt41);
+        position = tdoa_positioning_4bs(type, bs1, bs2, bs3, bs4, dt21, dt31, dt41);
         end = my_us_gettimeofday();
         total_ticks += (end - start);
 
@@ -66,6 +66,13 @@ int main(void)
 
     printf("Average run time is %.6f us !\n", float(total_ticks)/2000);
     printf("Error < 1m CDF = %.4f \n", float(counter) / 2000);
+}
+
+int main(void)
+{
+    test_positioning_each(TAYLOR_DIRECT_METHOD);
+    test_positioning_each(NEWTON_ITER_METHOD);
+    test_positioning_each(NEWTON_FREE_ITER_METHOD);
 
     return 0;
 }
