@@ -4771,6 +4771,80 @@ void cblas_dsymv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                  const int lda, const double *X, const int incX,
                  const double beta, double *Y, const int incY)
 {
+  int i, j;
+
+  CHECK_ARGS11(SD_SYMV,order,Uplo,N,alpha,A,lda,X,incX,beta,Y,incY);
+
+  if (alpha == 0.0 && beta == 1.0)
+    return;
+
+  /* form  y := beta*y */
+  if (beta == 0.0) {
+    int iy = OFFSET(N, incY);
+    for (i = 0; i < N; i++) {
+      Y[iy] = 0.0;
+      iy += incY;
+    }
+  } else if (beta != 1.0) {
+    int iy = OFFSET(N, incY);
+    for (i = 0; i < N; i++) {
+      Y[iy] *= beta;
+      iy += incY;
+    }
+  }
+
+  if (alpha == 0.0)
+    return;
+
+  /* form  y := alpha*A*x + y */
+
+  if ((order == CblasRowMajor && Uplo == CblasUpper)
+      || (order == CblasColMajor && Uplo == CblasLower)) {
+    int ix = OFFSET(N, incX);
+    int iy = OFFSET(N, incY);
+    for (i = 0; i < N; i++) {
+      double temp1 = alpha * X[ix];
+      double temp2 = 0.0;
+      const int j_min = i + 1;
+      const int j_max = N;
+      int jx = OFFSET(N, incX) + j_min * incX;
+      int jy = OFFSET(N, incY) + j_min * incY;
+      Y[iy] += temp1 * A[lda * i + i];
+      for (j = j_min; j < j_max; j++) {
+        Y[jy] += temp1 * A[lda * i + j];
+        temp2 += X[jx] * A[lda * i + j];
+        jx += incX;
+        jy += incY;
+      }
+      Y[iy] += alpha * temp2;
+      ix += incX;
+      iy += incY;
+    }
+  } else if ((order == CblasRowMajor && Uplo == CblasLower)
+             || (order == CblasColMajor && Uplo == CblasUpper)) {
+    int ix = OFFSET(N, incX) + (N - 1) * incX;
+    int iy = OFFSET(N, incY) + (N - 1) * incY;
+    for (i = N; i > 0 && i--;) {
+      double temp1 = alpha * X[ix];
+      double temp2 = 0.0;
+      const int j_min = 0;
+      const int j_max = i;
+      int jx = OFFSET(N, incX) + j_min * incX;
+      int jy = OFFSET(N, incY) + j_min * incY;
+      Y[iy] += temp1 * A[lda * i + i];
+      for (j = j_min; j < j_max; j++) {
+        Y[jy] += temp1 * A[lda * i + j];
+        temp2 += X[jx] * A[lda * i + j];
+        jx += incX;
+        jy += incY;
+      }
+      Y[iy] += alpha * temp2;
+      ix -= incX;
+      iy -= incY;
+    }
+  } else {
+    fprintf(stderr, "unrecognized operation for cblas_dsymv()\n");
+  }
 }
 
 void cblas_dsbmv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
@@ -4778,6 +4852,86 @@ void cblas_dsbmv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                  const int lda, const double *X, const int incX,
                  const double beta, double *Y, const int incY)
 {
+  int i, j;
+
+  CHECK_ARGS12(SD_SBMV,order,Uplo,N,K,alpha,A,lda,X,incX,beta,Y,incY);
+
+  if (N == 0)
+    return;
+
+  if (alpha == 0.0 && beta == 1.0)
+    return;
+
+  /* form  y := beta*y */
+  if (beta == 0.0) {
+    int iy = OFFSET(N, incY);
+    for (i = 0; i < N; i++) {
+      Y[iy] = 0.0;
+      iy += incY;
+    }
+  } else if (beta != 1.0) {
+    int iy = OFFSET(N, incY);
+    for (i = 0; i < N; i++) {
+      Y[iy] *= beta;
+      iy += incY;
+    }
+  }
+
+  if (alpha == 0.0)
+    return;
+
+  /* form  y := alpha*A*x + y */
+
+  if ((order == CblasRowMajor && Uplo == CblasUpper)
+      || (order == CblasColMajor && Uplo == CblasLower)) {
+    int ix = OFFSET(N, incX);
+    int iy = OFFSET(N, incY);
+
+    for (i = 0; i < N; i++) {
+      double tmp1 = alpha * X[ix];
+      double tmp2 = 0.0;
+      const int j_min = i + 1;
+      const int j_max = NA_MIN(N, i + K + 1);
+      int jx = OFFSET(N, incX) + j_min * incX;
+      int jy = OFFSET(N, incY) + j_min * incY;
+      Y[iy] += tmp1 * A[0 + i * lda];
+      for (j = j_min; j < j_max; j++) {
+        double Aij = A[(j - i) + i * lda];
+        Y[jy] += tmp1 * Aij;
+        tmp2 += Aij * X[jx];
+        jx += incX;
+        jy += incY;
+      }
+      Y[iy] += alpha * tmp2;
+      ix += incX;
+      iy += incY;
+    }
+  } else if ((order == CblasRowMajor && Uplo == CblasLower)
+             || (order == CblasColMajor && Uplo == CblasUpper)) {
+    int ix = OFFSET(N, incX);
+    int iy = OFFSET(N, incY);
+
+    for (i = 0; i < N; i++) {
+      double tmp1 = alpha * X[ix];
+      double tmp2 = 0.0;
+      const int j_min = (i > K) ? i - K : 0;
+      const int j_max = i;
+      int jx = OFFSET(N, incX) + j_min * incX;
+      int jy = OFFSET(N, incY) + j_min * incY;
+      for (j = j_min; j < j_max; j++) {
+        double Aij = A[(K - i + j) + i * lda];
+        Y[jy] += tmp1 * Aij;
+        tmp2 += Aij * X[jx];
+        jx += incX;
+        jy += incY;
+      }
+      Y[iy] += tmp1 * A[K + i * lda] + alpha * tmp2;
+      ix += incX;
+      iy += incY;
+    }
+  } else {
+    fprintf(stderr, "unrecognized operation for cblas_dsbmv()\n");
+  }
 }
 
 void cblas_dspmv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
@@ -4785,24 +4939,208 @@ void cblas_dspmv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                  const double *X, const int incX,
                  const double beta, double *Y, const int incY)
 {
+  int i, j;
+
+  CHECK_ARGS10(SD_SPMV,order,Uplo,N,alpha,Ap,X,incX,beta,Y,incY);
+
+  if (alpha == 0.0 && beta == 1.0)
+    return;
+
+  /* form  y := beta*y */
+  if (beta == 0.0) {
+    int iy = OFFSET(N, incY);
+    for (i = 0; i < N; i++) {
+      Y[iy] = 0.0;
+      iy += incY;
+    }
+  } else if (beta != 1.0) {
+    int iy = OFFSET(N, incY);
+    for (i = 0; i < N; i++) {
+      Y[iy] *= beta;
+      iy += incY;
+    }
+  }
+
+  if (alpha == 0.0)
+    return;
+
+  /* form  y := alpha*A*x + y */
+
+  if ((order == CblasRowMajor && Uplo == CblasUpper)
+      || (order == CblasColMajor && Uplo == CblasLower)) {
+    int ix = OFFSET(N, incX);
+    int iy = OFFSET(N, incY);
+    for (i = 0; i < N; i++) {
+      double tmp1 = alpha * X[ix];
+      double tmp2 = 0.0;
+      const int j_min = i + 1;
+      const int j_max = N;
+      int jx = OFFSET(N, incX) + j_min * incX;
+      int jy = OFFSET(N, incY) + j_min * incY;
+
+      Y[iy] += tmp1 * Ap[TPUP(N, i, i)];
+
+      for (j = j_min; j < j_max; j++) {
+        const double apk = Ap[TPUP(N, i, j)];
+        Y[jy] += tmp1 * apk;
+        tmp2 += apk * X[jx];
+        jy += incY;
+        jx += incX;
+      }
+      Y[iy] += alpha * tmp2;
+      ix += incX;
+      iy += incY;
+    }
+  } else if ((order == CblasRowMajor && Uplo == CblasLower)
+             || (order == CblasColMajor && Uplo == CblasUpper)) {
+    int ix = OFFSET(N, incX);
+    int iy = OFFSET(N, incY);
+    for (i = 0; i < N; i++) {
+      double tmp1 = alpha * X[ix];
+      double tmp2 = 0.0;
+
+      const int j_min = 0;
+      const int j_max = i;
+      int jx = OFFSET(N, incX) + j_min * incX;
+      int jy = OFFSET(N, incY) + j_min * incY;
+
+      Y[iy] += tmp1 * Ap[TPLO(N, i, i)];
+
+      for (j = j_min; j < j_max; j++) {
+        const double apk = Ap[TPLO(N, i, j)];
+        Y[jy] += tmp1 * apk;
+        tmp2 += apk * X[jx];
+        jy += incY;
+        jx += incX;
+      }
+      Y[iy] += alpha * tmp2;
+      ix += incX;
+      iy += incY;
+    }
+  } else {
+    fprintf(stderr, "unrecognized operation for cblas_dspmv()\n");
+  }
 }
 
 void cblas_dger(const enum CBLAS_ORDER order, const int M, const int N,
                 const double alpha, const double *X, const int incX,
                 const double *Y, const int incY, double *A, const int lda)
 {
+  int i, j;
+
+  CHECK_ARGS10(SD_GER,order,M,N,alpha,X,incX,Y,incY,A,lda);
+
+  if (order == CblasRowMajor) {
+    int ix = OFFSET(M, incX);
+    for (i = 0; i < M; i++) {
+      const double tmp = alpha * X[ix];
+      int jy = OFFSET(N, incY);
+      for (j = 0; j < N; j++) {
+        A[lda * i + j] += Y[jy] * tmp;
+        jy += incY;
+      }
+      ix += incX;
+    }
+  } else if (order == CblasColMajor) {
+    int jy = OFFSET(N, incY);
+    for (j = 0; j < N; j++) {
+      const double tmp = alpha * Y[jy];
+      int ix = OFFSET(M, incX);
+      for (i = 0; i < M; i++) {
+        A[i + lda * j] += X[ix] * tmp;
+        ix += incX;
+      }
+      jy += incY;
+    }
+  } else {
+    fprintf(stderr, "unrecognized operation for cblas_dger()\n");
+  }
 }
 
 void cblas_dsyr(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                 const int N, const double alpha, const double *X,
                 const int incX, double *A, const int lda)
 {
+  int i, j;
+
+  CHECK_ARGS8(SD_SYR,order,Uplo,N,alpha,X,incX,A,lda);
+
+  if (N == 0)
+    return;
+
+  if (alpha == 0.0)
+    return;
+
+  if ((order == CblasRowMajor && Uplo == CblasUpper)
+      || (order == CblasColMajor && Uplo == CblasLower)) {
+    int ix = OFFSET(N, incX);
+    for (i = 0; i < N; i++) {
+      const double tmp = alpha * X[ix];
+      int jx = ix;
+      for (j = i; j < N; j++) {
+        A[lda * i + j] += X[jx] * tmp;
+        jx += incX;
+      }
+      ix += incX;
+    }
+  } else if ((order == CblasRowMajor && Uplo == CblasLower)
+             || (order == CblasColMajor && Uplo == CblasUpper)) {
+    int ix = OFFSET(N, incX);
+    for (i = 0; i < N; i++) {
+      const double tmp = alpha * X[ix];
+      int jx = OFFSET(N, incX);
+      for (j = 0; j <= i; j++) {
+        A[lda * i + j] += X[jx] * tmp;
+        jx += incX;
+      }
+      ix += incX;
+    }
+  } else {
+    fprintf(stderr, "unrecognized operation for cblas_dsyr()\n");
+  }
 }
 
 void cblas_dspr(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                 const int N, const double alpha, const double *X,
                 const int incX, double *Ap)
 {
+  int i, j;
+
+  CHECK_ARGS7(SD_SPR,order,Uplo,N,alpha,X,incX,Ap);
+
+  if (N == 0)
+    return;
+
+  if (alpha == 0.0)
+    return;
+
+  if ((order == CblasRowMajor && Uplo == CblasUpper)
+      || (order == CblasColMajor && Uplo == CblasLower)) {
+    int ix = OFFSET(N, incX);
+    for (i = 0; i < N; i++) {
+      const double tmp = alpha * X[ix];
+      int jx = ix;
+      for (j = i; j < N; j++) {
+        Ap[TPUP(N, i, j)] += X[jx] * tmp;
+        jx += incX;
+      }
+      ix += incX;
+    }
+  } else if ((order == CblasRowMajor && Uplo == CblasLower)
+             || (order == CblasColMajor && Uplo == CblasUpper)) {
+    int ix = OFFSET(N, incX);
+    for (i = 0; i < N; i++) {
+      const double tmp = alpha * X[ix];
+      int jx = OFFSET(N, incX);
+      for (j = 0; j <= i; j++) {
+        Ap[TPLO(N, i, j)] += X[jx] * tmp;
+        jx += incX;
+      }
+      ix += incX;
+    }
+  } else {
+    fprintf(stderr, "unrecognized operation for cblas_dspr()\n");
+  }
 }
 
 void cblas_dsyr2(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
@@ -4810,12 +5148,106 @@ void cblas_dsyr2(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                 const int incX, const double *Y, const int incY, double *A,
                 const int lda)
 {
+  int i, j;
+
+  CHECK_ARGS10(SD_SYR2,order,Uplo,N,alpha,X,incX,Y,incY,A,lda);
+
+  if (N == 0)
+    return;
+
+  if (alpha == 0.0)
+    return;
+
+  if ((order == CblasRowMajor && Uplo == CblasUpper)
+      || (order == CblasColMajor && Uplo == CblasLower)) {
+    int ix = OFFSET(N, incX);
+    int iy = OFFSET(N, incY);
+    for (i = 0; i < N; i++) {
+      const double tmp1 = alpha * X[ix];
+      const double tmp2 = alpha * Y[iy];
+      int jx = ix;
+      int jy = iy;
+      for (j = i; j < N; j++) {
+        A[lda * i + j] += tmp1 * Y[jy] + tmp2 * X[jx];
+        jx += incX;
+        jy += incY;
+      }
+      ix += incX;
+      iy += incY;
+    }
+  } else if ((order == CblasRowMajor && Uplo == CblasLower)
+             || (order == CblasColMajor && Uplo == CblasUpper)) {
+    int ix = OFFSET(N, incX);
+    int iy = OFFSET(N, incY);
+    for (i = 0; i < N; i++) {
+      const double tmp1 = alpha * X[ix];
+      const double tmp2 = alpha * Y[iy];
+      int jx = OFFSET(N, incX);
+      int jy = OFFSET(N, incY);
+      for (j = 0; j <= i; j++) {
+        A[lda * i + j] += tmp1 * Y[jy] + tmp2 * X[jx];
+        jx += incX;
+        jy += incY;
+      }
+      ix += incX;
+      iy += incY;
+    }
+  } else {
+    fprintf(stderr, "unrecognized operation for cblas_dsyr2()\n");
+  }
 }
 
 void cblas_dspr2(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                 const int N, const double alpha, const double *X,
                 const int incX, const double *Y, const int incY, double *A)
 {
+  int i, j;
+
+  CHECK_ARGS9(SD_SPR2,order,Uplo,N,alpha,X,incX,Y,incY,A);
+
+  if (N == 0)
+    return;
+
+  if (alpha == 0.0)
+    return;
+
+  if ((order == CblasRowMajor && Uplo == CblasUpper)
+      || (order == CblasColMajor && Uplo == CblasLower)) {
+    int ix = OFFSET(N, incX);
+    int iy = OFFSET(N, incY);
+    for (i = 0; i < N; i++) {
+      const double tmp1 = alpha * X[ix];
+      const double tmp2 = alpha * Y[iy];
+      int jx = ix;
+      int jy = iy;
+      for (j = i; j < N; j++) {
+        A[TPUP(N, i, j)] += tmp1 * Y[jy] + tmp2 * X[jx];
+        jx += incX;
+        jy += incY;
+      }
+      ix += incX;
+      iy += incY;
+    }
+  } else if ((order == CblasRowMajor && Uplo == CblasLower)
+             || (order == CblasColMajor && Uplo == CblasUpper)) {
+    int ix = OFFSET(N, incX);
+    int iy = OFFSET(N, incY);
+    for (i = 0; i < N; i++) {
+      const double tmp1 = alpha * X[ix];
+      const double tmp2 = alpha * Y[iy];
+      int jx = OFFSET(N, incX);
+      int jy = OFFSET(N, incY);
+      for (j = 0; j <= i; j++) {
+        A[TPLO(N, i, j)] += tmp1 * Y[jy] + tmp2 * X[jx];
+        jx += incX;
+        jy += incY;
+      }
+      ix += incX;
+      iy += incY;
+    }
+  } else {
+    fprintf(stderr, "unrecognized operation for cblas_dspr2()\n");
+  }
 }
 
 
@@ -5209,36 +5641,446 @@ void cblas_cgeru(const enum CBLAS_ORDER order, const int M, const int N,
                  const void *alpha, const void *X, const int incX,
                  const void *Y, const int incY, void *A, const int lda)
 {
+  int i, j;
+
+  CHECK_ARGS10(CZ_GERU,order,M,N,alpha,X,incX,Y,incY,A,lda);
+
+  {
+    const float alpha_real = CONST_REAL0_FLOAT(alpha);
+    const float alpha_imag = CONST_IMAG0_FLOAT(alpha);
+
+    if (order == CblasRowMajor) {
+      int ix = OFFSET(M, incX);
+      for (i = 0; i < M; i++) {
+        const float X_real = CONST_REAL_FLOAT(X, ix);
+        const float X_imag = CONST_IMAG_FLOAT(X, ix);
+        const float tmp_real = alpha_real * X_real - alpha_imag * X_imag;
+        const float tmp_imag = alpha_imag * X_real + alpha_real * X_imag;
+        int jy = OFFSET(N, incY);
+        for (j = 0; j < N; j++) {
+          const float Y_real = CONST_REAL_FLOAT(Y, jy);
+          const float Y_imag = CONST_IMAG_FLOAT(Y, jy);
+          REAL_FLOAT(A, lda * i + j) += Y_real * tmp_real - Y_imag * tmp_imag;
+          IMAG_FLOAT(A, lda * i + j) += Y_imag * tmp_real + Y_real * tmp_imag;
+          jy += incY;
+        }
+        ix += incX;
+      }
+    } else if (order == CblasColMajor) {
+      int jy = OFFSET(N, incY);
+      for (j = 0; j < N; j++) {
+        const float Y_real = CONST_REAL_FLOAT(Y, jy);
+        const float Y_imag = CONST_IMAG_FLOAT(Y, jy);
+        const float tmp_real = alpha_real * Y_real - alpha_imag * Y_imag;
+        const float tmp_imag = alpha_imag * Y_real + alpha_real * Y_imag;
+        int ix = OFFSET(M, incX);
+        for (i = 0; i < M; i++) {
+          const float X_real = CONST_REAL_FLOAT(X, ix);
+          const float X_imag = CONST_IMAG_FLOAT(X, ix);
+          REAL_FLOAT(A, i + lda * j) += X_real * tmp_real - X_imag * tmp_imag;
+          IMAG_FLOAT(A, i + lda * j) += X_imag * tmp_real + X_real * tmp_imag;
+          ix += incX;
+        }
+        jy += incY;
+      }
+    } else {
+      fprintf(stderr, "unrecognized operation for cblas_cgeru()\n");
+    }
+  }
 }
 
 void cblas_cgerc(const enum CBLAS_ORDER order, const int M, const int N,
                  const void *alpha, const void *X, const int incX,
                  const void *Y, const int incY, void *A, const int lda)
 {
+  int i, j;
+
+  CHECK_ARGS10(CZ_GERC,order,M,N,alpha,X,incX,Y,incY,A,lda);
+
+  {
+    const float alpha_real = CONST_REAL0_FLOAT(alpha);
+    const float alpha_imag = CONST_IMAG0_FLOAT(alpha);
+
+    if (order == CblasRowMajor) {
+      int ix = OFFSET(M, incX);
+      for (i = 0; i < M; i++) {
+        const float X_real = CONST_REAL_FLOAT(X, ix);
+        const float X_imag = CONST_IMAG_FLOAT(X, ix);
+        const float tmp_real = alpha_real * X_real - alpha_imag * X_imag;
+        const float tmp_imag = alpha_imag * X_real + alpha_real * X_imag;
+        int jy = OFFSET(N, incY);
+        for (j = 0; j < N; j++) {
+          const float Y_real = CONST_REAL_FLOAT(Y, jy);
+          const float Y_imag = -CONST_IMAG_FLOAT(Y, jy);
+          REAL_FLOAT(A, lda * i + j) += Y_real * tmp_real - Y_imag * tmp_imag;
+          IMAG_FLOAT(A, lda * i + j) += Y_imag * tmp_real + Y_real * tmp_imag;
+          jy += incY;
+        }
+        ix += incX;
+      }
+    } else if (order == CblasColMajor) {
+      int jy = OFFSET(N, incY);
+      for (j = 0; j < N; j++) {
+        const float Y_real = CONST_REAL_FLOAT(Y, jy);
+        const float Y_imag = -CONST_IMAG_FLOAT(Y, jy);
+        const float tmp_real = alpha_real * Y_real - alpha_imag * Y_imag;
+        const float tmp_imag = alpha_imag * Y_real + alpha_real * Y_imag;
+        int ix = OFFSET(M, incX);
+        for (i = 0; i < M; i++) {
+          const float X_real = CONST_REAL_FLOAT(X, ix);
+          const float X_imag = CONST_IMAG_FLOAT(X, ix);
+          REAL_FLOAT(A, i + lda * j) += X_real * tmp_real - X_imag * tmp_imag;
+          IMAG_FLOAT(A, i + lda * j) += X_imag * tmp_real + X_real * tmp_imag;
+          ix += incX;
+        }
+        jy += incY;
+      }
+    } else {
+      fprintf(stderr, "unrecognized operation for cblas_cgerc()\n");
+    }
+  }
 }
 
 void cblas_cher(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                 const int N, const float alpha, const void *X, const int incX,
                 void *A, const int lda)
 {
+  int i, j;
+  const int conj = (order == CblasColMajor) ? -1 : 1;
+
+  CHECK_ARGS8(CZ_HER,order,Uplo,N,alpha,X,incX,A,lda);
+
+  if (alpha == 0.0)
+    return;
+
+  if ((order == CblasRowMajor && Uplo == CblasUpper)
+      || (order == CblasColMajor && Uplo == CblasLower)) {
+    int ix = OFFSET(N, incX);
+    for (i = 0; i < N; i++) {
+      const float tmp_real = alpha * CONST_REAL_FLOAT(X, ix);
+      const float tmp_imag = alpha * conj * CONST_IMAG_FLOAT(X, ix);
+      int jx = ix;
+
+      {
+        const float X_real = CONST_REAL_FLOAT(X, jx);
+        const float X_imag = -conj * CONST_IMAG_FLOAT(X, jx);
+        REAL_FLOAT(A, lda * i + i) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_FLOAT(A, lda * i + i) = 0;
+        jx += incX;
+      }
+
+      for (j = i + 1; j < N; j++) {
+        const float X_real = CONST_REAL_FLOAT(X, jx);
+        const float X_imag = -conj * CONST_IMAG_FLOAT(X, jx);
+        REAL_FLOAT(A, lda * i + j) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_FLOAT(A, lda * i + j) += X_imag * tmp_real + X_real * tmp_imag;
+        jx += incX;
+      }
+      ix += incX;
+    }
+  } else if ((order == CblasRowMajor && Uplo == CblasLower)
+             || (order == CblasColMajor && Uplo == CblasUpper)) {
+    int ix = OFFSET(N, incX);
+    for (i = 0; i < N; i++) {
+      const float tmp_real = alpha * CONST_REAL_FLOAT(X, ix);
+      const float tmp_imag = alpha * conj * CONST_IMAG_FLOAT(X, ix);
+      int jx = OFFSET(N, incX);
+      for (j = 0; j < i; j++) {
+        const float X_real = CONST_REAL_FLOAT(X, jx);
+        const float X_imag = -conj * CONST_IMAG_FLOAT(X, jx);
+        REAL_FLOAT(A, lda * i + j) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_FLOAT(A, lda * i + j) += X_imag * tmp_real + X_real * tmp_imag;
+        jx += incX;
+      }
+
+      {
+        const float X_real = CONST_REAL_FLOAT(X, jx);
+        const float X_imag = -conj * CONST_IMAG_FLOAT(X, jx);
+        REAL_FLOAT(A, lda * i + i) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_FLOAT(A, lda * i + i) = 0;
+        jx += incX;
+      }
+
+      ix += incX;
+    }
+  } else {
+    fprintf(stderr, "unrecognized operation for cblas_cher()\n");
+  }
 }
 
 void cblas_chpr(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                 const int N, const float alpha, const void *X,
                 const int incX, void *A)
 {
+  int i, j;
+  const int conj = (order == CblasColMajor) ? -1 : 1;
+
+  CHECK_ARGS7(CZ_HPR,order,Uplo,N,alpha,X,incX,A);
+
+  if (alpha == 0.0)
+    return;
+
+  if ((order == CblasRowMajor && Uplo == CblasUpper)
+      || (order == CblasColMajor && Uplo == CblasLower)) {
+    int ix = OFFSET(N, incX);
+    for (i = 0; i < N; i++) {
+      const float tmp_real = alpha * CONST_REAL_FLOAT(X, ix);
+      const float tmp_imag = alpha * conj * CONST_IMAG_FLOAT(X, ix);
+      int jx = ix;
+
+      {
+        const float X_real = CONST_REAL_FLOAT(X, jx);
+        const float X_imag = -conj * CONST_IMAG_FLOAT(X, jx);
+        REAL_FLOAT(A, TPUP(N, i, i)) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_FLOAT(A, TPUP(N, i, i)) = 0;
+        jx += incX;
+      }
+
+      for (j = i + 1; j < N; j++) {
+        const float X_real = CONST_REAL_FLOAT(X, jx);
+        const float X_imag = -conj * CONST_IMAG_FLOAT(X, jx);
+        REAL_FLOAT(A, TPUP(N, i, j)) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_FLOAT(A, TPUP(N, i, j)) += X_imag * tmp_real + X_real * tmp_imag;
+        jx += incX;
+      }
+      ix += incX;
+    }
+  } else if ((order == CblasRowMajor && Uplo == CblasLower)
+             || (order == CblasColMajor && Uplo == CblasUpper)) {
+    int ix = OFFSET(N, incX);
+    for (i = 0; i < N; i++) {
+      const float tmp_real = alpha * CONST_REAL_FLOAT(X, ix);
+      const float tmp_imag = alpha * conj * CONST_IMAG_FLOAT(X, ix);
+      int jx = OFFSET(N, incX);
+      for (j = 0; j < i; j++) {
+        const float X_real = CONST_REAL_FLOAT(X, jx);
+        const float X_imag = -conj * CONST_IMAG_FLOAT(X, jx);
+        REAL_FLOAT(A, TPLO(N, i, j)) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_FLOAT(A, TPLO(N, i, j)) += X_imag * tmp_real + X_real * tmp_imag;
+        jx += incX;
+      }
+
+      {
+        const float X_real = CONST_REAL_FLOAT(X, jx);
+        const float X_imag = -conj * CONST_IMAG_FLOAT(X, jx);
+        REAL_FLOAT(A, TPLO(N, i, i)) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_FLOAT(A, TPLO(N, i, i)) = 0;
+        jx += incX;
+      }
+
+      ix += incX;
+    }
+  } else {
+    fprintf(stderr, "unrecognized operation for cblas_chpr()\n");
+  }
 }
 
 void cblas_cher2(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo, const int N,
                 const void *alpha, const void *X, const int incX,
                 const void *Y, const int incY, void *A, const int lda)
 {
+  int i, j;
+  const int conj = (order == CblasColMajor) ? -1 : 1;
+
+  CHECK_ARGS10(CZ_HER2,order,Uplo,N,alpha,X,incX,Y,incY,A,lda);
+
+  {
+    const float alpha_real = CONST_REAL0_FLOAT(alpha);
+    const float alpha_imag = CONST_IMAG0_FLOAT(alpha);
+
+    if (alpha_real == 0.0 && alpha_imag == 0.0)
+      return;
+
+    if ((order == CblasRowMajor && Uplo == CblasUpper)
+        || (order == CblasColMajor && Uplo == CblasLower)) {
+      int ix = OFFSET(N, incX);
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        const float Xi_real = CONST_REAL_FLOAT(X, ix);
+        const float Xi_imag = CONST_IMAG_FLOAT(X, ix);
+        /* tmp1 = alpha Xi */
+        const float tmp1_real = alpha_real * Xi_real - alpha_imag * Xi_imag;
+        const float tmp1_imag = alpha_imag * Xi_real + alpha_real * Xi_imag;
+
+        const float Yi_real = CONST_REAL_FLOAT(Y, iy);
+        const float Yi_imag = CONST_IMAG_FLOAT(Y, iy);
+        /* tmp2 = conj(alpha) Yi */
+        const float tmp2_real = alpha_real * Yi_real + alpha_imag * Yi_imag;
+        const float tmp2_imag = -alpha_imag * Yi_real + alpha_real * Yi_imag;
+
+        int jx = ix + incX;
+        int jy = iy + incY;
+
+        /* Aij = alpha*Xi*conj(Yj) + conj(alpha)*Yi*conj(Xj) */
+
+        REAL_FLOAT(A, lda * i + i) += 2 * (tmp1_real * Yi_real + tmp1_imag * Yi_imag);
+        IMAG_FLOAT(A, lda * i + i) = 0;
+
+        for (j = i + 1; j < N; j++) {
+          const float Xj_real = CONST_REAL_FLOAT(X, jx);
+          const float Xj_imag = CONST_IMAG_FLOAT(X, jx);
+          const float Yj_real = CONST_REAL_FLOAT(Y, jy);
+          const float Yj_imag = CONST_IMAG_FLOAT(Y, jy);
+          REAL_FLOAT(A, lda * i + j) += ((tmp1_real * Yj_real + tmp1_imag * Yj_imag)
+                                   + (tmp2_real * Xj_real + tmp2_imag * Xj_imag));
+          IMAG_FLOAT(A, lda * i + j) +=
+            conj * ((tmp1_imag * Yj_real - tmp1_real * Yj_imag) +
+                    (tmp2_imag * Xj_real - tmp2_real * Xj_imag));
+          jx += incX;
+          jy += incY;
+        }
+        ix += incX;
+        iy += incY;
+      }
+    } else if ((order == CblasRowMajor && Uplo == CblasLower)
+               || (order == CblasColMajor && Uplo == CblasUpper)) {
+
+      int ix = OFFSET(N, incX);
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        const float Xi_real = CONST_REAL_FLOAT(X, ix);
+        const float Xi_imag = CONST_IMAG_FLOAT(X, ix);
+        const float tmp1_real = alpha_real * Xi_real - alpha_imag * Xi_imag;
+        const float tmp1_imag = alpha_imag * Xi_real + alpha_real * Xi_imag;
+
+        const float Yi_real = CONST_REAL_FLOAT(Y, iy);
+        const float Yi_imag = CONST_IMAG_FLOAT(Y, iy);
+        const float tmp2_real = alpha_real * Yi_real + alpha_imag * Yi_imag;
+        const float tmp2_imag = -alpha_imag * Yi_real + alpha_real * Yi_imag;
+
+        int jx = OFFSET(N, incX);
+        int jy = OFFSET(N, incY);
+
+        /* Aij = alpha*Xi*conj(Yj) + conj(alpha)*Yi*conj(Xj) */
+
+        for (j = 0; j < i; j++) {
+          const float Xj_real = CONST_REAL_FLOAT(X, jx);
+          const float Xj_imag = CONST_IMAG_FLOAT(X, jx);
+          const float Yj_real = CONST_REAL_FLOAT(Y, jy);
+          const float Yj_imag = CONST_IMAG_FLOAT(Y, jy);
+          REAL_FLOAT(A, lda * i + j) += ((tmp1_real * Yj_real + tmp1_imag * Yj_imag)
+                                   + (tmp2_real * Xj_real + tmp2_imag * Xj_imag));
+          IMAG_FLOAT(A, lda * i + j) +=
+            conj * ((tmp1_imag * Yj_real - tmp1_real * Yj_imag) +
+                    (tmp2_imag * Xj_real - tmp2_real * Xj_imag));
+          jx += incX;
+          jy += incY;
+        }
+
+        REAL_FLOAT(A, lda * i + i) += 2 * (tmp1_real * Yi_real + tmp1_imag * Yi_imag);
+        IMAG_FLOAT(A, lda * i + i) = 0;
+
+        ix += incX;
+        iy += incY;
+      }
+    } else {
+      fprintf(stderr, "unrecognized operation for cblas_cher2()\n");
+    }
+  }
 }
 
 void cblas_chpr2(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo, const int N,
                 const void *alpha, const void *X, const int incX,
                 const void *Y, const int incY, void *Ap)
 {
+  int i, j;
+  const int conj = (order == CblasColMajor) ? -1 : 1;
+
+  CHECK_ARGS9(CZ_HPR2,order,Uplo,N,alpha,X,incX,Y,incY,Ap);
+
+  {
+    const float alpha_real = CONST_REAL0_FLOAT(alpha);
+    const float alpha_imag = CONST_IMAG0_FLOAT(alpha);
+
+    if (alpha_real == 0.0 && alpha_imag == 0.0)
+      return;
+
+    if ((order == CblasRowMajor && Uplo == CblasUpper)
+        || (order == CblasColMajor && Uplo == CblasLower)) {
+      int ix = OFFSET(N, incX);
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        const float Xi_real = CONST_REAL_FLOAT(X, ix);
+        const float Xi_imag = CONST_IMAG_FLOAT(X, ix);
+        /* tmp1 = alpha Xi */
+        const float tmp1_real = alpha_real * Xi_real - alpha_imag * Xi_imag;
+        const float tmp1_imag = alpha_imag * Xi_real + alpha_real * Xi_imag;
+
+        const float Yi_real = CONST_REAL_FLOAT(Y, iy);
+        const float Yi_imag = CONST_IMAG_FLOAT(Y, iy);
+        /* tmp2 = conj(alpha) Yi */
+        const float tmp2_real = alpha_real * Yi_real + alpha_imag * Yi_imag;
+        const float tmp2_imag = -alpha_imag * Yi_real + alpha_real * Yi_imag;
+
+        int jx = ix + incX;
+        int jy = iy + incY;
+
+        /* Aij = alpha*Xi*conj(Yj) + conj(alpha)*Yi*conj(Xj) */
+
+        REAL_FLOAT(Ap, TPUP(N, i, i)) += 2 * (tmp1_real * Yi_real + tmp1_imag * Yi_imag);
+        IMAG_FLOAT(Ap, TPUP(N, i, i)) = 0;
+
+        for (j = i + 1; j < N; j++) {
+          const float Xj_real = CONST_REAL_FLOAT(X, jx);
+          const float Xj_imag = CONST_IMAG_FLOAT(X, jx);
+          const float Yj_real = CONST_REAL_FLOAT(Y, jy);
+          const float Yj_imag = CONST_IMAG_FLOAT(Y, jy);
+          REAL_FLOAT(Ap, TPUP(N, i, j)) += ((tmp1_real * Yj_real + tmp1_imag * Yj_imag)
+                                      + (tmp2_real * Xj_real + tmp2_imag * Xj_imag));
+          IMAG_FLOAT(Ap, TPUP(N, i, j)) +=
+            conj * ((tmp1_imag * Yj_real - tmp1_real * Yj_imag) +
+                    (tmp2_imag * Xj_real - tmp2_real * Xj_imag));
+          jx += incX;
+          jy += incY;
+        }
+        ix += incX;
+        iy += incY;
+      }
+    } else if ((order == CblasRowMajor && Uplo == CblasLower)
+               || (order == CblasColMajor && Uplo == CblasUpper)) {
+
+      int ix = OFFSET(N, incX);
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        const float Xi_real = CONST_REAL_FLOAT(X, ix);
+        const float Xi_imag = CONST_IMAG_FLOAT(X, ix);
+        const float tmp1_real = alpha_real * Xi_real - alpha_imag * Xi_imag;
+        const float tmp1_imag = alpha_imag * Xi_real + alpha_real * Xi_imag;
+
+        const float Yi_real = CONST_REAL_FLOAT(Y, iy);
+        const float Yi_imag = CONST_IMAG_FLOAT(Y, iy);
+        const float tmp2_real = alpha_real * Yi_real + alpha_imag * Yi_imag;
+        const float tmp2_imag = -alpha_imag * Yi_real + alpha_real * Yi_imag;
+
+        int jx = OFFSET(N, incX);
+        int jy = OFFSET(N, incY);
+
+        /* Aij = alpha*Xi*conj(Yj) + conj(alpha)*Yi*conj(Xj) */
+
+        for (j = 0; j < i; j++) {
+          const float Xj_real = CONST_REAL_FLOAT(X, jx);
+          const float Xj_imag = CONST_IMAG_FLOAT(X, jx);
+          const float Yj_real = CONST_REAL_FLOAT(Y, jy);
+          const float Yj_imag = CONST_IMAG_FLOAT(Y, jy);
+          REAL_FLOAT(Ap, TPLO(N, i, j)) += ((tmp1_real * Yj_real + tmp1_imag * Yj_imag)
+                                      + (tmp2_real * Xj_real + tmp2_imag * Xj_imag));
+          IMAG_FLOAT(Ap, TPLO(N, i, j)) +=
+            conj * ((tmp1_imag * Yj_real - tmp1_real * Yj_imag) +
+                    (tmp2_imag * Xj_real - tmp2_real * Xj_imag));
+          jx += incX;
+          jy += incY;
+        }
+
+        REAL_FLOAT(Ap, TPLO(N, i, i)) += 2 * (tmp1_real * Yi_real + tmp1_imag * Yi_imag);
+        IMAG_FLOAT(Ap, TPLO(N, i, i)) = 0;
+
+        ix += incX;
+        iy += incY;
+      }
+    } else {
+      fprintf(stderr, "unrecognized operation for cblas_chpr2()\n");
+    }
+  }
 }
 
 
@@ -5247,6 +6089,125 @@ void cblas_zhemv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                  const int lda, const void *X, const int incX,
                  const void *beta, void *Y, const int incY)
 {
+  const int conj = (order == CblasColMajor) ? -1 : 1;
+  int i, j;
+
+  CHECK_ARGS11(CZ_HEMV,order,Uplo,N,alpha,A,lda,X,incX,beta,Y,incY);
+
+  {
+    const double alpha_real = CONST_REAL0_DOUBLE(alpha);
+    const double alpha_imag = CONST_IMAG0_DOUBLE(alpha);
+
+    const double beta_real = CONST_REAL0_DOUBLE(beta);
+    const double beta_imag = CONST_IMAG0_DOUBLE(beta);
+
+    if ((alpha_real == 0.0 && alpha_imag == 0.0)
+        && (beta_real == 1.0 && beta_imag == 0.0))
+      return;
+
+    /* form  y := beta*y */
+    if (beta_real == 0.0 && beta_imag == 0.0) {
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        REAL_DOUBLE(Y, iy) = 0.0;
+        IMAG_DOUBLE(Y, iy) = 0.0;
+        iy += incY;
+      }
+    } else if (!(beta_real == 1.0 && beta_imag == 0.0)) {
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        const double y_real = REAL_DOUBLE(Y, iy);
+        const double y_imag = IMAG_DOUBLE(Y, iy);
+        const double tmpR = y_real * beta_real - y_imag * beta_imag;
+        const double tmpI = y_real * beta_imag + y_imag * beta_real;
+        REAL_DOUBLE(Y, iy) = tmpR;
+        IMAG_DOUBLE(Y, iy) = tmpI;
+        iy += incY;
+      }
+    }
+
+    if (alpha_real == 0.0 && alpha_imag == 0.0)
+      return;
+
+    /* form  y := alpha*A*x + y */
+
+    if ((order == CblasRowMajor && Uplo == CblasUpper)
+        || (order == CblasColMajor && Uplo == CblasLower)) {
+      int ix = OFFSET(N, incX);
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        double x_real = CONST_REAL_DOUBLE(X, ix);
+        double x_imag = CONST_IMAG_DOUBLE(X, ix);
+        double temp1_real = alpha_real * x_real - alpha_imag * x_imag;
+        double temp1_imag = alpha_real * x_imag + alpha_imag * x_real;
+        double temp2_real = 0.0;
+        double temp2_imag = 0.0;
+        const int j_min = i + 1;
+        const int j_max = N;
+        int jx = OFFSET(N, incX) + j_min * incX;
+        int jy = OFFSET(N, incY) + j_min * incY;
+        double Aii_real = CONST_REAL_DOUBLE(A, lda * i + i);
+        /* Aii_imag is zero */
+        REAL_DOUBLE(Y, iy) += temp1_real * Aii_real;
+        IMAG_DOUBLE(Y, iy) += temp1_imag * Aii_real;
+        for (j = j_min; j < j_max; j++) {
+          double Aij_real = CONST_REAL_DOUBLE(A, lda * i + j);
+          double Aij_imag = conj * CONST_IMAG_DOUBLE(A, lda * i + j);
+          REAL_DOUBLE(Y, jy) += temp1_real * Aij_real - temp1_imag * (-Aij_imag);
+          IMAG_DOUBLE(Y, jy) += temp1_real * (-Aij_imag) + temp1_imag * Aij_real;
+          x_real = CONST_REAL_DOUBLE(X, jx);
+          x_imag = CONST_IMAG_DOUBLE(X, jx);
+          temp2_real += x_real * Aij_real - x_imag * Aij_imag;
+          temp2_imag += x_real * Aij_imag + x_imag * Aij_real;
+          jx += incX;
+          jy += incY;
+        }
+        REAL_DOUBLE(Y, iy) += alpha_real * temp2_real - alpha_imag * temp2_imag;
+        IMAG_DOUBLE(Y, iy) += alpha_real * temp2_imag + alpha_imag * temp2_real;
+        ix += incX;
+        iy += incY;
+      }
+    } else if ((order == CblasRowMajor && Uplo == CblasLower)
+               || (order == CblasColMajor && Uplo == CblasUpper)) {
+      int ix = OFFSET(N, incX) + (N - 1) * incX;
+      int iy = OFFSET(N, incY) + (N - 1) * incY;
+      for (i = N; i > 0 && i--;) {
+        double x_real = CONST_REAL_DOUBLE(X, ix);
+        double x_imag = CONST_IMAG_DOUBLE(X, ix);
+        double temp1_real = alpha_real * x_real - alpha_imag * x_imag;
+        double temp1_imag = alpha_real * x_imag + alpha_imag * x_real;
+        double temp2_real = 0.0;
+        double temp2_imag = 0.0;
+        const int j_min = 0;
+        const int j_max = i;
+        int jx = OFFSET(N, incX) + j_min * incX;
+        int jy = OFFSET(N, incY) + j_min * incY;
+        double Aii_real = CONST_REAL_DOUBLE(A, lda * i + i);
+        /* Aii_imag is zero */
+        REAL_DOUBLE(Y, iy) += temp1_real * Aii_real;
+        IMAG_DOUBLE(Y, iy) += temp1_imag * Aii_real;
+
+        for (j = j_min; j < j_max; j++) {
+          double Aij_real = CONST_REAL_DOUBLE(A, lda * i + j);
+          double Aij_imag = conj * CONST_IMAG_DOUBLE(A, lda * i + j);
+          REAL_DOUBLE(Y, jy) += temp1_real * Aij_real - temp1_imag * (-Aij_imag);
+          IMAG_DOUBLE(Y, jy) += temp1_real * (-Aij_imag) + temp1_imag * Aij_real;
+          x_real = CONST_REAL_DOUBLE(X, jx);
+          x_imag = CONST_IMAG_DOUBLE(X, jx);
+          temp2_real += x_real * Aij_real - x_imag * Aij_imag;
+          temp2_imag += x_real * Aij_imag + x_imag * Aij_real;
+          jx += incX;
+          jy += incY;
+        }
+        REAL_DOUBLE(Y, iy) += alpha_real * temp2_real - alpha_imag * temp2_imag;
+        IMAG_DOUBLE(Y, iy) += alpha_real * temp2_imag + alpha_imag * temp2_real;
+        ix -= incX;
+        iy -= incY;
+      }
+    } else {
+      fprintf(stderr, "unrecognized operation for cblas_zhemv()\n");
+    }
+  }
 }
 
 void cblas_zhbmv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
@@ -5254,6 +6215,132 @@ void cblas_zhbmv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                  const int lda, const void *X, const int incX,
                  const void *beta, void *Y, const int incY)
 {
+  int i, j;
+  const int conj = (order == CblasColMajor) ? -1 : 1;
+  CHECK_ARGS12(CZ_HBMV,order,Uplo,N,K,alpha,A,lda,X,incX,beta,Y,incY);
+
+  {
+    const double alpha_real = CONST_REAL0_DOUBLE(alpha);
+    const double alpha_imag = CONST_IMAG0_DOUBLE(alpha);
+
+    const double beta_real = CONST_REAL0_DOUBLE(beta);
+    const double beta_imag = CONST_IMAG0_DOUBLE(beta);
+
+    if (N == 0)
+      return;
+
+    if ((alpha_real == 0.0 && alpha_imag == 0.0)
+        && (beta_real == 1.0 && beta_imag == 0.0))
+      return;
+
+    /* form  y := beta*y */
+    if (beta_real == 0.0 && beta_imag == 0.0) {
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        REAL_DOUBLE(Y, iy) = 0.0;
+        IMAG_DOUBLE(Y, iy) = 0.0;
+        iy += incY;
+      }
+    } else if (!(beta_real == 1.0 && beta_imag == 0.0)) {
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        const double y_real = REAL_DOUBLE(Y, iy);
+        const double y_imag = IMAG_DOUBLE(Y, iy);
+        const double tmpR = y_real * beta_real - y_imag * beta_imag;
+        const double tmpI = y_real * beta_imag + y_imag * beta_real;
+        REAL_DOUBLE(Y, iy) = tmpR;
+        IMAG_DOUBLE(Y, iy) = tmpI;
+        iy += incY;
+      }
+    }
+
+    if (alpha_real == 0.0 && alpha_imag == 0.0)
+      return;
+
+    /* form  y := alpha*A*x + y */
+
+    if ((order == CblasRowMajor && Uplo == CblasUpper)
+        || (order == CblasColMajor && Uplo == CblasLower)) {
+      int ix = OFFSET(N, incX);
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        double x_real = CONST_REAL_DOUBLE(X, ix);
+        double x_imag = CONST_IMAG_DOUBLE(X, ix);
+        double temp1_real = alpha_real * x_real - alpha_imag * x_imag;
+        double temp1_imag = alpha_real * x_imag + alpha_imag * x_real;
+        double temp2_real = 0.0;
+        double temp2_imag = 0.0;
+        const int j_min = i + 1;
+        const int j_max = NA_MIN(N, i + K + 1);
+        int jx = OFFSET(N, incX) + j_min * incX;
+        int jy = OFFSET(N, incY) + j_min * incY;
+        double Aii_real = CONST_REAL_DOUBLE(A, lda * i + 0);
+        /* Aii_imag is zero */
+        REAL_DOUBLE(Y, iy) += temp1_real * Aii_real;
+        IMAG_DOUBLE(Y, iy) += temp1_imag * Aii_real;
+        for (j = j_min; j < j_max; j++) {
+          double Aij_real = CONST_REAL_DOUBLE(A, lda * i + (j - i));
+          double Aij_imag = conj * CONST_IMAG_DOUBLE(A, lda * i + (j - i));
+          REAL_DOUBLE(Y, jy) += temp1_real * Aij_real - temp1_imag * (-Aij_imag);
+          IMAG_DOUBLE(Y, jy) += temp1_real * (-Aij_imag) + temp1_imag * Aij_real;
+          x_real = CONST_REAL_DOUBLE(X, jx);
+          x_imag = CONST_IMAG_DOUBLE(X, jx);
+          temp2_real += x_real * Aij_real - x_imag * Aij_imag;
+          temp2_imag += x_real * Aij_imag + x_imag * Aij_real;
+          jx += incX;
+          jy += incY;
+        }
+        REAL_DOUBLE(Y, iy) += alpha_real * temp2_real - alpha_imag * temp2_imag;
+        IMAG_DOUBLE(Y, iy) += alpha_real * temp2_imag + alpha_imag * temp2_real;
+        ix += incX;
+        iy += incY;
+      }
+    } else if ((order == CblasRowMajor && Uplo == CblasLower)
+               || (order == CblasColMajor && Uplo == CblasUpper)) {
+      int ix = OFFSET(N, incX);
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        double x_real = CONST_REAL_DOUBLE(X, ix);
+        double x_imag = CONST_IMAG_DOUBLE(X, ix);
+        double temp1_real = alpha_real * x_real - alpha_imag * x_imag;
+        double temp1_imag = alpha_real * x_imag + alpha_imag * x_real;
+        double temp2_real = 0.0;
+        double temp2_imag = 0.0;
+        const int j_min = (K > i ? 0 : i - K);
+        const int j_max = i;
+        int jx = OFFSET(N, incX) + j_min * incX;
+        int jy = OFFSET(N, incY) + j_min * incY;
+
+        for (j = j_min; j < j_max; j++) {
+          double Aij_real = CONST_REAL_DOUBLE(A, i * lda + (K - i + j));
+          double Aij_imag = conj * CONST_IMAG_DOUBLE(A, i * lda + (K - i + j));
+          REAL_DOUBLE(Y, jy) += temp1_real * Aij_real - temp1_imag * (-Aij_imag);
+          IMAG_DOUBLE(Y, jy) += temp1_real * (-Aij_imag) + temp1_imag * Aij_real;
+          x_real = CONST_REAL_DOUBLE(X, jx);
+          x_imag = CONST_IMAG_DOUBLE(X, jx);
+          temp2_real += x_real * Aij_real - x_imag * Aij_imag;
+          temp2_imag += x_real * Aij_imag + x_imag * Aij_real;
+          jx += incX;
+          jy += incY;
+        }
+
+        {
+          double Aii_real = CONST_REAL_DOUBLE(A, lda * i + K);
+          /* Aii_imag is zero */
+          REAL_DOUBLE(Y, iy) += temp1_real * Aii_real;
+          IMAG_DOUBLE(Y, iy) += temp1_imag * Aii_real;
+        }
+
+        REAL_DOUBLE(Y, iy) += alpha_real * temp2_real - alpha_imag * temp2_imag;
+        IMAG_DOUBLE(Y, iy) += alpha_real * temp2_imag + alpha_imag * temp2_real;
+        ix += incX;
+        iy += incY;
+      }
+
+    } else {
+      fprintf(stderr, "unrecognized operation for cblas_zhbmv()\n");
+    }
+  }
 }
 
 void cblas_zhpmv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
@@ -5261,18 +6348,230 @@ void cblas_zhpmv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                  const void *X, const int incX,
                  const void *beta, void *Y, const int incY)
 {
+  int i, j;
+  const int conj = (order == CblasColMajor) ? -1 : 1;
+  CHECK_ARGS10(CZ_HPMV,order,Uplo,N,alpha,Ap,X,incX,beta,Y,incY);
+
+  {
+    const double alpha_real = CONST_REAL0_DOUBLE(alpha);
+    const double alpha_imag = CONST_IMAG0_DOUBLE(alpha);
+
+    const double beta_real = CONST_REAL0_DOUBLE(beta);
+    const double beta_imag = CONST_IMAG0_DOUBLE(beta);
+
+    if ((alpha_real == 0.0 && alpha_imag == 0.0)
+        && (beta_real == 1.0 && beta_imag == 0.0))
+      return;
+
+    /* form  y := beta*y */
+    if (beta_real == 0.0 && beta_imag == 0.0) {
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        REAL_DOUBLE(Y, iy) = 0.0;
+        IMAG_DOUBLE(Y, iy) = 0.0;
+        iy += incY;
+      }
+    } else if (!(beta_real == 1.0 && beta_imag == 0.0)) {
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        const double y_real = REAL_DOUBLE(Y, iy);
+        const double y_imag = IMAG_DOUBLE(Y, iy);
+        const double tmpR = y_real * beta_real - y_imag * beta_imag;
+        const double tmpI = y_real * beta_imag + y_imag * beta_real;
+        REAL_DOUBLE(Y, iy) = tmpR;
+        IMAG_DOUBLE(Y, iy) = tmpI;
+        iy += incY;
+      }
+    }
+
+    if (alpha_real == 0.0 && alpha_imag == 0.0)
+      return;
+
+    /* form  y := alpha*A*x + y */
+
+    if ((order == CblasRowMajor && Uplo == CblasUpper)
+        || (order == CblasColMajor && Uplo == CblasLower)) {
+
+      int ix = OFFSET(N, incX);
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        double x_real = CONST_REAL_DOUBLE(X, ix);
+        double x_imag = CONST_IMAG_DOUBLE(X, ix);
+        double temp1_real = alpha_real * x_real - alpha_imag * x_imag;
+        double temp1_imag = alpha_real * x_imag + alpha_imag * x_real;
+        double temp2_real = 0.0;
+        double temp2_imag = 0.0;
+        const int j_min = i + 1;
+        const int j_max = N;
+        int jx = OFFSET(N, incX) + j_min * incX;
+        int jy = OFFSET(N, incY) + j_min * incY;
+        double Aii_real = CONST_REAL_DOUBLE(Ap, TPUP(N, i, i));
+        /* Aii_imag is zero */
+        REAL_DOUBLE(Y, iy) += temp1_real * Aii_real;
+        IMAG_DOUBLE(Y, iy) += temp1_imag * Aii_real;
+        for (j = j_min; j < j_max; j++) {
+          double Aij_real = CONST_REAL_DOUBLE(Ap, TPUP(N, i, j));
+          double Aij_imag = conj * CONST_IMAG_DOUBLE(Ap, TPUP(N, i, j));
+          REAL_DOUBLE(Y, jy) += temp1_real * Aij_real - temp1_imag * (-Aij_imag);
+          IMAG_DOUBLE(Y, jy) += temp1_real * (-Aij_imag) + temp1_imag * Aij_real;
+          x_real = CONST_REAL_DOUBLE(X, jx);
+          x_imag = CONST_IMAG_DOUBLE(X, jx);
+          temp2_real += x_real * Aij_real - x_imag * Aij_imag;
+          temp2_imag += x_real * Aij_imag + x_imag * Aij_real;
+          jx += incX;
+          jy += incY;
+        }
+        REAL_DOUBLE(Y, iy) += alpha_real * temp2_real - alpha_imag * temp2_imag;
+        IMAG_DOUBLE(Y, iy) += alpha_real * temp2_imag + alpha_imag * temp2_real;
+        ix += incX;
+        iy += incY;
+      }
+    } else if ((order == CblasRowMajor && Uplo == CblasLower)
+               || (order == CblasColMajor && Uplo == CblasUpper)) {
+
+      int ix = OFFSET(N, incX);
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        double x_real = CONST_REAL_DOUBLE(X, ix);
+        double x_imag = CONST_IMAG_DOUBLE(X, ix);
+        double temp1_real = alpha_real * x_real - alpha_imag * x_imag;
+        double temp1_imag = alpha_real * x_imag + alpha_imag * x_real;
+        double temp2_real = 0.0;
+        double temp2_imag = 0.0;
+        const int j_min = 0;
+        const int j_max = i;
+        int jx = OFFSET(N, incX) + j_min * incX;
+        int jy = OFFSET(N, incY) + j_min * incY;
+        double Aii_real = CONST_REAL_DOUBLE(Ap, TPLO(N, i, i));
+        /* Aii_imag is zero */
+        REAL_DOUBLE(Y, iy) += temp1_real * Aii_real;
+        IMAG_DOUBLE(Y, iy) += temp1_imag * Aii_real;
+        for (j = j_min; j < j_max; j++) {
+          double Aij_real = CONST_REAL_DOUBLE(Ap, TPLO(N, i, j));
+          double Aij_imag = conj * CONST_IMAG_DOUBLE(Ap, TPLO(N, i, j));
+          REAL_DOUBLE(Y, jy) += temp1_real * Aij_real - temp1_imag * (-Aij_imag);
+          IMAG_DOUBLE(Y, jy) += temp1_real * (-Aij_imag) + temp1_imag * Aij_real;
+          x_real = CONST_REAL_DOUBLE(X, jx);
+          x_imag = CONST_IMAG_DOUBLE(X, jx);
+          temp2_real += x_real * Aij_real - x_imag * Aij_imag;
+          temp2_imag += x_real * Aij_imag + x_imag * Aij_real;
+          jx += incX;
+          jy += incY;
+        }
+        REAL_DOUBLE(Y, iy) += alpha_real * temp2_real - alpha_imag * temp2_imag;
+        IMAG_DOUBLE(Y, iy) += alpha_real * temp2_imag + alpha_imag * temp2_real;
+        ix += incX;
+        iy += incY;
+      }
+
+    } else {
+      fprintf(stderr, "unrecognized operation for cblas_zhpmv()\n");
+    }
+  }
 }
 
 void cblas_zgeru(const enum CBLAS_ORDER order, const int M, const int N,
                  const void *alpha, const void *X, const int incX,
                  const void *Y, const int incY, void *A, const int lda)
 {
+  int i, j;
+
+  CHECK_ARGS10(CZ_GERU,order,M,N,alpha,X,incX,Y,incY,A,lda);
+
+  {
+    const double alpha_real = CONST_REAL0_DOUBLE(alpha);
+    const double alpha_imag = CONST_IMAG0_DOUBLE(alpha);
+
+    if (order == CblasRowMajor) {
+      int ix = OFFSET(M, incX);
+      for (i = 0; i < M; i++) {
+        const double X_real = CONST_REAL_DOUBLE(X, ix);
+        const double X_imag = CONST_IMAG_DOUBLE(X, ix);
+        const double tmp_real = alpha_real * X_real - alpha_imag * X_imag;
+        const double tmp_imag = alpha_imag * X_real + alpha_real * X_imag;
+        int jy = OFFSET(N, incY);
+        for (j = 0; j < N; j++) {
+          const double Y_real = CONST_REAL_DOUBLE(Y, jy);
+          const double Y_imag = CONST_IMAG_DOUBLE(Y, jy);
+          REAL_DOUBLE(A, lda * i + j) += Y_real * tmp_real - Y_imag * tmp_imag;
+          IMAG_DOUBLE(A, lda * i + j) += Y_imag * tmp_real + Y_real * tmp_imag;
+          jy += incY;
+        }
+        ix += incX;
+      }
+    } else if (order == CblasColMajor) {
+      int jy = OFFSET(N, incY);
+      for (j = 0; j < N; j++) {
+        const double Y_real = CONST_REAL_DOUBLE(Y, jy);
+        const double Y_imag = CONST_IMAG_DOUBLE(Y, jy);
+        const double tmp_real = alpha_real * Y_real - alpha_imag * Y_imag;
+        const double tmp_imag = alpha_imag * Y_real + alpha_real * Y_imag;
+        int ix = OFFSET(M, incX);
+        for (i = 0; i < M; i++) {
+          const double X_real = CONST_REAL_DOUBLE(X, ix);
+          const double X_imag = CONST_IMAG_DOUBLE(X, ix);
+          REAL_DOUBLE(A, i + lda * j) += X_real * tmp_real - X_imag * tmp_imag;
+          IMAG_DOUBLE(A, i + lda * j) += X_imag * tmp_real + X_real * tmp_imag;
+          ix += incX;
+        }
+        jy += incY;
+      }
+    } else {
+      fprintf(stderr, "unrecognized operation for cblas_zgeru()\n");
+    }
+  }
 }
 
 void cblas_zgerc(const enum CBLAS_ORDER order, const int M, const int N,
                  const void *alpha, const void *X, const int incX,
                  const void *Y, const int incY, void *A, const int lda)
 {
+  int i, j;
+
+  CHECK_ARGS10(CZ_GERC,order,M,N,alpha,X,incX,Y,incY,A,lda);
+
+  {
+    const double alpha_real = CONST_REAL0_DOUBLE(alpha);
+    const double alpha_imag = CONST_IMAG0_DOUBLE(alpha);
+
+    if (order == CblasRowMajor) {
+      int ix = OFFSET(M, incX);
+      for (i = 0; i < M; i++) {
+        const double X_real = CONST_REAL_DOUBLE(X, ix);
+        const double X_imag = CONST_IMAG_DOUBLE(X, ix);
+        const double tmp_real = alpha_real * X_real - alpha_imag * X_imag;
+        const double tmp_imag = alpha_imag * X_real + alpha_real * X_imag;
+        int jy = OFFSET(N, incY);
+        for (j = 0; j < N; j++) {
+          const double Y_real = CONST_REAL_DOUBLE(Y, jy);
+          const double Y_imag = -CONST_IMAG_DOUBLE(Y, jy);
+          REAL_DOUBLE(A, lda * i + j) += Y_real * tmp_real - Y_imag * tmp_imag;
+          IMAG_DOUBLE(A, lda * i + j) += Y_imag * tmp_real + Y_real * tmp_imag;
+          jy += incY;
+        }
+        ix += incX;
+      }
+    } else if (order == CblasColMajor) {
+      int jy = OFFSET(N, incY);
+      for (j = 0; j < N; j++) {
+        const double Y_real = CONST_REAL_DOUBLE(Y, jy);
+        const double Y_imag = -CONST_IMAG_DOUBLE(Y, jy);
+        const double tmp_real = alpha_real * Y_real - alpha_imag * Y_imag;
+        const double tmp_imag = alpha_imag * Y_real + alpha_real * Y_imag;
+        int ix = OFFSET(M, incX);
+        for (i = 0; i < M; i++) {
+          const double X_real = CONST_REAL_DOUBLE(X, ix);
+          const double X_imag = CONST_IMAG_DOUBLE(X, ix);
+          REAL_DOUBLE(A, i + lda * j) += X_real * tmp_real - X_imag * tmp_imag;
+          IMAG_DOUBLE(A, i + lda * j) += X_imag * tmp_real + X_real * tmp_imag;
+          ix += incX;
+        }
+        jy += incY;
+      }
+    } else {
+      fprintf(stderr, "unrecognized operation for cblas_zgerc()\n");
+    }
+  }
 }
 
 
@@ -5280,23 +6579,341 @@ void cblas_zher(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                 const int N, const double alpha, const void *X, const int incX,
                 void *A, const int lda)
 {
+  int i, j;
+  const int conj = (order == CblasColMajor) ? -1 : 1;
+
+  CHECK_ARGS8(CZ_HER,order,Uplo,N,alpha,X,incX,A,lda);
+
+  if (alpha == 0.0)
+    return;
+
+  if ((order == CblasRowMajor && Uplo == CblasUpper)
+      || (order == CblasColMajor && Uplo == CblasLower)) {
+    int ix = OFFSET(N, incX);
+    for (i = 0; i < N; i++) {
+      const double tmp_real = alpha * CONST_REAL_DOUBLE(X, ix);
+      const double tmp_imag = alpha * conj * CONST_IMAG_DOUBLE(X, ix);
+      int jx = ix;
+
+      {
+        const double X_real = CONST_REAL_DOUBLE(X, jx);
+        const double X_imag = -conj * CONST_IMAG_DOUBLE(X, jx);
+        REAL_DOUBLE(A, lda * i + i) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_DOUBLE(A, lda * i + i) = 0;
+        jx += incX;
+      }
+
+      for (j = i + 1; j < N; j++) {
+        const double X_real = CONST_REAL_DOUBLE(X, jx);
+        const double X_imag = -conj * CONST_IMAG_DOUBLE(X, jx);
+        REAL_DOUBLE(A, lda * i + j) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_DOUBLE(A, lda * i + j) += X_imag * tmp_real + X_real * tmp_imag;
+        jx += incX;
+      }
+      ix += incX;
+    }
+  } else if ((order == CblasRowMajor && Uplo == CblasLower)
+             || (order == CblasColMajor && Uplo == CblasUpper)) {
+    int ix = OFFSET(N, incX);
+    for (i = 0; i < N; i++) {
+      const double tmp_real = alpha * CONST_REAL_DOUBLE(X, ix);
+      const double tmp_imag = alpha * conj * CONST_IMAG_DOUBLE(X, ix);
+      int jx = OFFSET(N, incX);
+      for (j = 0; j < i; j++) {
+        const double X_real = CONST_REAL_DOUBLE(X, jx);
+        const double X_imag = -conj * CONST_IMAG_DOUBLE(X, jx);
+        REAL_DOUBLE(A, lda * i + j) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_DOUBLE(A, lda * i + j) += X_imag * tmp_real + X_real * tmp_imag;
+        jx += incX;
+      }
+
+      {
+        const double X_real = CONST_REAL_DOUBLE(X, jx);
+        const double X_imag = -conj * CONST_IMAG_DOUBLE(X, jx);
+        REAL_DOUBLE(A, lda * i + i) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_DOUBLE(A, lda * i + i) = 0;
+        jx += incX;
+      }
+
+      ix += incX;
+    }
+  } else {
+    fprintf(stderr, "unrecognized operation for cblas_zher()\n");
+  }
 }
 
 void cblas_zhpr(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                 const int N, const double alpha, const void *X,
                 const int incX, void *A)
 {
+  int i, j;
+  const int conj = (order == CblasColMajor) ? -1 : 1;
+
+  CHECK_ARGS7(CZ_HPR,order,Uplo,N,alpha,X,incX,A);
+
+  if (alpha == 0.0)
+    return;
+
+  if ((order == CblasRowMajor && Uplo == CblasUpper)
+      || (order == CblasColMajor && Uplo == CblasLower)) {
+    int ix = OFFSET(N, incX);
+    for (i = 0; i < N; i++) {
+      const double tmp_real = alpha * CONST_REAL_DOUBLE(X, ix);
+      const double tmp_imag = alpha * conj * CONST_IMAG_DOUBLE(X, ix);
+      int jx = ix;
+
+      {
+        const double X_real = CONST_REAL_DOUBLE(X, jx);
+        const double X_imag = -conj * CONST_IMAG_DOUBLE(X, jx);
+        REAL_DOUBLE(A, TPUP(N, i, i)) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_DOUBLE(A, TPUP(N, i, i)) = 0;
+        jx += incX;
+      }
+
+      for (j = i + 1; j < N; j++) {
+        const double X_real = CONST_REAL_DOUBLE(X, jx);
+        const double X_imag = -conj * CONST_IMAG_DOUBLE(X, jx);
+        REAL_DOUBLE(A, TPUP(N, i, j)) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_DOUBLE(A, TPUP(N, i, j)) += X_imag * tmp_real + X_real * tmp_imag;
+        jx += incX;
+      }
+      ix += incX;
+    }
+  } else if ((order == CblasRowMajor && Uplo == CblasLower)
+             || (order == CblasColMajor && Uplo == CblasUpper)) {
+    int ix = OFFSET(N, incX);
+    for (i = 0; i < N; i++) {
+      const double tmp_real = alpha * CONST_REAL_DOUBLE(X, ix);
+      const double tmp_imag = alpha * conj * CONST_IMAG_DOUBLE(X, ix);
+      int jx = OFFSET(N, incX);
+      for (j = 0; j < i; j++) {
+        const double X_real = CONST_REAL_DOUBLE(X, jx);
+        const double X_imag = -conj * CONST_IMAG_DOUBLE(X, jx);
+        REAL_DOUBLE(A, TPLO(N, i, j)) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_DOUBLE(A, TPLO(N, i, j)) += X_imag * tmp_real + X_real * tmp_imag;
+        jx += incX;
+      }
+
+      {
+        const double X_real = CONST_REAL_DOUBLE(X, jx);
+        const double X_imag = -conj * CONST_IMAG_DOUBLE(X, jx);
+        REAL_DOUBLE(A, TPLO(N, i, i)) += X_real * tmp_real - X_imag * tmp_imag;
+        IMAG_DOUBLE(A, TPLO(N, i, i)) = 0;
+        jx += incX;
+      }
+
+      ix += incX;
+    }
+  } else {
+    fprintf(stderr, "unrecognized operation for cblas_zhpr()\n");
+  }
 }
 
 void cblas_zher2(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo, const int N,
                 const void *alpha, const void *X, const int incX,
                 const void *Y, const int incY, void *A, const int lda)
 {
+  int i, j;
+  const int conj = (order == CblasColMajor) ? -1 : 1;
+
+  CHECK_ARGS10(CZ_HER2,order,Uplo,N,alpha,X,incX,Y,incY,A,lda);
+
+  {
+    const double alpha_real = CONST_REAL0_DOUBLE(alpha);
+    const double alpha_imag = CONST_IMAG0_DOUBLE(alpha);
+
+    if (alpha_real == 0.0 && alpha_imag == 0.0)
+      return;
+
+    if ((order == CblasRowMajor && Uplo == CblasUpper)
+        || (order == CblasColMajor && Uplo == CblasLower)) {
+      int ix = OFFSET(N, incX);
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        const double Xi_real = CONST_REAL_DOUBLE(X, ix);
+        const double Xi_imag = CONST_IMAG_DOUBLE(X, ix);
+        /* tmp1 = alpha Xi */
+        const double tmp1_real = alpha_real * Xi_real - alpha_imag * Xi_imag;
+        const double tmp1_imag = alpha_imag * Xi_real + alpha_real * Xi_imag;
+
+        const double Yi_real = CONST_REAL_DOUBLE(Y, iy);
+        const double Yi_imag = CONST_IMAG_DOUBLE(Y, iy);
+        /* tmp2 = conj(alpha) Yi */
+        const double tmp2_real = alpha_real * Yi_real + alpha_imag * Yi_imag;
+        const double tmp2_imag = -alpha_imag * Yi_real + alpha_real * Yi_imag;
+
+        int jx = ix + incX;
+        int jy = iy + incY;
+
+        /* Aij = alpha*Xi*conj(Yj) + conj(alpha)*Yi*conj(Xj) */
+
+        REAL_DOUBLE(A, lda * i + i) += 2 * (tmp1_real * Yi_real + tmp1_imag * Yi_imag);
+        IMAG_DOUBLE(A, lda * i + i) = 0;
+
+        for (j = i + 1; j < N; j++) {
+          const double Xj_real = CONST_REAL_DOUBLE(X, jx);
+          const double Xj_imag = CONST_IMAG_DOUBLE(X, jx);
+          const double Yj_real = CONST_REAL_DOUBLE(Y, jy);
+          const double Yj_imag = CONST_IMAG_DOUBLE(Y, jy);
+          REAL_DOUBLE(A, lda * i + j) += ((tmp1_real * Yj_real + tmp1_imag * Yj_imag)
+                                   + (tmp2_real * Xj_real + tmp2_imag * Xj_imag));
+          IMAG_DOUBLE(A, lda * i + j) +=
+            conj * ((tmp1_imag * Yj_real - tmp1_real * Yj_imag) +
+                    (tmp2_imag * Xj_real - tmp2_real * Xj_imag));
+          jx += incX;
+          jy += incY;
+        }
+        ix += incX;
+        iy += incY;
+      }
+    } else if ((order == CblasRowMajor && Uplo == CblasLower)
+               || (order == CblasColMajor && Uplo == CblasUpper)) {
+
+      int ix = OFFSET(N, incX);
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        const double Xi_real = CONST_REAL_DOUBLE(X, ix);
+        const double Xi_imag = CONST_IMAG_DOUBLE(X, ix);
+        const double tmp1_real = alpha_real * Xi_real - alpha_imag * Xi_imag;
+        const double tmp1_imag = alpha_imag * Xi_real + alpha_real * Xi_imag;
+
+        const double Yi_real = CONST_REAL_DOUBLE(Y, iy);
+        const double Yi_imag = CONST_IMAG_DOUBLE(Y, iy);
+        const double tmp2_real = alpha_real * Yi_real + alpha_imag * Yi_imag;
+        const double tmp2_imag = -alpha_imag * Yi_real + alpha_real * Yi_imag;
+
+        int jx = OFFSET(N, incX);
+        int jy = OFFSET(N, incY);
+
+        /* Aij = alpha*Xi*conj(Yj) + conj(alpha)*Yi*conj(Xj) */
+
+        for (j = 0; j < i; j++) {
+          const double Xj_real = CONST_REAL_DOUBLE(X, jx);
+          const double Xj_imag = CONST_IMAG_DOUBLE(X, jx);
+          const double Yj_real = CONST_REAL_DOUBLE(Y, jy);
+          const double Yj_imag = CONST_IMAG_DOUBLE(Y, jy);
+          REAL_DOUBLE(A, lda * i + j) += ((tmp1_real * Yj_real + tmp1_imag * Yj_imag)
+                                   + (tmp2_real * Xj_real + tmp2_imag * Xj_imag));
+          IMAG_DOUBLE(A, lda * i + j) +=
+            conj * ((tmp1_imag * Yj_real - tmp1_real * Yj_imag) +
+                    (tmp2_imag * Xj_real - tmp2_real * Xj_imag));
+          jx += incX;
+          jy += incY;
+        }
+
+        REAL_DOUBLE(A, lda * i + i) += 2 * (tmp1_real * Yi_real + tmp1_imag * Yi_imag);
+        IMAG_DOUBLE(A, lda * i + i) = 0;
+
+        ix += incX;
+        iy += incY;
+      }
+    } else {
+      fprintf(stderr, "unrecognized operation for cblas_zher2()\n");
+    }
+  }
 }
 
 void cblas_zhpr2(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo, const int N,
                 const void *alpha, const void *X, const int incX,
                 const void *Y, const int incY, void *Ap)
 {
+  int i, j;
+  const int conj = (order == CblasColMajor) ? -1 : 1;
+
+  CHECK_ARGS9(CZ_HPR2,order,Uplo,N,alpha,X,incX,Y,incY,Ap);
+
+  {
+    const double alpha_real = CONST_REAL0_DOUBLE(alpha);
+    const double alpha_imag = CONST_IMAG0_DOUBLE(alpha);
+
+    if (alpha_real == 0.0 && alpha_imag == 0.0)
+      return;
+
+    if ((order == CblasRowMajor && Uplo == CblasUpper)
+        || (order == CblasColMajor && Uplo == CblasLower)) {
+      int ix = OFFSET(N, incX);
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        const double Xi_real = CONST_REAL_DOUBLE(X, ix);
+        const double Xi_imag = CONST_IMAG_DOUBLE(X, ix);
+        /* tmp1 = alpha Xi */
+        const double tmp1_real = alpha_real * Xi_real - alpha_imag * Xi_imag;
+        const double tmp1_imag = alpha_imag * Xi_real + alpha_real * Xi_imag;
+
+        const double Yi_real = CONST_REAL_DOUBLE(Y, iy);
+        const double Yi_imag = CONST_IMAG_DOUBLE(Y, iy);
+        /* tmp2 = conj(alpha) Yi */
+        const double tmp2_real = alpha_real * Yi_real + alpha_imag * Yi_imag;
+        const double tmp2_imag = -alpha_imag * Yi_real + alpha_real * Yi_imag;
+
+        int jx = ix + incX;
+        int jy = iy + incY;
+
+        /* Aij = alpha*Xi*conj(Yj) + conj(alpha)*Yi*conj(Xj) */
+
+        REAL_DOUBLE(Ap, TPUP(N, i, i)) += 2 * (tmp1_real * Yi_real + tmp1_imag * Yi_imag);
+        IMAG_DOUBLE(Ap, TPUP(N, i, i)) = 0;
+
+        for (j = i + 1; j < N; j++) {
+          const double Xj_real = CONST_REAL_DOUBLE(X, jx);
+          const double Xj_imag = CONST_IMAG_DOUBLE(X, jx);
+          const double Yj_real = CONST_REAL_DOUBLE(Y, jy);
+          const double Yj_imag = CONST_IMAG_DOUBLE(Y, jy);
+          REAL_DOUBLE(Ap, TPUP(N, i, j)) += ((tmp1_real * Yj_real + tmp1_imag * Yj_imag)
+                                      + (tmp2_real * Xj_real + tmp2_imag * Xj_imag));
+          IMAG_DOUBLE(Ap, TPUP(N, i, j)) +=
+            conj * ((tmp1_imag * Yj_real - tmp1_real * Yj_imag) +
+                    (tmp2_imag * Xj_real - tmp2_real * Xj_imag));
+          jx += incX;
+          jy += incY;
+        }
+        ix += incX;
+        iy += incY;
+      }
+    } else if ((order == CblasRowMajor && Uplo == CblasLower)
+               || (order == CblasColMajor && Uplo == CblasUpper)) {
+
+      int ix = OFFSET(N, incX);
+      int iy = OFFSET(N, incY);
+      for (i = 0; i < N; i++) {
+        const double Xi_real = CONST_REAL_DOUBLE(X, ix);
+        const double Xi_imag = CONST_IMAG_DOUBLE(X, ix);
+        const double tmp1_real = alpha_real * Xi_real - alpha_imag * Xi_imag;
+        const double tmp1_imag = alpha_imag * Xi_real + alpha_real * Xi_imag;
+
+        const double Yi_real = CONST_REAL_DOUBLE(Y, iy);
+        const double Yi_imag = CONST_IMAG_DOUBLE(Y, iy);
+        const double tmp2_real = alpha_real * Yi_real + alpha_imag * Yi_imag;
+        const double tmp2_imag = -alpha_imag * Yi_real + alpha_real * Yi_imag;
+
+        int jx = OFFSET(N, incX);
+        int jy = OFFSET(N, incY);
+
+        /* Aij = alpha*Xi*conj(Yj) + conj(alpha)*Yi*conj(Xj) */
+
+        for (j = 0; j < i; j++) {
+          const double Xj_real = CONST_REAL_DOUBLE(X, jx);
+          const double Xj_imag = CONST_IMAG_DOUBLE(X, jx);
+          const double Yj_real = CONST_REAL_DOUBLE(Y, jy);
+          const double Yj_imag = CONST_IMAG_DOUBLE(Y, jy);
+          REAL_DOUBLE(Ap, TPLO(N, i, j)) += ((tmp1_real * Yj_real + tmp1_imag * Yj_imag)
+                                      + (tmp2_real * Xj_real + tmp2_imag * Xj_imag));
+          IMAG_DOUBLE(Ap, TPLO(N, i, j)) +=
+            conj * ((tmp1_imag * Yj_real - tmp1_real * Yj_imag) +
+                    (tmp2_imag * Xj_real - tmp2_real * Xj_imag));
+          jx += incX;
+          jy += incY;
+        }
+
+        REAL_DOUBLE(Ap, TPLO(N, i, i)) += 2 * (tmp1_real * Yi_real + tmp1_imag * Yi_imag);
+        IMAG_DOUBLE(Ap, TPLO(N, i, i)) = 0;
+
+        ix += incX;
+        iy += incY;
+      }
+    } else {
+      fprintf(stderr, "unrecognized operation for cblas_zhpr2()\n");
+    }
+  }
 }
 
