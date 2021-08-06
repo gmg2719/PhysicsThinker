@@ -37,6 +37,9 @@
 #define NA_SIGN(x)              ((x) >= 0 ? 1 : -1)
 #define NA_MAX(a, b)            ((a) > (b) ? (a):(b))
 #define NA_MIN(a, b)            ((a) < (b) ? (a):(b))
+#define TRCOUNT(N,i)            ((((i)+1)*(2*(N)-(i)))/2)
+#define TPUP(N,i,j)             (TRCOUNT(N,(i)-1)+(j)-(i))
+#define TPLO(N,i,j)             (((i)*((i)+1))/2 + (j))
 /* Handling of packed complex types */
 // Every 2 float numbers form the complex number !
 #define REAL_FLOAT(a,i) (((float *) a)[2*(i)])
@@ -103,6 +106,7 @@ extern "C" {
  * ===========================================================================
  */
 void cblas_xerbla(int p, const char *rout, const char *form, ...);
+double xhypot (const double x, const double y);
 
 /*
  * ===========================================================================

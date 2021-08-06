@@ -45,6 +45,31 @@ void cblas_xerbla(int p, const char *rout, const char *form, ...)
     abort ();
 }
 
+double xhypot (const double x, const double y)
+{
+    double xabs = fabs(x) ;
+    double yabs = fabs(y) ;
+    double min, max;
+
+    if (xabs < yabs) {
+        min = xabs ;
+        max = yabs ;
+    } else {
+        min = yabs ;
+        max = xabs ;
+    }
+
+    if (min == 0) 
+    {
+        return max ;
+    }
+
+    {
+        double u = min / max ;
+        return max * sqrt (1 + u * u) ;
+    }
+}
+
 float cblas_sdsdot(const int N, const float alpha, const float *X,
                     const int incX, const float *Y, const int incY)
 {
