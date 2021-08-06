@@ -29,10 +29,14 @@
 // Pingzhou Ming, 2021.8.5
 //
 
+#include <cstdio>
 #include <cstddef>
+#include <cstdarg>
 
 #define OFFSET(N, incX)         ((incX) > 0 ?  0 : ((N) - 1) * (-(incX)))
 #define NA_SIGN(x)              ((x) >= 0 ? 1 : -1)
+#define NA_MAX(a, b)            ((a) > (b) ? (a):(b))
+#define NA_MIN(a, b)            ((a) < (b) ? (a):(b))
 /* Handling of packed complex types */
 // Every 2 float numbers form the complex number !
 #define REAL_FLOAT(a,i) (((float *) a)[2*(i)])
@@ -92,6 +96,13 @@ enum CBLAS_SIDE
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/*
+ * ===========================================================================
+ * Prototypes for some BLAS common functions
+ * ===========================================================================
+ */
+void cblas_xerbla(int p, const char *rout, const char *form, ...);
 
 /*
  * ===========================================================================

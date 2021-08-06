@@ -270,7 +270,3 @@ void cblas_zher2k(const enum CBLAS_ORDER Order, const enum CBLAS_UPLO Uplo,
 {
 }
 
-void cblas_xerbla(int p, const char *rout, const char *form, ...)
-{
-}
-

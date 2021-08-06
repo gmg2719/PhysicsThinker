@@ -20,9 +20,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <cstdio>
 #include <cmath>
 #include "na/na_cblas.h"
-
+#include "na/na_cblas_error.h"
 
 /*
  * ===========================================================================
@@ -36,6 +37,76 @@ void cblas_sgemv(const enum CBLAS_ORDER order,
                  const float *X, const int incX, const float beta,
                  float *Y, const int incY)
 {
+    int lenX, lenY;
+    const int Trans = (TransA != CblasConjTrans) ? TransA : CblasTrans;
+
+    CHECK_ARGS12(GEMV,order,TransA,M,N,alpha,A,lda,X,incX,beta,Y,incY);
+
+    if (M == 0 || N == 0)
+        return;
+
+    if (alpha == 0.0 && beta == 1.0)
+        return;
+
+    if (Trans == CblasNoTrans) {
+        lenX = N;
+        lenY = M;
+    } else {
+        lenX = M;
+        lenY = N;
+    }
+
+    /* form  y := beta*y */
+    if (beta == 0.0) {
+    int iy = OFFSET(lenY, incY);
+        for (int i = 0; i < lenY; i++) {
+            Y[iy] = 0.0;
+            iy += incY;
+        }
+    } else if (beta != 1.0) {
+        int iy = OFFSET(lenY, incY);
+        for (int i = 0; i < lenY; i++) {
+            Y[iy] *= beta;
+            iy += incY;
+        }
+    }
+
+    if (alpha == 0.0)
+        return;
+
+    if ((order == CblasRowMajor && Trans == CblasNoTrans) || 
+        (order == CblasColMajor && Trans == CblasTrans)) {
+        /* form  y := alpha*A*x + y */
+        int iy = OFFSET(lenY, incY);
+        for (int i = 0; i < lenY; i++) {
+            float temp = 0.0;
+            int ix = OFFSET(lenX, incX);
+            for (int j = 0; j < lenX; j++)
+            {
+                temp += X[ix] * A[lda * i + j];
+                ix += incX;
+            }
+            Y[iy] += alpha * temp;
+            iy += incY;
+        }
+    } else if ((order == CblasRowMajor && Trans == CblasTrans) || 
+               (order == CblasColMajor && Trans == CblasNoTrans)) {
+        /* form  y := alpha*A'*x + y */
+        int ix = OFFSET(lenX, incX);
+        for (int j = 0; j < lenX; j++) {
+            const float temp = alpha * X[ix];
+            if (temp != 0.0) {
+                int iy = OFFSET(lenY, incY);
+                for (int i = 0; i < lenY; i++) {
+                    Y[iy] += temp * A[lda * j + i];
+                    iy += incY;
+                }
+            }
+            ix += incX;
+        }
+    } else {
+        fprintf(stderr, "unrecognized operation for cblas_sgemv()\n");
+  }
 }
 
 void cblas_sgbmv(const enum CBLAS_ORDER order,
@@ -44,6 +115,82 @@ void cblas_sgbmv(const enum CBLAS_ORDER order,
                  const float *A, const int lda, const float *X,
                  const int incX, const float beta, float *Y, const int incY)
 {
+    int lenX, lenY, L, U;
+    const int Trans = (TransA != CblasConjTrans) ? TransA : CblasTrans;
+    CHECK_ARGS14(GBMV,order,TransA,M,N,KL,KU,alpha,A,lda,X,incX,beta,Y,incY);
+
+    if (M == 0 || N == 0)
+        return;
+
+    if (alpha == 0.0 && beta == 1.0)
+        return;
+
+    if (Trans == CblasNoTrans) {
+        lenX = N;
+        lenY = M;
+        L = KL;
+        U = KU;
+    } else {
+        lenX = M;
+        lenY = N;
+        L = KU;
+        U = KL;
+    }
+
+    /* form  y := beta*y */
+    if (beta == 0.0) {
+        int iy = OFFSET(lenY, incY);
+        for (int i = 0; i < lenY; i++) {
+            Y[iy] = 0;
+            iy += incY;
+        }
+    } else if (beta != 1.0) {
+        int iy = OFFSET(lenY, incY);
+        for (int i = 0; i < lenY; i++) {
+            Y[iy] *= beta;
+            iy += incY;
+        }
+    }
+
+    if (alpha == 0.0)
+        return;
+
+    if ((order == CblasRowMajor && Trans == CblasNoTrans) || 
+        (order == CblasColMajor && Trans == CblasTrans)) {
+        /* form  y := alpha*A*x + y */
+        int iy = OFFSET(lenY, incY);
+        for (int i = 0; i < lenY; i++) {
+            float temp = 0.0;
+            const int j_min = (i > L ? i - L : 0);
+            const int j_max = NA_MIN(lenX, i + U + 1);
+            int jx = OFFSET(lenX, incX) + j_min * incX;
+            for (int j = j_min; j < j_max; j++) {
+                temp += X[jx] * A[(L - i + j) + i * lda];
+                jx += incX;
+            }
+            Y[iy] += alpha * temp;
+            iy += incY;
+        }
+    } else if ((order == CblasRowMajor && Trans == CblasTrans) || 
+               (order == CblasColMajor && Trans == CblasNoTrans)) {
+        /* form  y := alpha*A'*x + y */
+        int jx = OFFSET(lenX, incX);
+        for (int j = 0; j < lenX; j++) {
+            const float temp = alpha * X[jx];
+            if (temp != 0.0) {
+                const int i_min = (j > U ? j - U : 0);
+                const int i_max = NA_MIN(lenY, j + L + 1);
+                int iy = OFFSET(lenY, incY) + i_min * incY;
+                for (int i = i_min; i < i_max; i++) {
+                    Y[iy] += temp * A[lda * j + (U + i - j)];
+                    iy += incY;
+                }
+            }
+            jx += incX;
+        }
+    } else {
+        fprintf(stderr, "unrecognized operation for cblas_sgbmv()\n");
+    }
 }
 
 void cblas_strmv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
@@ -51,6 +198,91 @@ void cblas_strmv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
                  const int N, const float *A, const int lda, 
                  float *X, const int incX)
 {
+    const int nonunit = (Diag == CblasNonUnit);
+    const int Trans = (TransA != CblasConjTrans) ? TransA : CblasTrans;
+    CHECK_ARGS9(TRMV,order,Uplo,TransA,Diag,N,A,lda,X,incX);
+
+    if ((order == CblasRowMajor && Trans == CblasNoTrans && Uplo == CblasUpper) || 
+        (order == CblasColMajor && Trans == CblasTrans && Uplo == CblasLower)) {
+        /* form  x := A*x */
+        int ix = OFFSET(N, incX);
+        for (int i = 0; i < N; i++) {
+            float temp = 0.0;
+            const int j_min = i + 1;
+            const int j_max = N;
+            int jx = OFFSET(N, incX) + j_min * incX;
+            for (int j = j_min; j < j_max; j++) {
+                temp += X[jx] * A[lda * i + j];
+                jx += incX;
+            }
+            if (nonunit) {
+                X[ix] = temp + X[ix] * A[lda * i + i];
+            } else {
+                X[ix] += temp;
+            }
+            ix += incX;
+        }
+    } else if ((order == CblasRowMajor && Trans == CblasNoTrans && Uplo == CblasLower) || 
+               (order == CblasColMajor && Trans == CblasTrans && Uplo == CblasUpper)) {
+        int ix = OFFSET(N, incX) + (N - 1) * incX;
+        for (int i = N; i > 0 && i--;) {
+            float temp = 0.0;
+            const int j_min = 0;
+            const int j_max = i;
+            int jx = OFFSET(N, incX) + j_min * incX;
+            for (int j = j_min; j < j_max; j++) {
+                temp += X[jx] * A[lda * i + j];
+                jx += incX;
+            }
+            if (nonunit) {
+                X[ix] = temp + X[ix] * A[lda * i + i];
+            } else {
+                X[ix] += temp;
+            }
+            ix -= incX;
+        }
+    } else if ((order == CblasRowMajor && Trans == CblasTrans && Uplo == CblasUpper) || 
+               (order == CblasColMajor && Trans == CblasNoTrans && Uplo == CblasLower)) {
+        /* form  x := A'*x */
+        int ix = OFFSET(N, incX) + (N - 1) * incX;
+        for (int i = N; i > 0 && i--;) {
+            float temp = 0.0;
+            const int j_min = 0;
+            const int j_max = i;
+            int jx = OFFSET(N, incX) + j_min * incX;
+            for (int j = j_min; j < j_max; j++) {
+                temp += X[jx] * A[lda * j + i];
+                jx += incX;
+            }
+            if (nonunit) {
+                X[ix] = temp + X[ix] * A[lda * i + i];
+            } else {
+                X[ix] += temp;
+            }
+            ix -= incX;
+        }
+    } else if ((order == CblasRowMajor && Trans == CblasTrans && Uplo == CblasLower) || 
+               (order == CblasColMajor && Trans == CblasNoTrans && Uplo == CblasUpper)) {
+        int ix = OFFSET(N, incX);
+        for (int i = 0; i < N; i++) {
+            float temp = 0.0;
+            const int j_min = i + 1;
+            const int j_max = N;
+            int jx = OFFSET(N, incX) + (i + 1) * incX;
+            for (int j = j_min; j < j_max; j++) {
+                temp += X[jx] * A[lda * j + i];
+                jx += incX;
+            }
+            if (nonunit) {
+                X[ix] = temp + X[ix] * A[lda * i + i];
+            } else {
+                X[ix] += temp;
+            }
+            ix += incX;
+        }
+    } else {
+        fprintf(stderr, "unrecognized operation for cblas_strmv()\n");
+    }
 }
 
 void cblas_stbmv(const enum CBLAS_ORDER order, const enum CBLAS_UPLO Uplo,
