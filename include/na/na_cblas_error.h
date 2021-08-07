@@ -32,16 +32,25 @@
 
 #define CHECK_ARGS7(FUNCTION,A1,A2,A3,A4,A5,A6,A7) \
   CHECK_ARGS_X(FUNCTION,pos,(pos,A1,A2,A3,A4,A5,A6,A7))
+
 #define CHECK_ARGS8(FUNCTION,A1,A2,A3,A4,A5,A6,A7,A8) \
   CHECK_ARGS_X(FUNCTION,pos,(pos,A1,A2,A3,A4,A5,A6,A7,A8))
+
 #define CHECK_ARGS9(FUNCTION,A1,A2,A3,A4,A5,A6,A7,A8,A9) \
   CHECK_ARGS_X(FUNCTION,pos,(pos,A1,A2,A3,A4,A5,A6,A7,A8,A9))
+
 #define CHECK_ARGS10(FUNCTION,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10) \
   CHECK_ARGS_X(FUNCTION,pos,(pos,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10))
+
 #define CHECK_ARGS11(FUNCTION,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11) \
   CHECK_ARGS_X(FUNCTION,pos,(pos,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11))
+
 #define CHECK_ARGS12(FUNCTION,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12) \
   CHECK_ARGS_X(FUNCTION,pos,(pos,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12))
+
+#define CHECK_ARGS13(FUNCTION,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13) \
+  CHECK_ARGS_X(FUNCTION,pos,(pos,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13))
+
 #define CHECK_ARGS14(FUNCTION,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14) \
   CHECK_ARGS_X(FUNCTION,pos,(pos,A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14))
 
@@ -274,4 +283,225 @@ CBLAS_ERROR_SD_SYR2(pos,order,Uplo,N,alpha,X,incX,Y,incY,A,lda)
 #define CBLAS_ERROR_CZ_HPR2(pos,order,Uplo,N,alpha,X,incX,Y,incY,Ap) \
 CBLAS_ERROR_SD_SPR2(pos,order,Uplo,N,alpha,X,incX,Y,incY,Ap)
 
+/*
+ * =============================================================================
+ * Prototypes for level 3 BLAS
+ * =============================================================================
+ */
+/*
+ * Routines with standard 4 prefixes (S, D, C, Z)
+ */
+
+/* cblas_xgemm() */
+#define CBLAS_ERROR_GEMM(pos,Order,TransA,TransB,M,N,K,alpha,A,lda,B,ldb,beta,C,ldc) \
+{ \
+    enum CBLAS_TRANSPOSE __transF=CblasNoTrans,__transG=CblasNoTrans; \
+    if((Order)==CblasRowMajor) { \
+        __transF = ((TransA)!=CblasConjTrans) ? (TransA) : CblasTrans; \
+        __transG = ((TransB)!=CblasConjTrans) ? (TransB) : CblasTrans; \
+    } else { \
+        __transF = ((TransB)!=CblasConjTrans) ? (TransB) : CblasTrans; \
+        __transG = ((TransA)!=CblasConjTrans) ? (TransA) : CblasTrans; \
+    } \
+    CHECK_ORDER(pos,1,Order); \
+    CHECK_TRANSPOSE(pos,2,TransA); \
+    CHECK_TRANSPOSE(pos,3,TransB); \
+    CHECK_DIM(pos,4,M); \
+    CHECK_DIM(pos,5,N); \
+    CHECK_DIM(pos,6,K); \
+    if((Order)==CblasRowMajor) { \
+        if(__transF==CblasNoTrans) { \
+            if((lda)<NA_MAX(1,(K))) { \
+                (pos) = 9; \
+            } \
+        } else { \
+            if((lda)<NA_MAX(1,(M))) { \
+                (pos) = 9; \
+            } \
+        } \
+        if(__transG==CblasNoTrans) { \
+            if((ldb)<NA_MAX(1,(N))) { \
+                (pos) = 11; \
+            } \
+        } else { \
+            if((ldb)<NA_MAX(1,(K))) { \
+                (pos) = 11; \
+            } \
+        } \
+        if((ldc)<NA_MAX(1,(N))) { \
+            (pos) = 14; \
+        } \
+    } else if((Order)==CblasColMajor) { \
+        if(__transF==CblasNoTrans) { \
+            if((ldb)<NA_MAX(1,(K))) { \
+                (pos) = 11; \
+            } \
+        } else { \
+            if((ldb)<NA_MAX(1,(N))) { \
+                (pos) = 11; \
+            } \
+        } \
+        if(__transG==CblasNoTrans) { \
+            if((lda)<NA_MAX(1,(M))) { \
+                (pos) = 9; \
+            } \
+        } else { \
+            if((lda)<NA_MAX(1,(K))) { \
+                (pos) = 9; \
+            } \
+        } \
+        if((ldc)<NA_MAX(1,(M))) { \
+            (pos) = 14; \
+        } \
+    } \
+}
+
+/* cblas_xsymm() */
+#define CBLAS_ERROR_SYMM(pos,Order,Side,Uplo,M,N,alpha,A,lda,B,ldb,beta,C,ldc) \
+{ \
+    int __dimA=0; \
+    if((Side)==CblasLeft) { \
+        __dimA = (M); \
+    } else { \
+        __dimA = (N); \
+    } \
+    CHECK_ORDER(pos,1,Order); \
+    CHECK_SIDE(pos,2,Side) \
+    CHECK_UPLO(pos,3,Uplo); \
+    CHECK_DIM(pos,4,M); \
+    CHECK_DIM(pos,5,N); \
+    if((lda)<NA_MAX(1,__dimA)) { \
+        (pos) = 8; \
+    } \
+    if((Order)==CblasRowMajor) { \
+        if((ldb)<NA_MAX(1,(N))) { \
+                (pos) = 10; \
+        } \
+        if((ldc)<NA_MAX(1,(N))) { \
+                (pos) = 13; \
+        } \
+    } else if((Order)==CblasColMajor) { \
+        if((ldb)<NA_MAX(1,(M))) { \
+                (pos) = 10; \
+        } \
+        if((ldc)<NA_MAX(1,(M))) { \
+                (pos) = 13; \
+        } \
+    } \
+}
+
+/* cblas_xsyrk() */
+#define CBLAS_ERROR_SYRK(pos,Order,Uplo,Trans,N,K,alpha,A,lda,beta,C,ldc) \
+{ \
+    int __dimA=0; \
+    if((Order)==CblasRowMajor) { \
+        if((Trans)==CblasNoTrans) { \
+            __dimA = (K); \
+        } else { \
+            __dimA = (N); \
+        } \
+    } else { \
+        if((Trans)==CblasNoTrans) { \
+            __dimA = (N); \
+        } else { \
+            __dimA = (K); \
+        } \
+    } \
+    CHECK_ORDER(pos,1,Order); \
+    CHECK_UPLO(pos,2,Uplo); \
+    CHECK_TRANSPOSE(pos,3,Trans); \
+    CHECK_DIM(pos,4,N); \
+    CHECK_DIM(pos,5,K); \
+    if((lda)<NA_MAX(1,__dimA)) { \
+        (pos) = 8; \
+    } \
+    if((ldc)<NA_MAX(1,(N))) { \
+        (pos) = 11; \
+    } \
+}
+
+/* cblas_xsyr2k() */
+#define CBLAS_ERROR_SYR2K(pos,Order,Uplo,Trans,N,K,alpha,A,lda,B,ldb,beta,C,ldc) \
+{ \
+    int __dim=0; \
+    if((Order)==CblasRowMajor) { \
+        if((Trans)==CblasNoTrans) { \
+            __dim = (K); \
+        } else { \
+            __dim = (N); \
+        } \
+    } else { \
+        if((Trans)==CblasNoTrans) { \
+            __dim = (N); \
+        } else { \
+            __dim = (K); \
+        } \
+    } \
+    CHECK_ORDER(pos,1,Order); \
+    CHECK_UPLO(pos,2,Uplo); \
+    CHECK_TRANSPOSE(pos,3,Trans); \
+    CHECK_DIM(pos,4,N); \
+    CHECK_DIM(pos,5,K); \
+    if((lda)<NA_MAX(1,__dim)) { \
+        (pos) = 8; \
+    } \
+    if((ldb)<NA_MAX(1,__dim)) { \
+        (pos) = 11; \
+    } \
+    if((ldc)<NA_MAX(1,(N))) { \
+        (pos) = 14; \
+    } \
+}
+
+/* cblas_xtrmm() */
+#define CBLAS_ERROR_TRMM(pos,Order,Side,Uplo,TransA,Diag,M,N,alpha,A,lda,B,ldb) \
+{ \
+    int __dim=0; \
+    if((Side)==CblasLeft) { \
+        __dim = (M); \
+    } else { \
+        __dim = (N); \
+    } \
+    CHECK_ORDER(pos,1,Order); \
+    CHECK_SIDE(pos,2,Side); \
+    CHECK_UPLO(pos,3,Uplo); \
+    CHECK_TRANSPOSE(pos,4,TransA); \
+    CHECK_DIAG(pos,5,Diag); \
+    CHECK_DIM(pos,6,M); \
+    CHECK_DIM(pos,7,N); \
+    if((lda)<NA_MAX(1,__dim)) { \
+        (pos) = 10; \
+    } \
+    if((Order)==CblasRowMajor) { \
+        if((ldb)<NA_MAX(1,(N))) { \
+            (pos) = 12; \
+        } \
+    } else { \
+        if((ldb)<NA_MAX(1,(M))) { \
+            (pos) = 12; \
+        } \
+    } \
+}
+
+/* cblas_xtrsm() */
+#define CBLAS_ERROR_TRSM(pos,Order,Side,Uplo,TransA,Diag,M,N,alpha,A,lda,B,ldb) \
+CBLAS_ERROR_TRMM(pos,Order,Side,Uplo,TransA,Diag,M,N,alpha,A,lda,B,ldb)
+
+/*
+ * Routines with prefixes C and Z only
+ */
+
+/* cblas_xhemm() */
+#define CBLAS_ERROR_HEMM(pos,Order,Side,Uplo,M,N,alpha,A,lda,B,ldb,beta,C,ldc) \
+CBLAS_ERROR_SYMM(pos,Order,Side,Uplo,M,N,alpha,A,lda,B,ldb,beta,C,ldc)
+
+/* cblas_xherk() */
+#define CBLAS_ERROR_HERK(pos,Order,Uplo,Trans,N,K,alpha,A,lda,beta,C,ldc) \
+CBLAS_ERROR_SYRK(pos,Order,Uplo,Trans,N,K,alpha,A,lda,beta,C,ldc)
+
+/* cblas_xher2k() */
+#define CBLAS_ERROR_HER2K(pos,Order,Uplo,Trans,N,K,alpha,A,lda,B,ldb,beta,C,ldc) \
+CBLAS_ERROR_SYR2K(pos,Order,Uplo,Trans,N,K,alpha,A,lda,B,ldb,beta,C,ldc)
+
 #endif
+
