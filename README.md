@@ -6,7 +6,7 @@ algorithm simulation system is constructed at the same time.
 C/C++, Python
 
 ## Development platform
-Visual Studio Code, Anaconda::Spyder
+Visual Studio Code, Anaconda::Spyder, OMNeT++
 
 ## Requirements and libraries:
 | name         | version  |
@@ -16,12 +16,16 @@ Visual Studio Code, Anaconda::Spyder
 | GCC          | >=7.5.0  |
 | python-numpy | >=1.19.2 |
 | Matplotlib   | >=3.3.2  |
+| OMNeT++      | >=5.2.6  |
+| Simu5G       | ==1.1.0  |
+| INET         | ==4.2.5  |
 
 ## Basic functions :
 1. Debug functions
 2. Multiple modules for different functions, especially in numerical analysis and signal processing
 3. Basic light-weighted data structure that is self-developed
 4. Python algorithm simulation system
+5. OMNeT++ based simulation system
 
 ## License
 MIT
@@ -43,8 +47,6 @@ Languages<br>
 | Shell Script | 4 | 228 | 14 | 11 | 253 |
 | Markdown | 1 | 31 | 0 | 10 | 41 |
 
-## 2021-08-03
-Reach the codes of 20K-LOC.
+## 2021-08-11
+Ready to develop the 5G simulator based on the OMNeT++-5.2.6, Simu5G-1.1.0.
 
-## 2021-10-31
-Reach the codes of 100K-LOC.

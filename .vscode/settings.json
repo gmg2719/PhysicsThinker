@@ -2,6 +2,8 @@
     "files.associations": {
         "complex": "cpp",
         "random": "cpp",
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "limits": "cpp",
+        "functional": "cpp"
     }
 }
