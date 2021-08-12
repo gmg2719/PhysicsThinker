@@ -1,0 +1,5 @@
+
+message BsControlMsg
+{
+    int timer;
+}

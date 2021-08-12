@@ -1,17 +1,17 @@
 // MIT License
-// 
+//
 // Copyright (c) 2021 PingzhouMing
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,26 +20,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-simple Txc
+#include "NrEntity.h"
+#include "airframe_m.h"
+
+using namespace omnetpp;
+
+namespace ss5G {
+
+Define_Module(NrUeBase);
+
+void NrUeBase::initialize()
 {
-    parameters:
-        @display("i=block/routing");
-    gates:
-        inout gate[];
+    // Initialize variables
+    numSent = 0;
+    numReceived = 0;
+    WATCH(numSent);
+    WATCH(numReceived);
 }
 
-network Tictoc
+void NrUeBase::handleMessage(cMessage *msg)
 {
-    types:
-        channel Channel extends ned.DelayChannel {
-            delay = 100ms;
-        }
-    submodules:
-        tic[6]: Txc;
-    connections:
-        tic[0].gate++ <--> Channel <--> tic[1].gate++;
-        tic[1].gate++ <--> Channel <--> tic[2].gate++;
-        tic[1].gate++ <--> Channel <--> tic[4].gate++;
-        tic[3].gate++ <--> Channel <--> tic[4].gate++;
-        tic[4].gate++ <--> Channel <--> tic[5].gate++;
+    AirFrameMsg *ttmsg = check_and_cast<AirFrameMsg *>(msg);
+    // Message arrived
+    EV << "Message " << ttmsg << " arrived.\n";
+    bubble("ARRIVED, bs send something !");
+    delete msg;
+
+    // update statistics.
+    numReceived++;
 }
+
+}; //namespace
+
