@@ -1,5 +1,5 @@
 //
-// Generated file, do not edit! Created by nedtool 5.6 from src/bscontrol.msg.
+// Generated file, do not edit! Created by nedtool 5.6 from bscontrol.msg.
 //
 
 // Disable warnings about unused variables, empty switch stmts, etc:
@@ -181,6 +181,7 @@ Register_Class(BsControlMsg)
 
 BsControlMsg::BsControlMsg(const char *name, short kind) : ::omnetpp::cMessage(name,kind)
 {
+    this->msgType = 0;
     this->timer = 0;
 }
 
@@ -203,19 +204,32 @@ BsControlMsg& BsControlMsg::operator=(const BsControlMsg& other)
 
 void BsControlMsg::copy(const BsControlMsg& other)
 {
+    this->msgType = other.msgType;
     this->timer = other.timer;
 }
 
 void BsControlMsg::parsimPack(omnetpp::cCommBuffer *b) const
 {
     ::omnetpp::cMessage::parsimPack(b);
+    doParsimPacking(b,this->msgType);
     doParsimPacking(b,this->timer);
 }
 
 void BsControlMsg::parsimUnpack(omnetpp::cCommBuffer *b)
 {
     ::omnetpp::cMessage::parsimUnpack(b);
+    doParsimUnpacking(b,this->msgType);
     doParsimUnpacking(b,this->timer);
+}
+
+int BsControlMsg::getMsgType() const
+{
+    return this->msgType;
+}
+
+void BsControlMsg::setMsgType(int msgType)
+{
+    this->msgType = msgType;
 }
 
 int BsControlMsg::getTimer() const
@@ -293,7 +307,7 @@ const char *BsControlMsgDescriptor::getProperty(const char *propertyname) const
 int BsControlMsgDescriptor::getFieldCount() const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
-    return basedesc ? 1+basedesc->getFieldCount() : 1;
+    return basedesc ? 2+basedesc->getFieldCount() : 2;
 }
 
 unsigned int BsControlMsgDescriptor::getFieldTypeFlags(int field) const
@@ -306,8 +320,9 @@ unsigned int BsControlMsgDescriptor::getFieldTypeFlags(int field) const
     }
     static unsigned int fieldTypeFlags[] = {
         FD_ISEDITABLE,
+        FD_ISEDITABLE,
     };
-    return (field>=0 && field<1) ? fieldTypeFlags[field] : 0;
+    return (field>=0 && field<2) ? fieldTypeFlags[field] : 0;
 }
 
 const char *BsControlMsgDescriptor::getFieldName(int field) const
@@ -319,16 +334,18 @@ const char *BsControlMsgDescriptor::getFieldName(int field) const
         field -= basedesc->getFieldCount();
     }
     static const char *fieldNames[] = {
+        "msgType",
         "timer",
     };
-    return (field>=0 && field<1) ? fieldNames[field] : nullptr;
+    return (field>=0 && field<2) ? fieldNames[field] : nullptr;
 }
 
 int BsControlMsgDescriptor::findField(const char *fieldName) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     int base = basedesc ? basedesc->getFieldCount() : 0;
-    if (fieldName[0]=='t' && strcmp(fieldName, "timer")==0) return base+0;
+    if (fieldName[0]=='m' && strcmp(fieldName, "msgType")==0) return base+0;
+    if (fieldName[0]=='t' && strcmp(fieldName, "timer")==0) return base+1;
     return basedesc ? basedesc->findField(fieldName) : -1;
 }
 
@@ -342,8 +359,9 @@ const char *BsControlMsgDescriptor::getFieldTypeString(int field) const
     }
     static const char *fieldTypeStrings[] = {
         "int",
+        "int",
     };
-    return (field>=0 && field<1) ? fieldTypeStrings[field] : nullptr;
+    return (field>=0 && field<2) ? fieldTypeStrings[field] : nullptr;
 }
 
 const char **BsControlMsgDescriptor::getFieldPropertyNames(int field) const
@@ -410,7 +428,8 @@ std::string BsControlMsgDescriptor::getFieldValueAsString(void *object, int fiel
     }
     BsControlMsg *pp = (BsControlMsg *)object; (void)pp;
     switch (field) {
-        case 0: return long2string(pp->getTimer());
+        case 0: return long2string(pp->getMsgType());
+        case 1: return long2string(pp->getTimer());
         default: return "";
     }
 }
@@ -425,7 +444,8 @@ bool BsControlMsgDescriptor::setFieldValueAsString(void *object, int field, int 
     }
     BsControlMsg *pp = (BsControlMsg *)object; (void)pp;
     switch (field) {
-        case 0: pp->setTimer(string2long(value)); return true;
+        case 0: pp->setMsgType(string2long(value)); return true;
+        case 1: pp->setTimer(string2long(value)); return true;
         default: return false;
     }
 }

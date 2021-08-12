@@ -36,12 +36,14 @@ OBJS = \
     $O/NrServer.o \
     $O/NrUeBase.o \
     $O/airframe_m.o \
-    $O/bscontrol_m.o
+    $O/bscontrol_m.o \
+    $O/corepacket_m.o
 
 # Message files
 MSGFILES = \
     airframe.msg \
-    bscontrol.msg
+    bscontrol.msg \
+    corepacket.msg
 
 # SM files
 SMFILES =

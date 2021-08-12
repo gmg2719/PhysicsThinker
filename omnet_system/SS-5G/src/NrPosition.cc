@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 #include "NrEntity.h"
+#include "corepacket_m.h"
 
 using namespace omnetpp;
 
@@ -30,10 +31,56 @@ Define_Module(NrPosition);
 
 void NrPosition::initialize()
 {
+    if (period_positioning <= 0) {
+        period_positioning = 0.02;
+    }
+
+    position_request_msg = nullptr;
+    BsControlMsg *msg = new BsControlMsg("positiong-request");
+    msg->setMsgType(POSITION_REQUEST);
+    position_request_msg = msg;
+    scheduleAt(0.0, position_request_msg);
+    EV << "Scheduling position request on the Base Station\n";
+
+    NrGnbBase::initialize();
 }
 
 void NrPosition::handleMessage(cMessage *msg)
 {
+    if (NrGnbBase::state < READY_STATE)
+    {
+        if (msg == position_request_msg) {
+            // Period_positioning is 20ms = 20000us
+            scheduleAt(simTime() + period_positioning, msg);
+            EV << "BS positioning period is next " << period_positioning << " sec !\n";
+        } else {
+            NrGnbBase::handleMessage(msg);
+        }
+    }
+    else
+    {
+        if (msg == position_request_msg) {
+            forward2core_positioning_request();
+            NrGnbBase::numSent++;
+        }
+
+        delete msg;
+    }
+}
+
+void NrPosition::forward2core_positioning_request()
+{
+    char msgname[64];
+
+    sprintf(msgname, "bs-request-to-core");
+    CorePacket *core_msg = new CorePacket(msgname);
+
+    // Set request contents
+
+    // Send operation
+    core_msg->setType(BS_POSITION_REQ);
+    EV << "Send request " << core_msg << " on BS to core network server\n";
+    send(core_msg, "core_out");
 }
 
 };

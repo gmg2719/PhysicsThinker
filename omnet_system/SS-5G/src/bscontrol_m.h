@@ -1,5 +1,5 @@
 //
-// Generated file, do not edit! Created by nedtool 5.6 from src/bscontrol.msg.
+// Generated file, do not edit! Created by nedtool 5.6 from bscontrol.msg.
 //
 
 #ifndef __BSCONTROL_M_H
@@ -19,10 +19,11 @@
 
 
 /**
- * Class generated from <tt>src/bscontrol.msg:3</tt> by nedtool.
+ * Class generated from <tt>bscontrol.msg:3</tt> by nedtool.
  * <pre>
  * message BsControlMsg
  * {
+ *     int msgType;
  *     int timer;
  * }
  * </pre>
@@ -30,6 +31,7 @@
 class BsControlMsg : public ::omnetpp::cMessage
 {
   protected:
+    int msgType;
     int timer;
 
   private:
@@ -49,6 +51,8 @@ class BsControlMsg : public ::omnetpp::cMessage
     virtual void parsimUnpack(omnetpp::cCommBuffer *b) override;
 
     // field getter/setter methods
+    virtual int getMsgType() const;
+    virtual void setMsgType(int msgType);
     virtual int getTimer() const;
     virtual void setTimer(int timer);
 };

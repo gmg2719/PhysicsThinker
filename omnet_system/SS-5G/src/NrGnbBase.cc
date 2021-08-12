@@ -72,7 +72,9 @@ void NrGnbBase::initialize()
 
     // Boot the process scheduling the initial message as a self-message.
     control_msg = nullptr;
-    control_msg = new BsControlMsg("bcast-info");
+    BsControlMsg *msg = new BsControlMsg("bcast-info");
+    msg->setMsgType(INIT_BROADCAST);
+    control_msg = msg;
     scheduleAt(0.0, control_msg);
     EV << "Scheduling first on the Base Station\n";
 }
@@ -115,11 +117,12 @@ void NrGnbBase::handleMessage(cMessage *msg)
                 }
             } else {
                 BsControlMsg *mst_ct = check_and_cast<BsControlMsg *>(msg);
-                broadcastPeriodMessage(mst_ct);
-
-                // When execute debug, just comment two sentences below, so that broadcast one time and make the handleMessage simpler
-                scheduleAt(simTime() + period_sched, msg);
-                EV << "BS schedule period is next " << period_sched << " sec !\n";
+                if (mst_ct->getMsgType() == INIT_BROADCAST) {
+                    broadcastPeriodMessage(mst_ct);
+                    // When execute debug, just comment two sentences below, so that broadcast one time and make the handleMessage simpler
+                    scheduleAt(simTime() + period_sched, msg);
+                    EV << "BS schedule period is next " << period_sched << " sec !\n";
+                }
             }
         } else {
             AirFrameMsg *ttmsg = check_and_cast<AirFrameMsg *>(msg);

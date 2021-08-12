@@ -34,21 +34,24 @@ using namespace omnetpp;
 #define SPEED_OF_LIGHT      (299792458.0d)
 
 enum NrMessageType {
-    BS_CONTROL,
     BS_BROAD,
     BS_MSG2,
     BS_MSG4,
     UE_MSG1,
     UE_MSG3,
     // COMPLETE_RRC is equal to the msg5 in the 5G NR standard
-    UE_COMPLETE_RRC
+    UE_COMPLETE_RRC,
+    BS_POSITION_REQ
+};
+
+enum NrControlSignalType {
+    INIT_BROADCAST,
+    POSITION_REQUEST
 };
 
 enum GnbState {
     SWITCH_ON_STATE,
     READY_STATE,
-    POSITION_START,
-    POSITION_END
 };
 
 enum UeState {
@@ -66,7 +69,7 @@ typedef struct ue_info {
 
 class NrUeBase : public cSimpleModule
 {
-  private:
+  protected:
     int sim_id;
     int state;
     double bs_x_coord;
@@ -91,7 +94,7 @@ class NrUeBase : public cSimpleModule
 
 class NrGnbBase : public cSimpleModule
 {
-  private:
+  protected:
     int sim_id;
     int state;
     long numSent;
@@ -118,25 +121,31 @@ class NrGnbBase : public cSimpleModule
 
     ue_info_t* find_ue(int sim_id);
     int get_active_ue();
+    int get_state() { return state; }
 
     // The finish() function is called by OMNeT++ at the end of the simulation:
     virtual void finish() override;
 };
 
-class NrPosition : public cSimpleModule
+class NrPosition : public NrGnbBase
 {
   private:
-    int state;
     long numSent;
     long numReceived;
+    double period_positioning;
+    cMessage *position_request_msg;
+
   protected:
-    virtual void initialize() override;
-    virtual void handleMessage(cMessage *msg) override;
+    virtual void initialize();
+    virtual void handleMessage(cMessage *msg);
+
+    // Send positioning request
+    virtual void forward2core_positioning_request();
 };
 
 class NrServer : public cSimpleModule
 {
-  private:
+  protected:
 
   protected:
     virtual void initialize() override;

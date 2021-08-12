@@ -1,5 +1,5 @@
 //
-// Generated file, do not edit! Created by nedtool 5.6 from airframe.msg.
+// Generated file, do not edit! Created by nedtool 5.6 from corepacket.msg.
 //
 
 // Disable warnings about unused variables, empty switch stmts, etc:
@@ -26,7 +26,7 @@
 
 #include <iostream>
 #include <sstream>
-#include "airframe_m.h"
+#include "corepacket_m.h"
 
 namespace omnetpp {
 
@@ -177,148 +177,64 @@ inline std::ostream& operator<<(std::ostream& out, const std::vector<T,A>& vec)
     return out;
 }
 
-Register_Class(AirFrameMsg)
+Register_Class(CorePacket)
 
-AirFrameMsg::AirFrameMsg(const char *name, short kind) : ::omnetpp::cMessage(name,kind)
+CorePacket::CorePacket(const char *name, short kind) : ::omnetpp::cPacket(name,kind)
 {
     this->type = 0;
-    this->source = 0;
-    this->destination = 0;
-    this->fakePropagateTime = 0;
-    this->x = 0;
-    this->y = 0;
-    this->z = 0;
 }
 
-AirFrameMsg::AirFrameMsg(const AirFrameMsg& other) : ::omnetpp::cMessage(other)
+CorePacket::CorePacket(const CorePacket& other) : ::omnetpp::cPacket(other)
 {
     copy(other);
 }
 
-AirFrameMsg::~AirFrameMsg()
+CorePacket::~CorePacket()
 {
 }
 
-AirFrameMsg& AirFrameMsg::operator=(const AirFrameMsg& other)
+CorePacket& CorePacket::operator=(const CorePacket& other)
 {
     if (this==&other) return *this;
-    ::omnetpp::cMessage::operator=(other);
+    ::omnetpp::cPacket::operator=(other);
     copy(other);
     return *this;
 }
 
-void AirFrameMsg::copy(const AirFrameMsg& other)
+void CorePacket::copy(const CorePacket& other)
 {
     this->type = other.type;
-    this->source = other.source;
-    this->destination = other.destination;
-    this->fakePropagateTime = other.fakePropagateTime;
-    this->x = other.x;
-    this->y = other.y;
-    this->z = other.z;
 }
 
-void AirFrameMsg::parsimPack(omnetpp::cCommBuffer *b) const
+void CorePacket::parsimPack(omnetpp::cCommBuffer *b) const
 {
-    ::omnetpp::cMessage::parsimPack(b);
+    ::omnetpp::cPacket::parsimPack(b);
     doParsimPacking(b,this->type);
-    doParsimPacking(b,this->source);
-    doParsimPacking(b,this->destination);
-    doParsimPacking(b,this->fakePropagateTime);
-    doParsimPacking(b,this->x);
-    doParsimPacking(b,this->y);
-    doParsimPacking(b,this->z);
 }
 
-void AirFrameMsg::parsimUnpack(omnetpp::cCommBuffer *b)
+void CorePacket::parsimUnpack(omnetpp::cCommBuffer *b)
 {
-    ::omnetpp::cMessage::parsimUnpack(b);
+    ::omnetpp::cPacket::parsimUnpack(b);
     doParsimUnpacking(b,this->type);
-    doParsimUnpacking(b,this->source);
-    doParsimUnpacking(b,this->destination);
-    doParsimUnpacking(b,this->fakePropagateTime);
-    doParsimUnpacking(b,this->x);
-    doParsimUnpacking(b,this->y);
-    doParsimUnpacking(b,this->z);
 }
 
-int AirFrameMsg::getType() const
+int CorePacket::getType() const
 {
     return this->type;
 }
 
-void AirFrameMsg::setType(int type)
+void CorePacket::setType(int type)
 {
     this->type = type;
 }
 
-int AirFrameMsg::getSource() const
-{
-    return this->source;
-}
-
-void AirFrameMsg::setSource(int source)
-{
-    this->source = source;
-}
-
-int AirFrameMsg::getDestination() const
-{
-    return this->destination;
-}
-
-void AirFrameMsg::setDestination(int destination)
-{
-    this->destination = destination;
-}
-
-double AirFrameMsg::getFakePropagateTime() const
-{
-    return this->fakePropagateTime;
-}
-
-void AirFrameMsg::setFakePropagateTime(double fakePropagateTime)
-{
-    this->fakePropagateTime = fakePropagateTime;
-}
-
-double AirFrameMsg::getX() const
-{
-    return this->x;
-}
-
-void AirFrameMsg::setX(double x)
-{
-    this->x = x;
-}
-
-double AirFrameMsg::getY() const
-{
-    return this->y;
-}
-
-void AirFrameMsg::setY(double y)
-{
-    this->y = y;
-}
-
-double AirFrameMsg::getZ() const
-{
-    return this->z;
-}
-
-void AirFrameMsg::setZ(double z)
-{
-    this->z = z;
-}
-
-class AirFrameMsgDescriptor : public omnetpp::cClassDescriptor
+class CorePacketDescriptor : public omnetpp::cClassDescriptor
 {
   private:
     mutable const char **propertynames;
   public:
-    AirFrameMsgDescriptor();
-    virtual ~AirFrameMsgDescriptor();
+    CorePacketDescriptor();
+    virtual ~CorePacketDescriptor();
 
     virtual bool doesSupport(omnetpp::cObject *obj) const override;
     virtual const char **getPropertyNames() const override;
@@ -340,24 +256,24 @@ class AirFrameMsgDescriptor : public omnetpp::cClassDescriptor
     virtual void *getFieldStructValuePointer(void *object, int field, int i) const override;
 };
 
-Register_ClassDescriptor(AirFrameMsgDescriptor)
+Register_ClassDescriptor(CorePacketDescriptor)
 
-AirFrameMsgDescriptor::AirFrameMsgDescriptor() : omnetpp::cClassDescriptor("AirFrameMsg", "omnetpp::cMessage")
+CorePacketDescriptor::CorePacketDescriptor() : omnetpp::cClassDescriptor("CorePacket", "omnetpp::cPacket")
 {
     propertynames = nullptr;
 }
 
-AirFrameMsgDescriptor::~AirFrameMsgDescriptor()
+CorePacketDescriptor::~CorePacketDescriptor()
 {
     delete[] propertynames;
 }
 
-bool AirFrameMsgDescriptor::doesSupport(omnetpp::cObject *obj) const
+bool CorePacketDescriptor::doesSupport(omnetpp::cObject *obj) const
 {
-    return dynamic_cast<AirFrameMsg *>(obj)!=nullptr;
+    return dynamic_cast<CorePacket *>(obj)!=nullptr;
 }
 
-const char **AirFrameMsgDescriptor::getPropertyNames() const
+const char **CorePacketDescriptor::getPropertyNames() const
 {
     if (!propertynames) {
         static const char *names[] = {  nullptr };
@@ -368,19 +284,19 @@ const char **AirFrameMsgDescriptor::getPropertyNames() const
     return propertynames;
 }
 
-const char *AirFrameMsgDescriptor::getProperty(const char *propertyname) const
+const char *CorePacketDescriptor::getProperty(const char *propertyname) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     return basedesc ? basedesc->getProperty(propertyname) : nullptr;
 }
 
-int AirFrameMsgDescriptor::getFieldCount() const
+int CorePacketDescriptor::getFieldCount() const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
-    return basedesc ? 7+basedesc->getFieldCount() : 7;
+    return basedesc ? 1+basedesc->getFieldCount() : 1;
 }
 
-unsigned int AirFrameMsgDescriptor::getFieldTypeFlags(int field) const
+unsigned int CorePacketDescriptor::getFieldTypeFlags(int field) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -390,17 +306,11 @@ unsigned int AirFrameMsgDescriptor::getFieldTypeFlags(int field) const
     }
     static unsigned int fieldTypeFlags[] = {
         FD_ISEDITABLE,
-        FD_ISEDITABLE,
-        FD_ISEDITABLE,
-        FD_ISEDITABLE,
-        FD_ISEDITABLE,
-        FD_ISEDITABLE,
-        FD_ISEDITABLE,
     };
-    return (field>=0 && field<7) ? fieldTypeFlags[field] : 0;
+    return (field>=0 && field<1) ? fieldTypeFlags[field] : 0;
 }
 
-const char *AirFrameMsgDescriptor::getFieldName(int field) const
+const char *CorePacketDescriptor::getFieldName(int field) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -410,31 +320,19 @@ const char *AirFrameMsgDescriptor::getFieldName(int field) const
     }
     static const char *fieldNames[] = {
         "type",
-        "source",
-        "destination",
-        "fakePropagateTime",
-        "x",
-        "y",
-        "z",
     };
-    return (field>=0 && field<7) ? fieldNames[field] : nullptr;
+    return (field>=0 && field<1) ? fieldNames[field] : nullptr;
 }
 
-int AirFrameMsgDescriptor::findField(const char *fieldName) const
+int CorePacketDescriptor::findField(const char *fieldName) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     int base = basedesc ? basedesc->getFieldCount() : 0;
     if (fieldName[0]=='t' && strcmp(fieldName, "type")==0) return base+0;
-    if (fieldName[0]=='s' && strcmp(fieldName, "source")==0) return base+1;
-    if (fieldName[0]=='d' && strcmp(fieldName, "destination")==0) return base+2;
-    if (fieldName[0]=='f' && strcmp(fieldName, "fakePropagateTime")==0) return base+3;
-    if (fieldName[0]=='x' && strcmp(fieldName, "x")==0) return base+4;
-    if (fieldName[0]=='y' && strcmp(fieldName, "y")==0) return base+5;
-    if (fieldName[0]=='z' && strcmp(fieldName, "z")==0) return base+6;
     return basedesc ? basedesc->findField(fieldName) : -1;
 }
 
-const char *AirFrameMsgDescriptor::getFieldTypeString(int field) const
+const char *CorePacketDescriptor::getFieldTypeString(int field) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -444,17 +342,11 @@ const char *AirFrameMsgDescriptor::getFieldTypeString(int field) const
     }
     static const char *fieldTypeStrings[] = {
         "int",
-        "int",
-        "int",
-        "double",
-        "double",
-        "double",
-        "double",
     };
-    return (field>=0 && field<7) ? fieldTypeStrings[field] : nullptr;
+    return (field>=0 && field<1) ? fieldTypeStrings[field] : nullptr;
 }
 
-const char **AirFrameMsgDescriptor::getFieldPropertyNames(int field) const
+const char **CorePacketDescriptor::getFieldPropertyNames(int field) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -467,7 +359,7 @@ const char **AirFrameMsgDescriptor::getFieldPropertyNames(int field) const
     }
 }
 
-const char *AirFrameMsgDescriptor::getFieldProperty(int field, const char *propertyname) const
+const char *CorePacketDescriptor::getFieldProperty(int field, const char *propertyname) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -480,7 +372,7 @@ const char *AirFrameMsgDescriptor::getFieldProperty(int field, const char *prope
     }
 }
 
-int AirFrameMsgDescriptor::getFieldArraySize(void *object, int field) const
+int CorePacketDescriptor::getFieldArraySize(void *object, int field) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -488,13 +380,13 @@ int AirFrameMsgDescriptor::getFieldArraySize(void *object, int field) const
             return basedesc->getFieldArraySize(object, field);
         field -= basedesc->getFieldCount();
     }
-    AirFrameMsg *pp = (AirFrameMsg *)object; (void)pp;
+    CorePacket *pp = (CorePacket *)object; (void)pp;
     switch (field) {
         default: return 0;
     }
 }
 
-const char *AirFrameMsgDescriptor::getFieldDynamicTypeString(void *object, int field, int i) const
+const char *CorePacketDescriptor::getFieldDynamicTypeString(void *object, int field, int i) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -502,13 +394,13 @@ const char *AirFrameMsgDescriptor::getFieldDynamicTypeString(void *object, int f
             return basedesc->getFieldDynamicTypeString(object,field,i);
         field -= basedesc->getFieldCount();
     }
-    AirFrameMsg *pp = (AirFrameMsg *)object; (void)pp;
+    CorePacket *pp = (CorePacket *)object; (void)pp;
     switch (field) {
         default: return nullptr;
     }
 }
 
-std::string AirFrameMsgDescriptor::getFieldValueAsString(void *object, int field, int i) const
+std::string CorePacketDescriptor::getFieldValueAsString(void *object, int field, int i) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -516,20 +408,14 @@ std::string AirFrameMsgDescriptor::getFieldValueAsString(void *object, int field
             return basedesc->getFieldValueAsString(object,field,i);
         field -= basedesc->getFieldCount();
     }
-    AirFrameMsg *pp = (AirFrameMsg *)object; (void)pp;
+    CorePacket *pp = (CorePacket *)object; (void)pp;
     switch (field) {
         case 0: return long2string(pp->getType());
-        case 1: return long2string(pp->getSource());
-        case 2: return long2string(pp->getDestination());
-        case 3: return double2string(pp->getFakePropagateTime());
-        case 4: return double2string(pp->getX());
-        case 5: return double2string(pp->getY());
-        case 6: return double2string(pp->getZ());
         default: return "";
     }
 }
 
-bool AirFrameMsgDescriptor::setFieldValueAsString(void *object, int field, int i, const char *value) const
+bool CorePacketDescriptor::setFieldValueAsString(void *object, int field, int i, const char *value) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -537,20 +423,14 @@ bool AirFrameMsgDescriptor::setFieldValueAsString(void *object, int field, int i
             return basedesc->setFieldValueAsString(object,field,i,value);
         field -= basedesc->getFieldCount();
     }
-    AirFrameMsg *pp = (AirFrameMsg *)object; (void)pp;
+    CorePacket *pp = (CorePacket *)object; (void)pp;
     switch (field) {
         case 0: pp->setType(string2long(value)); return true;
-        case 1: pp->setSource(string2long(value)); return true;
-        case 2: pp->setDestination(string2long(value)); return true;
-        case 3: pp->setFakePropagateTime(string2double(value)); return true;
-        case 4: pp->setX(string2double(value)); return true;
-        case 5: pp->setY(string2double(value)); return true;
-        case 6: pp->setZ(string2double(value)); return true;
         default: return false;
     }
 }
 
-const char *AirFrameMsgDescriptor::getFieldStructName(int field) const
+const char *CorePacketDescriptor::getFieldStructName(int field) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -563,7 +443,7 @@ const char *AirFrameMsgDescriptor::getFieldStructName(int field) const
     };
 }
 
-void *AirFrameMsgDescriptor::getFieldStructValuePointer(void *object, int field, int i) const
+void *CorePacketDescriptor::getFieldStructValuePointer(void *object, int field, int i) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     if (basedesc) {
@@ -571,7 +451,7 @@ void *AirFrameMsgDescriptor::getFieldStructValuePointer(void *object, int field,
             return basedesc->getFieldStructValuePointer(object, field, i);
         field -= basedesc->getFieldCount();
     }
-    AirFrameMsg *pp = (AirFrameMsg *)object; (void)pp;
+    CorePacket *pp = (CorePacket *)object; (void)pp;
     switch (field) {
         default: return nullptr;
     }
