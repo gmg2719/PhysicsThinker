@@ -1,4 +1,4 @@
 #!/bin/sh
 cd `dirname $0`
-../src/ss5g -n .:../src $*
-# for shared lib, use: opp_run -l ../src/ss5g -n .:../src $*
+../src/ss5g_dev -n .:../src $*
+# for shared lib, use: opp_run -l ../src/ss5g_dev -n .:../src $*

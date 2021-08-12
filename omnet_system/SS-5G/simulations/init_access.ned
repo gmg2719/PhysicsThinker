@@ -20,6 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+package ss5g_dev.simulations;
+
 @namespace(ss5G);
 
 simple NrGnbBase
@@ -58,33 +60,6 @@ simple NrServer
     	output out;
 }
 
-simple NrPosition
-{
-	parameters:
-		int state = default(0);
-}
-
-module NrGnbPosition
-{
-    parameters:
-        @display("i=device/antennatower;bgb=1200,600");
-	gates:
-        input   in[];
-        output out[];
-        input   core_in;
-        output  core_out;
-    submodules:
-        gnb: NrGnbBase;
-        pos_entity: NrPosition;
-    connections:
-        gnb.core_in <-- core_in;
-        gnb.core_out --> core_out;
-        for i=0..1 {
-	        gnb.in++ <-- in++;
-	        gnb.out++ --> out++;
-        }
-}
-
 network indoor
 {
     types:
@@ -96,7 +71,7 @@ network indoor
             delay = 10ms;
         }
     submodules:
-        gnb   : NrGnbPosition;
+        gnb   : NrGnbBase;
         ue[2] : NrUeBase;
         server: NrServer;
     connections:

@@ -1,5 +1,5 @@
 //
-// Generated file, do not edit! Created by nedtool 5.6 from bscontrol.msg.
+// Generated file, do not edit! Created by nedtool 5.6 from src/bscontrol.msg.
 //
 
 #ifndef __BSCONTROL_M_H
@@ -19,7 +19,7 @@
 
 
 /**
- * Class generated from <tt>bscontrol.msg:3</tt> by nedtool.
+ * Class generated from <tt>src/bscontrol.msg:3</tt> by nedtool.
  * <pre>
  * message BsControlMsg
  * {

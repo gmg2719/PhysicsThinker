@@ -1,5 +1,5 @@
 //
-// Generated file, do not edit! Created by nedtool 5.6 from airframe.msg.
+// Generated file, do not edit! Created by nedtool 5.6 from src/airframe.msg.
 //
 
 #ifndef __AIRFRAME_M_H
@@ -19,7 +19,7 @@
 
 
 /**
- * Class generated from <tt>airframe.msg:3</tt> by nedtool.
+ * Class generated from <tt>src/airframe.msg:3</tt> by nedtool.
  * <pre>
  * message AirFrameMsg
  * {

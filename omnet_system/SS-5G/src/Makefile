@@ -1,12 +1,12 @@
 #
-# OMNeT++/OMNEST Makefile for SS5G
+# OMNeT++/OMNEST Makefile for SS5G_dev
 #
 # This file was generated with the command:
 #  opp_makemake -f --deep
 #
 
 # Name of target to be created (-o option)
-TARGET = SS5G$(D)$(EXE_SUFFIX)
+TARGET = SS5G_dev$(D)$(EXE_SUFFIX)
 TARGET_DIR = .
 
 # User interface (uncomment one) (-u option)
