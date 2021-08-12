@@ -29,9 +29,14 @@ namespace ss5G {
 
 Define_Module(NrUeBase);
 
+static int ue_id_omnetpp = 1062;
+
 void NrUeBase::initialize()
 {
+    // Set the ID for the simulation
+    sim_id = ue_id_omnetpp;
     // Initialize variables
+    state = RRC_IDLE;
     numSent = 0;
     numReceived = 0;
     WATCH(numSent);
@@ -44,6 +49,34 @@ void NrUeBase::handleMessage(cMessage *msg)
     // Message arrived
     EV << "Message " << ttmsg << " arrived.\n";
     bubble("ARRIVED, bs send something !");
+    numReceived++;
+
+    if (ttmsg->getType() == BS_BROAD) {
+        if (state == RRC_IDLE) {
+            bs_x_coord = ttmsg->getX();
+            bs_y_coord = ttmsg->getY();
+            bs_z_coord = ttmsg->getZ();
+
+            char msgname[64];
+            sprintf(msgname, "ue-%d-to-bs", sim_id);
+            AirFrameMsg *msg = new AirFrameMsg(msgname);
+            msg->setSource(sim_id);
+            msg->setDestination(-1);
+            // Set the message type
+            msg->setType(UE_MSG1);
+            EV << "UE send msg1 to the base station.\n";
+            state = RRC_SETUP;
+            send(msg, "out");
+            numSent++;
+        }
+    } else if (ttmsg->getType() == BS_MSG2) {
+
+    } else if (ttmsg->getType() == BS_MSG4) {
+
+    } else {
+        EV << "UE " << "sim_id(" << sim_id << ")" << " not supported message !\n";
+    }
+
     delete msg;
 
     // update statistics.

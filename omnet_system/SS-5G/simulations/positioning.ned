@@ -38,7 +38,7 @@ simple NrGnbBase
 simple NrUeBase
 {
     parameters:
-        @display("i=device/pocketpc;bgb=1500,800");
+        @display("i=device/pocketpc;bgb=1200,600");
     gates:
         input   in;
         output out;

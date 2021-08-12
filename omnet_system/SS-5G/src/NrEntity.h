@@ -33,14 +33,34 @@ using namespace omnetpp;
 enum NrMessageType {
     BS_CONTROL,
     BS_BROAD,
-    BS_RRC_SETUP,
-    UE_RRC_REQUEST,
-    UE_RRC_COMPLETE
+    BS_MSG2,
+    BS_MSG4,
+    UE_MSG1,
+    UE_MSG3,
+    UE_COMPLETE_RRC
+};
+
+enum GnbState {
+    NONE
+};
+
+enum UeState {
+    RRC_IDLE,
+    RRC_SETUP,
+    RRC_CONNECTED
 };
 
 class NrUeBase : public cSimpleModule
 {
   private:
+    int sim_id;
+    int state;
+    double bs_x_coord;
+    double bs_y_coord;
+    double bs_z_coord;
+    double x_coord;
+    double y_coord;
+    double z_coord;
     long numSent;
     long numReceived;
 
@@ -52,6 +72,7 @@ class NrUeBase : public cSimpleModule
 class NrGnbBase : public cSimpleModule
 {
   private:
+    int sim_id;
     long numSent;
     long numReceived;
     double x_coord;
@@ -74,12 +95,6 @@ class NrGnbBase : public cSimpleModule
 class NrUe : public NrUeBase
 {
   private:
-    double bs_x_coord;
-    double bs_y_coord;
-    double bs_z_coord;
-    double x_coord;
-    double y_coord;
-    double z_coord;
 
   protected:
     virtual void initialize() override;
