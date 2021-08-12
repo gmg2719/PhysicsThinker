@@ -34,7 +34,7 @@ static int ue_id_omnetpp = 1062;
 void NrUeBase::initialize()
 {
     // Set the ID for the simulation
-    sim_id = ue_id_omnetpp;
+    sim_id = ue_id_omnetpp++;
     // Initialize variables
     state = RRC_IDLE;
     numSent = 0;
@@ -49,7 +49,6 @@ void NrUeBase::handleMessage(cMessage *msg)
     // Message arrived
     EV << "Message " << ttmsg << " arrived.\n";
     bubble("ARRIVED, bs send something !");
-    numReceived++;
 
     if (ttmsg->getType() == BS_BROAD) {
         if (state == RRC_IDLE) {
@@ -57,22 +56,15 @@ void NrUeBase::handleMessage(cMessage *msg)
             bs_y_coord = ttmsg->getY();
             bs_z_coord = ttmsg->getZ();
 
-            char msgname[64];
-            sprintf(msgname, "ue-%d-to-bs", sim_id);
-            AirFrameMsg *msg = new AirFrameMsg(msgname);
-            msg->setSource(sim_id);
-            msg->setDestination(-1);
-            // Set the message type
-            msg->setType(UE_MSG1);
-            EV << "UE send msg1 to the base station.\n";
+            forward2Bs_msg1();
             state = RRC_SETUP;
-            send(msg, "out");
-            numSent++;
         }
     } else if (ttmsg->getType() == BS_MSG2) {
+        forward2Bs_msg3();
 
     } else if (ttmsg->getType() == BS_MSG4) {
-
+        forward2Bs_msg5();
+        state = RRC_CONNECTED;
     } else {
         EV << "UE " << "sim_id(" << sim_id << ")" << " not supported message !\n";
     }
@@ -81,6 +73,64 @@ void NrUeBase::handleMessage(cMessage *msg)
 
     // update statistics.
     numReceived++;
+}
+
+void NrUeBase::forward2Bs_msg1()
+{
+    char msgname[64];
+    sprintf(msgname, "ue-%d-to-bs-msg1", sim_id);
+    AirFrameMsg *msg = new AirFrameMsg(msgname);
+    msg->setSource(sim_id);
+    msg->setDestination(-1);
+    // Set the message type
+    msg->setType(UE_MSG1);
+
+    // Set the contents
+
+    EV << "UE send msg1 to the base station.\n";
+    send(msg, "out");
+    numSent++;
+}
+
+void NrUeBase::forward2Bs_msg3()
+{
+    char msgname[64];
+    sprintf(msgname, "ue-%d-to-bs-msg3", sim_id);
+    AirFrameMsg *msg = new AirFrameMsg(msgname);
+    msg->setSource(sim_id);
+    msg->setDestination(-1);
+    // Set the message type
+    msg->setType(UE_MSG3);
+
+    // Set the contents
+
+    EV << "UE send msg3 to the base station.\n";
+    send(msg, "out");
+    numSent++;
+}
+
+void NrUeBase::forward2Bs_msg5()
+{
+    char msgname[64];
+    sprintf(msgname, "ue-%d-to-bs-msg5", sim_id);
+    AirFrameMsg *msg = new AirFrameMsg(msgname);
+    msg->setSource(sim_id);
+    msg->setDestination(-1);
+    // Set the message type
+    msg->setType(UE_COMPLETE_RRC);
+
+    // Set the contents
+
+    EV << "UE send RRCSetupComplete msg5 to the base station.\n";
+    send(msg, "out");
+    numSent++;
+}
+
+void NrUeBase::finish()
+{
+    // This function is called by OMNeT++ at the end of the simulation.
+    EV << "Sent:     " << numSent << endl;
+    EV << "Received: " << numReceived << endl;
 }
 
 }; //namespace

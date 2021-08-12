@@ -23,12 +23,15 @@
 #include <stdio.h>
 #include <string.h>
 #include <omnetpp.h>
+#include <vector>
 #include "airframe_m.h"
 #include "bscontrol_m.h"
 
 namespace ss5G {
 
 using namespace omnetpp;
+
+#define SPEED_OF_LIGHT      (299792458.0d)
 
 enum NrMessageType {
     BS_CONTROL,
@@ -37,11 +40,15 @@ enum NrMessageType {
     BS_MSG4,
     UE_MSG1,
     UE_MSG3,
+    // COMPLETE_RRC is equal to the msg5 in the 5G NR standard
     UE_COMPLETE_RRC
 };
 
 enum GnbState {
-    NONE
+    SWITCH_ON_STATE,
+    READY_STATE,
+    POSITION_START,
+    POSITION_END
 };
 
 enum UeState {
@@ -49,6 +56,13 @@ enum UeState {
     RRC_SETUP,
     RRC_CONNECTED
 };
+
+typedef struct ue_info {
+    int is_active;
+    int sim_id;
+    int in_port_index;
+    double propagate_time;
+} ue_info_t;
 
 class NrUeBase : public cSimpleModule
 {
@@ -67,12 +81,19 @@ class NrUeBase : public cSimpleModule
   protected:
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
+    virtual void forward2Bs_msg1();
+    virtual void forward2Bs_msg3();
+    virtual void forward2Bs_msg5();
+
+    // The finish() function is called by OMNeT++ at the end of the simulation:
+    virtual void finish() override;
 };
 
 class NrGnbBase : public cSimpleModule
 {
   private:
     int sim_id;
+    int state;
     long numSent;
     long numReceived;
     double x_coord;
@@ -80,34 +101,49 @@ class NrGnbBase : public cSimpleModule
     double z_coord;
     double period_sched;
     cMessage *control_msg;
+    int numUeBacklog;
+    std::vector<ue_info_t*> ue_backlog_table;
 
   protected:
+    virtual ~NrGnbBase();
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
 
     // Self scheduling
     virtual void broadcastPeriodMessage(BsControlMsg *msg);
 
+    // Initial access
+    virtual void forward_msg2(AirFrameMsg *ttmsg_ue);
+    virtual void forward_msg4(AirFrameMsg *ttmsg_ue);
+
+    ue_info_t* find_ue(int sim_id);
+    int get_active_ue();
+
     // The finish() function is called by OMNeT++ at the end of the simulation:
     virtual void finish() override;
 };
 
-class NrUe : public NrUeBase
+class NrPosition : public cSimpleModule
 {
   private:
-
+    int state;
+    long numSent;
+    long numReceived;
   protected:
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
 };
 
-class NrGnb : public NrGnbBase
+class NrServer : public cSimpleModule
 {
   private:
 
   protected:
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
+
+    // The finish() function is called by OMNeT++ at the end of the simulation:
+    virtual void finish() override;
 };
 
 };

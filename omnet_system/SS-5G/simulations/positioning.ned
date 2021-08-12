@@ -33,15 +33,56 @@ simple NrGnbBase
     gates:
         input   in[];
         output out[];
+        input   core_in;
+        output  core_out;
 }
 
 simple NrUeBase
 {
     parameters:
+        double x_coord = default(0.0);
+    	double y_coord = default(0.0);
+    	double z_coord = default(0.0);
         @display("i=device/pocketpc;bgb=1200,600");
     gates:
         input   in;
         output out;
+}
+
+simple NrServer
+{
+    parameters:
+    	@display("i=device/server;bgb=1200,600");
+    gates:
+    	input   in;
+    	output out;
+}
+
+simple NrPosition
+{
+	parameters:
+		int state = default(0);
+}
+
+module NrGnbPosition
+{
+    parameters:
+        @display("i=device/antennatower;bgb=1200,600");
+	gates:
+        input   in[];
+        output out[];
+        input   core_in;
+        output  core_out;
+    submodules:
+        gnb: NrGnbBase;
+        pos_entity: NrPosition;
+    connections:
+        gnb.core_in <-- core_in;
+        gnb.core_out --> core_out;
+        for i=0..1 {
+	        gnb.in++ <-- in++;
+	        gnb.out++ --> out++;
+        }
 }
 
 network indoor
@@ -49,10 +90,38 @@ network indoor
     types:
         channel C extends ned.DelayChannel {
             delay = 10us;
+            @display("ls=-");
+        }
+        channel D extends ned.DelayChannel {
+            delay = 10ms;
+        }
+    submodules:
+        gnb   : NrGnbPosition;
+        ue[2] : NrUeBase;
+        server: NrServer;
+    connections:
+        ue[0].in <-- C <-- gnb.out++;
+        ue[0].out --> C --> gnb.in++;
+        ue[1].in <-- C <-- gnb.out++;
+        ue[1].out --> C --> gnb.in++;
+        server.in <-- D <-- gnb.core_out;
+        server.out --> D --> gnb.core_in;
+}
+
+network outdoor
+{
+    types:
+        channel C extends ned.DelayChannel {
+            delay = 10us;
+            @display("ls=-");
+        }
+        channel D extends ned.DelayChannel {
+            delay = 10ms;
         }
     submodules:
         gnb   : NrGnbBase;
         ue[5] : NrUeBase;
+        server: NrServer;
     connections:
         ue[0].in <-- C <-- gnb.out++;
         ue[0].out --> C --> gnb.in++;
@@ -64,5 +133,7 @@ network indoor
         ue[3].out --> C --> gnb.in++;
         ue[4].in <-- C <-- gnb.out++;
         ue[4].out --> C --> gnb.in++;
+        server.in <-- D <-- gnb.core_out;
+        server.out --> D --> gnb.core_in;
 }
 

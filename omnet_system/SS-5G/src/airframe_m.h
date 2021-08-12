@@ -23,9 +23,10 @@
  * <pre>
  * message AirFrameMsg
  * {
+ *     int type;
  *     int source;
  *     int destination;
- *     int hopCount = 0;
+ *     double fakePropagateTime;
  *     double x;
  *     double y;
  *     double z;
@@ -35,9 +36,10 @@
 class AirFrameMsg : public ::omnetpp::cMessage
 {
   protected:
+    int type;
     int source;
     int destination;
-    int hopCount;
+    double fakePropagateTime;
     double x;
     double y;
     double z;
@@ -59,12 +61,14 @@ class AirFrameMsg : public ::omnetpp::cMessage
     virtual void parsimUnpack(omnetpp::cCommBuffer *b) override;
 
     // field getter/setter methods
+    virtual int getType() const;
+    virtual void setType(int type);
     virtual int getSource() const;
     virtual void setSource(int source);
     virtual int getDestination() const;
     virtual void setDestination(int destination);
-    virtual int getHopCount() const;
-    virtual void setHopCount(int hopCount);
+    virtual double getFakePropagateTime() const;
+    virtual void setFakePropagateTime(double fakePropagateTime);
     virtual double getX() const;
     virtual void setX(double x);
     virtual double getY() const;

@@ -181,9 +181,10 @@ Register_Class(AirFrameMsg)
 
 AirFrameMsg::AirFrameMsg(const char *name, short kind) : ::omnetpp::cMessage(name,kind)
 {
+    this->type = 0;
     this->source = 0;
     this->destination = 0;
-    this->hopCount = 0;
+    this->fakePropagateTime = 0;
     this->x = 0;
     this->y = 0;
     this->z = 0;
@@ -208,9 +209,10 @@ AirFrameMsg& AirFrameMsg::operator=(const AirFrameMsg& other)
 
 void AirFrameMsg::copy(const AirFrameMsg& other)
 {
+    this->type = other.type;
     this->source = other.source;
     this->destination = other.destination;
-    this->hopCount = other.hopCount;
+    this->fakePropagateTime = other.fakePropagateTime;
     this->x = other.x;
     this->y = other.y;
     this->z = other.z;
@@ -219,9 +221,10 @@ void AirFrameMsg::copy(const AirFrameMsg& other)
 void AirFrameMsg::parsimPack(omnetpp::cCommBuffer *b) const
 {
     ::omnetpp::cMessage::parsimPack(b);
+    doParsimPacking(b,this->type);
     doParsimPacking(b,this->source);
     doParsimPacking(b,this->destination);
-    doParsimPacking(b,this->hopCount);
+    doParsimPacking(b,this->fakePropagateTime);
     doParsimPacking(b,this->x);
     doParsimPacking(b,this->y);
     doParsimPacking(b,this->z);
@@ -230,12 +233,23 @@ void AirFrameMsg::parsimPack(omnetpp::cCommBuffer *b) const
 void AirFrameMsg::parsimUnpack(omnetpp::cCommBuffer *b)
 {
     ::omnetpp::cMessage::parsimUnpack(b);
+    doParsimUnpacking(b,this->type);
     doParsimUnpacking(b,this->source);
     doParsimUnpacking(b,this->destination);
-    doParsimUnpacking(b,this->hopCount);
+    doParsimUnpacking(b,this->fakePropagateTime);
     doParsimUnpacking(b,this->x);
     doParsimUnpacking(b,this->y);
     doParsimUnpacking(b,this->z);
+}
+
+int AirFrameMsg::getType() const
+{
+    return this->type;
+}
+
+void AirFrameMsg::setType(int type)
+{
+    this->type = type;
 }
 
 int AirFrameMsg::getSource() const
@@ -258,14 +272,14 @@ void AirFrameMsg::setDestination(int destination)
     this->destination = destination;
 }
 
-int AirFrameMsg::getHopCount() const
+double AirFrameMsg::getFakePropagateTime() const
 {
-    return this->hopCount;
+    return this->fakePropagateTime;
 }
 
-void AirFrameMsg::setHopCount(int hopCount)
+void AirFrameMsg::setFakePropagateTime(double fakePropagateTime)
 {
-    this->hopCount = hopCount;
+    this->fakePropagateTime = fakePropagateTime;
 }
 
 double AirFrameMsg::getX() const
@@ -363,7 +377,7 @@ const char *AirFrameMsgDescriptor::getProperty(const char *propertyname) const
 int AirFrameMsgDescriptor::getFieldCount() const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
-    return basedesc ? 6+basedesc->getFieldCount() : 6;
+    return basedesc ? 7+basedesc->getFieldCount() : 7;
 }
 
 unsigned int AirFrameMsgDescriptor::getFieldTypeFlags(int field) const
@@ -381,8 +395,9 @@ unsigned int AirFrameMsgDescriptor::getFieldTypeFlags(int field) const
         FD_ISEDITABLE,
         FD_ISEDITABLE,
         FD_ISEDITABLE,
+        FD_ISEDITABLE,
     };
-    return (field>=0 && field<6) ? fieldTypeFlags[field] : 0;
+    return (field>=0 && field<7) ? fieldTypeFlags[field] : 0;
 }
 
 const char *AirFrameMsgDescriptor::getFieldName(int field) const
@@ -394,26 +409,28 @@ const char *AirFrameMsgDescriptor::getFieldName(int field) const
         field -= basedesc->getFieldCount();
     }
     static const char *fieldNames[] = {
+        "type",
         "source",
         "destination",
-        "hopCount",
+        "fakePropagateTime",
         "x",
         "y",
         "z",
     };
-    return (field>=0 && field<6) ? fieldNames[field] : nullptr;
+    return (field>=0 && field<7) ? fieldNames[field] : nullptr;
 }
 
 int AirFrameMsgDescriptor::findField(const char *fieldName) const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
     int base = basedesc ? basedesc->getFieldCount() : 0;
-    if (fieldName[0]=='s' && strcmp(fieldName, "source")==0) return base+0;
-    if (fieldName[0]=='d' && strcmp(fieldName, "destination")==0) return base+1;
-    if (fieldName[0]=='h' && strcmp(fieldName, "hopCount")==0) return base+2;
-    if (fieldName[0]=='x' && strcmp(fieldName, "x")==0) return base+3;
-    if (fieldName[0]=='y' && strcmp(fieldName, "y")==0) return base+4;
-    if (fieldName[0]=='z' && strcmp(fieldName, "z")==0) return base+5;
+    if (fieldName[0]=='t' && strcmp(fieldName, "type")==0) return base+0;
+    if (fieldName[0]=='s' && strcmp(fieldName, "source")==0) return base+1;
+    if (fieldName[0]=='d' && strcmp(fieldName, "destination")==0) return base+2;
+    if (fieldName[0]=='f' && strcmp(fieldName, "fakePropagateTime")==0) return base+3;
+    if (fieldName[0]=='x' && strcmp(fieldName, "x")==0) return base+4;
+    if (fieldName[0]=='y' && strcmp(fieldName, "y")==0) return base+5;
+    if (fieldName[0]=='z' && strcmp(fieldName, "z")==0) return base+6;
     return basedesc ? basedesc->findField(fieldName) : -1;
 }
 
@@ -432,8 +449,9 @@ const char *AirFrameMsgDescriptor::getFieldTypeString(int field) const
         "double",
         "double",
         "double",
+        "double",
     };
-    return (field>=0 && field<6) ? fieldTypeStrings[field] : nullptr;
+    return (field>=0 && field<7) ? fieldTypeStrings[field] : nullptr;
 }
 
 const char **AirFrameMsgDescriptor::getFieldPropertyNames(int field) const
@@ -500,12 +518,13 @@ std::string AirFrameMsgDescriptor::getFieldValueAsString(void *object, int field
     }
     AirFrameMsg *pp = (AirFrameMsg *)object; (void)pp;
     switch (field) {
-        case 0: return long2string(pp->getSource());
-        case 1: return long2string(pp->getDestination());
-        case 2: return long2string(pp->getHopCount());
-        case 3: return double2string(pp->getX());
-        case 4: return double2string(pp->getY());
-        case 5: return double2string(pp->getZ());
+        case 0: return long2string(pp->getType());
+        case 1: return long2string(pp->getSource());
+        case 2: return long2string(pp->getDestination());
+        case 3: return double2string(pp->getFakePropagateTime());
+        case 4: return double2string(pp->getX());
+        case 5: return double2string(pp->getY());
+        case 6: return double2string(pp->getZ());
         default: return "";
     }
 }
@@ -520,12 +539,13 @@ bool AirFrameMsgDescriptor::setFieldValueAsString(void *object, int field, int i
     }
     AirFrameMsg *pp = (AirFrameMsg *)object; (void)pp;
     switch (field) {
-        case 0: pp->setSource(string2long(value)); return true;
-        case 1: pp->setDestination(string2long(value)); return true;
-        case 2: pp->setHopCount(string2long(value)); return true;
-        case 3: pp->setX(string2double(value)); return true;
-        case 4: pp->setY(string2double(value)); return true;
-        case 5: pp->setZ(string2double(value)); return true;
+        case 0: pp->setType(string2long(value)); return true;
+        case 1: pp->setSource(string2long(value)); return true;
+        case 2: pp->setDestination(string2long(value)); return true;
+        case 3: pp->setFakePropagateTime(string2double(value)); return true;
+        case 4: pp->setX(string2double(value)); return true;
+        case 5: pp->setY(string2double(value)); return true;
+        case 6: pp->setZ(string2double(value)); return true;
         default: return false;
     }
 }

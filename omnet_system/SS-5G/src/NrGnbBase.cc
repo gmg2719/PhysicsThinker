@@ -35,11 +35,31 @@ Define_Module(NrGnbBase);
 
 static int gnb_id_omnetpp = 500;
 
+NrGnbBase::~NrGnbBase()
+{
+    for (int i = 0; i < ue_backlog_table.size(); i++)
+    {
+        if (ue_backlog_table[i] != NULL)
+        {
+            delete ue_backlog_table[i];
+        }
+
+        ue_backlog_table[i] = NULL;
+    }
+
+    if (control_msg != NULL)
+    {
+        delete control_msg;
+    }
+}
+
 void NrGnbBase::initialize()
 {
     // Set the ID for the simulation
     sim_id = gnb_id_omnetpp++;
     // Initialize variables
+    state = SWITCH_ON_STATE;
+    numUeBacklog = gateSize("in");
     numSent = 0;
     numReceived = 0;
     WATCH(numSent);
@@ -83,39 +103,114 @@ void NrGnbBase::broadcastPeriodMessage(BsControlMsg *msg)
 
 void NrGnbBase::handleMessage(cMessage *msg)
 {
-    char msgname[64];
-    int port = getIndex();
+    if (state == SWITCH_ON_STATE)
+    {
+        if (msg->isSelfMessage()) {
+            // variable : control_msg
+            EV << "Active UEs are " << get_active_ue() << " ...\n";
+            if (numUeBacklog == get_active_ue()) {
+                if (state == SWITCH_ON_STATE)
+                {
+                    state = READY_STATE;
+                }
+            } else {
+                BsControlMsg *mst_ct = check_and_cast<BsControlMsg *>(msg);
+                broadcastPeriodMessage(mst_ct);
 
-    if (msg == control_msg) {
-        BsControlMsg *mst_ct = check_and_cast<BsControlMsg *>(msg);
-        broadcastPeriodMessage(mst_ct);
-
-        scheduleAt(simTime() + period_sched, msg);
-        EV << "BS schedule period is next " << period_sched << " sec !\n";
-    } else {
-        EV << "Message from UE arrived, starting to process...\n";
-        numReceived++;
-
-        AirFrameMsg *ttmsg = check_and_cast<AirFrameMsg *>(msg);
-
-        if (ttmsg->getType() == UE_MSG1) {
-            EV << "Receive MSG1 from UE " << "sim_id(" << ttmsg->getSource() << ")\n";
-
-            sprintf(msgname, "bs-msg2-to-%d-port", port);
-            AirFrameMsg *ttmsg = new AirFrameMsg(msgname);
-            ttmsg->setType(BS_MSG2);
-            EV << "Send msg2 " << msg << " on BS out[" << port << "]\n";
-            send(ttmsg, "out", port);
-        } else if (ttmsg->getType() == UE_MSG3) {
-
-        } else if (ttmsg->getType() == UE_COMPLETE_RRC) {
-
+                // When execute debug, just comment two sentences below, so that broadcast one time and make the handleMessage simpler
+                scheduleAt(simTime() + period_sched, msg);
+                EV << "BS schedule period is next " << period_sched << " sec !\n";
+            }
         } else {
-            EV << "Not supported message !\n";
-        }
+            AirFrameMsg *ttmsg = check_and_cast<AirFrameMsg *>(msg);
 
-        delete msg;
+            EV << "Message from UE arrived, starting to process...\n";
+            numReceived++;
+
+            if (ttmsg->getType() == UE_MSG1) {
+                EV << "Receive MSG1 from UE " << "sim_id(" << ttmsg->getSource() << ")\n";
+                ue_info_t *e = new ue_info_t;
+                e->is_active = 0;
+                e->in_port_index = ttmsg->getArrivalGate()->getIndex();
+                e->sim_id = ttmsg->getSource();
+                ue_backlog_table.push_back(e);
+
+                forward_msg2(ttmsg);
+                numSent++;
+            } else if (ttmsg->getType() == UE_MSG3) {
+                forward_msg4(ttmsg);
+                numSent++;
+            } else if (ttmsg->getType() == UE_COMPLETE_RRC) {
+                // Create the RRC connection done.
+                ue_info_t *e = find_ue(ttmsg->getSource());
+                if (e != NULL) {
+                    e->is_active = 1;
+                } else {
+                    EV << "Simulate error... RRC Setup complete not correct !\n";
+                }
+            } else {
+                EV << "Not supported message !\n";
+            }
+
+            delete msg;
+        }
     }
+}
+
+void NrGnbBase::forward_msg2(AirFrameMsg *ttmsg_ue)
+{
+    char msgname[64];
+    int port = ttmsg_ue->getArrivalGate()->getIndex();
+
+    sprintf(msgname, "bs-msg2-to-UE-%d", ttmsg_ue->getSource());
+    AirFrameMsg *ttmsg = new AirFrameMsg(msgname);
+
+    // Set msg2 contents
+
+    // Send operation
+    ttmsg->setType(BS_MSG2);
+    EV << "Send msg2 " << ttmsg << " on BS out[" << port << "]\n";
+    send(ttmsg, "out", port);
+}
+
+void NrGnbBase::forward_msg4(AirFrameMsg *ttmsg_ue)
+{
+    char msgname[64];
+    int port = ttmsg_ue->getArrivalGate()->getIndex();
+
+    sprintf(msgname, "bs-msg4-to-UE-%d", ttmsg_ue->getSource());
+    AirFrameMsg *ttmsg = new AirFrameMsg(msgname);
+
+    // Set msg4 contents
+
+    // Send operation
+    ttmsg->setType(BS_MSG4);
+    EV << "Send msg4 " << ttmsg << " on BS out[" << port << "]\n";
+    send(ttmsg, "out", port);
+}
+
+ue_info_t* NrGnbBase::find_ue(int sim_id)
+{
+    for (int i = 0; i < ue_backlog_table.size(); i++) {
+        if (ue_backlog_table[i]->sim_id == sim_id) {
+            return ue_backlog_table[i];
+        }
+    }
+
+    return NULL;
+}
+
+int NrGnbBase::get_active_ue()
+{
+    int ue_num = 0;
+
+    for (int i = 0; i < ue_backlog_table.size(); i++) {
+        if (ue_backlog_table[i]->is_active != 0) {
+            ue_num++;
+        }
+    }
+
+    return ue_num;
 }
 
 void NrGnbBase::finish()

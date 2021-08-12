@@ -31,9 +31,9 @@ O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
 OBJS = \
-    $O/NrGnb.o \
     $O/NrGnbBase.o \
-    $O/NrUe.o \
+    $O/NrPosition.o \
+    $O/NrServer.o \
     $O/NrUeBase.o \
     $O/airframe_m.o \
     $O/bscontrol_m.o
