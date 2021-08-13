@@ -27,6 +27,16 @@
  * packet CorePacket
  * {
  *     int type;
+ *     int bsSimId;
+ *     int ueSimId;
+ *     double bsX;
+ *     double bsY;
+ *     double bsZ;
+ *     double ueX;
+ *     double ueY;
+ *     double ueZ;
+ *     double arriveTime;
+ *     double timeStamp;
  * }
  * </pre>
  */
@@ -34,6 +44,16 @@ class CorePacket : public ::omnetpp::cPacket
 {
   protected:
     int type;
+    int bsSimId;
+    int ueSimId;
+    double bsX;
+    double bsY;
+    double bsZ;
+    double ueX;
+    double ueY;
+    double ueZ;
+    double arriveTime;
+    double timeStamp;
 
   private:
     void copy(const CorePacket& other);
@@ -54,6 +74,26 @@ class CorePacket : public ::omnetpp::cPacket
     // field getter/setter methods
     virtual int getType() const;
     virtual void setType(int type);
+    virtual int getBsSimId() const;
+    virtual void setBsSimId(int bsSimId);
+    virtual int getUeSimId() const;
+    virtual void setUeSimId(int ueSimId);
+    virtual double getBsX() const;
+    virtual void setBsX(double bsX);
+    virtual double getBsY() const;
+    virtual void setBsY(double bsY);
+    virtual double getBsZ() const;
+    virtual void setBsZ(double bsZ);
+    virtual double getUeX() const;
+    virtual void setUeX(double ueX);
+    virtual double getUeY() const;
+    virtual void setUeY(double ueY);
+    virtual double getUeZ() const;
+    virtual void setUeZ(double ueZ);
+    virtual double getArriveTime() const;
+    virtual void setArriveTime(double arriveTime);
+    virtual double getTimeStamp() const;
+    virtual void setTimeStamp(double timeStamp);
 };
 
 inline void doParsimPacking(omnetpp::cCommBuffer *b, const CorePacket& obj) {obj.parsimPack(b);}

@@ -32,6 +32,11 @@ simple NrPosition extends NrGnbBase
 	@class(NrPosition);  // Important!
 }
 
+simple NrSrsUe extends NrUeBase
+{
+    @class(NrSrsUe);
+}
+
 network indoor_positioning
 {
     types:
@@ -43,16 +48,29 @@ network indoor_positioning
             delay = 10ms;
         }
     submodules:
-        gnb   : NrPosition;
-        ue[2] : NrUeBase;
+        gnb1  : NrPosition;
+        gnb2  : NrPosition;
+        gnb3  : NrPosition;
+        gnb4  : NrPosition;
+        ue    : NrSrsUe;
         server: NrServer;
     connections:
-        ue[0].in <-- C <-- gnb.out++;
-        ue[0].out --> C --> gnb.in++;
-        ue[1].in <-- C <-- gnb.out++;
-        ue[1].out --> C --> gnb.in++;
-        server.in <-- D <-- gnb.core_out;
-        server.out --> D --> gnb.core_in;
+        ue.in++ <-- C <-- gnb1.out++;
+        ue.out++ --> C --> gnb1.in++;
+        ue.in++ <-- C <-- gnb2.out++;
+        ue.out++ --> C --> gnb2.in++;
+        ue.in++ <-- C <-- gnb3.out++;
+        ue.out++ --> C --> gnb3.in++;
+         ue.in++ <-- C <-- gnb4.out++;
+        ue.out++ --> C --> gnb4.in++;
+        server.in++ <-- D <-- gnb1.core_out;
+        server.out++ --> D --> gnb1.core_in;
+        server.in++ <-- D <-- gnb2.core_out;
+        server.out++ --> D --> gnb2.core_in;
+        server.in++ <-- D <-- gnb3.core_out;
+        server.out++ --> D --> gnb3.core_in;
+        server.in++ <-- D <-- gnb4.core_out;
+        server.out++ --> D --> gnb4.core_in;
 }
 
 

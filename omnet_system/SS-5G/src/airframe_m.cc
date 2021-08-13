@@ -188,6 +188,7 @@ AirFrameMsg::AirFrameMsg(const char *name, short kind) : ::omnetpp::cMessage(nam
     this->x = 0;
     this->y = 0;
     this->z = 0;
+    this->timeStamp = 0;
 }
 
 AirFrameMsg::AirFrameMsg(const AirFrameMsg& other) : ::omnetpp::cMessage(other)
@@ -216,6 +217,7 @@ void AirFrameMsg::copy(const AirFrameMsg& other)
     this->x = other.x;
     this->y = other.y;
     this->z = other.z;
+    this->timeStamp = other.timeStamp;
 }
 
 void AirFrameMsg::parsimPack(omnetpp::cCommBuffer *b) const
@@ -228,6 +230,7 @@ void AirFrameMsg::parsimPack(omnetpp::cCommBuffer *b) const
     doParsimPacking(b,this->x);
     doParsimPacking(b,this->y);
     doParsimPacking(b,this->z);
+    doParsimPacking(b,this->timeStamp);
 }
 
 void AirFrameMsg::parsimUnpack(omnetpp::cCommBuffer *b)
@@ -240,6 +243,7 @@ void AirFrameMsg::parsimUnpack(omnetpp::cCommBuffer *b)
     doParsimUnpacking(b,this->x);
     doParsimUnpacking(b,this->y);
     doParsimUnpacking(b,this->z);
+    doParsimUnpacking(b,this->timeStamp);
 }
 
 int AirFrameMsg::getType() const
@@ -312,6 +316,16 @@ void AirFrameMsg::setZ(double z)
     this->z = z;
 }
 
+double AirFrameMsg::getTimeStamp() const
+{
+    return this->timeStamp;
+}
+
+void AirFrameMsg::setTimeStamp(double timeStamp)
+{
+    this->timeStamp = timeStamp;
+}
+
 class AirFrameMsgDescriptor : public omnetpp::cClassDescriptor
 {
   private:
@@ -377,7 +391,7 @@ const char *AirFrameMsgDescriptor::getProperty(const char *propertyname) const
 int AirFrameMsgDescriptor::getFieldCount() const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
-    return basedesc ? 7+basedesc->getFieldCount() : 7;
+    return basedesc ? 8+basedesc->getFieldCount() : 8;
 }
 
 unsigned int AirFrameMsgDescriptor::getFieldTypeFlags(int field) const
@@ -396,8 +410,9 @@ unsigned int AirFrameMsgDescriptor::getFieldTypeFlags(int field) const
         FD_ISEDITABLE,
         FD_ISEDITABLE,
         FD_ISEDITABLE,
+        FD_ISEDITABLE,
     };
-    return (field>=0 && field<7) ? fieldTypeFlags[field] : 0;
+    return (field>=0 && field<8) ? fieldTypeFlags[field] : 0;
 }
 
 const char *AirFrameMsgDescriptor::getFieldName(int field) const
@@ -416,8 +431,9 @@ const char *AirFrameMsgDescriptor::getFieldName(int field) const
         "x",
         "y",
         "z",
+        "timeStamp",
     };
-    return (field>=0 && field<7) ? fieldNames[field] : nullptr;
+    return (field>=0 && field<8) ? fieldNames[field] : nullptr;
 }
 
 int AirFrameMsgDescriptor::findField(const char *fieldName) const
@@ -431,6 +447,7 @@ int AirFrameMsgDescriptor::findField(const char *fieldName) const
     if (fieldName[0]=='x' && strcmp(fieldName, "x")==0) return base+4;
     if (fieldName[0]=='y' && strcmp(fieldName, "y")==0) return base+5;
     if (fieldName[0]=='z' && strcmp(fieldName, "z")==0) return base+6;
+    if (fieldName[0]=='t' && strcmp(fieldName, "timeStamp")==0) return base+7;
     return basedesc ? basedesc->findField(fieldName) : -1;
 }
 
@@ -450,8 +467,9 @@ const char *AirFrameMsgDescriptor::getFieldTypeString(int field) const
         "double",
         "double",
         "double",
+        "double",
     };
-    return (field>=0 && field<7) ? fieldTypeStrings[field] : nullptr;
+    return (field>=0 && field<8) ? fieldTypeStrings[field] : nullptr;
 }
 
 const char **AirFrameMsgDescriptor::getFieldPropertyNames(int field) const
@@ -525,6 +543,7 @@ std::string AirFrameMsgDescriptor::getFieldValueAsString(void *object, int field
         case 4: return double2string(pp->getX());
         case 5: return double2string(pp->getY());
         case 6: return double2string(pp->getZ());
+        case 7: return double2string(pp->getTimeStamp());
         default: return "";
     }
 }
@@ -546,6 +565,7 @@ bool AirFrameMsgDescriptor::setFieldValueAsString(void *object, int field, int i
         case 4: pp->setX(string2double(value)); return true;
         case 5: pp->setY(string2double(value)); return true;
         case 6: pp->setZ(string2double(value)); return true;
+        case 7: pp->setTimeStamp(string2double(value)); return true;
         default: return false;
     }
 }

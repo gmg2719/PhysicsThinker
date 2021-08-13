@@ -31,12 +31,33 @@ Define_Module(NrUeBase);
 
 static int ue_id_omnetpp = 1062;
 
+NrUeBase::~NrUeBase()
+{
+    if (state != NULL) {
+        delete []state;
+    }
+}
+
 void NrUeBase::initialize()
 {
     // Set the ID for the simulation
     sim_id = ue_id_omnetpp++;
     // Initialize variables
-    state = RRC_IDLE;
+    x_coord = par("x_coord");
+    y_coord = par("y_coord");
+    z_coord = par("z_coord");
+
+    int bs_num = gateSize("out");
+    state = new int[bs_num];
+    bs_x_coord = new double[bs_num];
+    bs_y_coord = new double[bs_num];
+    bs_z_coord = new double[bs_num];
+    for (int i = 0; i < bs_num; i++) {
+        state[i] = RRC_IDLE;
+        bs_x_coord[i] = 0.0;
+        bs_y_coord[i] = 0.0;
+        bs_z_coord[i] = 0.0;
+    }
     numSent = 0;
     numReceived = 0;
     WATCH(numSent);
@@ -46,25 +67,26 @@ void NrUeBase::initialize()
 void NrUeBase::handleMessage(cMessage *msg)
 {
     AirFrameMsg *ttmsg = check_and_cast<AirFrameMsg *>(msg);
+    int port = ttmsg->getArrivalGate()->getIndex();
     // Message arrived
     EV << "Message " << ttmsg << " arrived.\n";
     bubble("ARRIVED, bs send something !");
 
     if (ttmsg->getType() == BS_BROAD) {
-        if (state == RRC_IDLE) {
-            bs_x_coord = ttmsg->getX();
-            bs_y_coord = ttmsg->getY();
-            bs_z_coord = ttmsg->getZ();
+        if (state[port] == RRC_IDLE) {
+            bs_x_coord[port] = ttmsg->getX();
+            bs_y_coord[port] = ttmsg->getY();
+            bs_z_coord[port] = ttmsg->getZ();
 
-            forward2Bs_msg1();
-            state = RRC_SETUP;
+            forward2Bs_msg1(port);
+            state[port] = RRC_SETUP;
         }
     } else if (ttmsg->getType() == BS_MSG2) {
-        forward2Bs_msg3();
+        forward2Bs_msg3(port);
 
     } else if (ttmsg->getType() == BS_MSG4) {
-        forward2Bs_msg5();
-        state = RRC_CONNECTED;
+        forward2Bs_msg5(port);
+        state[port] = RRC_CONNECTED;
     } else {
         EV << "UE " << "sim_id(" << sim_id << ")" << " not supported message !\n";
     }
@@ -75,7 +97,7 @@ void NrUeBase::handleMessage(cMessage *msg)
     numReceived++;
 }
 
-void NrUeBase::forward2Bs_msg1()
+void NrUeBase::forward2Bs_msg1(int port)
 {
     char msgname[64];
     sprintf(msgname, "ue-%d-to-bs-msg1", sim_id);
@@ -88,11 +110,11 @@ void NrUeBase::forward2Bs_msg1()
     // Set the contents
 
     EV << "UE send msg1 to the base station.\n";
-    send(msg, "out");
+    send(msg, "out", port);
     numSent++;
 }
 
-void NrUeBase::forward2Bs_msg3()
+void NrUeBase::forward2Bs_msg3(int port)
 {
     char msgname[64];
     sprintf(msgname, "ue-%d-to-bs-msg3", sim_id);
@@ -105,11 +127,11 @@ void NrUeBase::forward2Bs_msg3()
     // Set the contents
 
     EV << "UE send msg3 to the base station.\n";
-    send(msg, "out");
+    send(msg, "out", port);
     numSent++;
 }
 
-void NrUeBase::forward2Bs_msg5()
+void NrUeBase::forward2Bs_msg5(int port)
 {
     char msgname[64];
     sprintf(msgname, "ue-%d-to-bs-msg5", sim_id);
@@ -122,7 +144,7 @@ void NrUeBase::forward2Bs_msg5()
     // Set the contents
 
     EV << "UE send RRCSetupComplete msg5 to the base station.\n";
-    send(msg, "out");
+    send(msg, "out", port);
     numSent++;
 }
 

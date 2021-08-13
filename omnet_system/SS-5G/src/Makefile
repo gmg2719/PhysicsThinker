@@ -34,6 +34,7 @@ OBJS = \
     $O/NrGnbBase.o \
     $O/NrPosition.o \
     $O/NrServer.o \
+    $O/NrSrsUe.o \
     $O/NrUeBase.o \
     $O/airframe_m.o \
     $O/bscontrol_m.o \

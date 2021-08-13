@@ -30,6 +30,7 @@
  *     double x;
  *     double y;
  *     double z;
+ *     double timeStamp;
  * }
  * </pre>
  */
@@ -43,6 +44,7 @@ class AirFrameMsg : public ::omnetpp::cMessage
     double x;
     double y;
     double z;
+    double timeStamp;
 
   private:
     void copy(const AirFrameMsg& other);
@@ -75,6 +77,8 @@ class AirFrameMsg : public ::omnetpp::cMessage
     virtual void setY(double y);
     virtual double getZ() const;
     virtual void setZ(double z);
+    virtual double getTimeStamp() const;
+    virtual void setTimeStamp(double timeStamp);
 };
 
 inline void doParsimPacking(omnetpp::cCommBuffer *b, const AirFrameMsg& obj) {obj.parsimPack(b);}

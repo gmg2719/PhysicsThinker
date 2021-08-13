@@ -8,4 +8,5 @@ message AirFrameMsg
     double x;
     double y;
     double z;
+    double timeStamp;
 }

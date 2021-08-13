@@ -18,4 +18,14 @@
 //
 packet CorePacket {
     int type;
+    int bsSimId;
+    int ueSimId;
+    double bsX;
+    double bsY;
+    double bsZ;
+    double ueX;
+    double ueY;
+    double ueZ;
+    double arriveTime;
+    double timeStamp;
 }

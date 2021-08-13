@@ -31,22 +31,24 @@ namespace ss5G {
 
 using namespace omnetpp;
 
-#define SPEED_OF_LIGHT      (299792458.0d)
+const double SPEED_OF_LIGHT = 299792458.0;
 
 enum NrMessageType {
     BS_BROAD,
     BS_MSG2,
     BS_MSG4,
+    BS_POSITION_REQ,
     UE_MSG1,
     UE_MSG3,
     // COMPLETE_RRC is equal to the msg5 in the 5G NR standard
     UE_COMPLETE_RRC,
-    BS_POSITION_REQ
+    UE_SRS_SIGNAL
 };
 
 enum NrControlSignalType {
     INIT_BROADCAST,
-    POSITION_REQUEST
+    POSITION_REQUEST,
+    POSITION_DO
 };
 
 enum GnbState {
@@ -71,10 +73,10 @@ class NrUeBase : public cSimpleModule
 {
   protected:
     int sim_id;
-    int state;
-    double bs_x_coord;
-    double bs_y_coord;
-    double bs_z_coord;
+    int *state;
+    double *bs_x_coord;
+    double *bs_y_coord;
+    double *bs_z_coord;
     double x_coord;
     double y_coord;
     double z_coord;
@@ -82,11 +84,13 @@ class NrUeBase : public cSimpleModule
     long numReceived;
 
   protected:
+    virtual ~NrUeBase();
+
     virtual void initialize() override;
     virtual void handleMessage(cMessage *msg) override;
-    virtual void forward2Bs_msg1();
-    virtual void forward2Bs_msg3();
-    virtual void forward2Bs_msg5();
+    virtual void forward2Bs_msg1(int port);
+    virtual void forward2Bs_msg3(int port);
+    virtual void forward2Bs_msg5(int port);
 
     // The finish() function is called by OMNeT++ at the end of the simulation:
     virtual void finish() override;
@@ -140,19 +144,22 @@ class NrPosition : public NrGnbBase
     virtual void handleMessage(cMessage *msg);
 
     // Send positioning request
-    virtual void forward2core_positioning_request();
+    virtual void forward2core_positioning_request(AirFrameMsg *ttmsg_ue);
 };
 
-class NrServer : public cSimpleModule
+class NrSrsUe : public NrUeBase
 {
-  protected:
+  private:
+    int bs_connected;
+    cMessage *srs_control_event;
 
   protected:
-    virtual void initialize() override;
-    virtual void handleMessage(cMessage *msg) override;
+    virtual void initialize();
+    virtual void handleMessage(cMessage *msg);
 
-    // The finish() function is called by OMNeT++ at the end of the simulation:
-    virtual void finish() override;
+    virtual void srsPeriodForward();
+
+    bool check_state();
 };
 
 };

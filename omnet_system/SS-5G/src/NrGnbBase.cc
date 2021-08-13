@@ -66,9 +66,10 @@ void NrGnbBase::initialize()
     WATCH(numReceived);
 
     // Other variables
-    if (period_sched <= 0) {
-        period_sched = 0.0005;
-    }
+    period_sched = 0.0005;
+    x_coord = par("x_coord");
+    y_coord = par("y_coord");
+    z_coord = par("z_coord");
 
     // Boot the process scheduling the initial message as a self-message.
     control_msg = nullptr;
@@ -77,6 +78,8 @@ void NrGnbBase::initialize()
     control_msg = msg;
     scheduleAt(0.0, control_msg);
     EV << "Scheduling first on the Base Station\n";
+    EV << "BS schedule period is " << period_sched << " sec !\n";
+    EV << "BS coordinate : " << x_coord << " " << y_coord << " " << z_coord << "\n";
 }
 
 void NrGnbBase::broadcastPeriodMessage(BsControlMsg *msg)

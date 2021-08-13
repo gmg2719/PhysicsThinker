@@ -31,9 +31,7 @@ Define_Module(NrPosition);
 
 void NrPosition::initialize()
 {
-    if (period_positioning <= 0) {
-        period_positioning = 0.02;
-    }
+    period_positioning = 0.02;
 
     position_request_msg = nullptr;
     BsControlMsg *msg = new BsControlMsg("positiong-request");
@@ -60,15 +58,20 @@ void NrPosition::handleMessage(cMessage *msg)
     else
     {
         if (msg == position_request_msg) {
-            forward2core_positioning_request();
-            NrGnbBase::numSent++;
+            EV << "Wait SRS signal to do positioning\n";
+        } else {
+            AirFrameMsg *ttmsg = check_and_cast<AirFrameMsg *>(msg);
+
+            if (ttmsg->getType() == UE_SRS_SIGNAL) {
+                forward2core_positioning_request(ttmsg);
+            }
         }
 
         delete msg;
     }
 }
 
-void NrPosition::forward2core_positioning_request()
+void NrPosition::forward2core_positioning_request(AirFrameMsg *ttmsg_ue)
 {
     char msgname[64];
 
@@ -76,11 +79,25 @@ void NrPosition::forward2core_positioning_request()
     CorePacket *core_msg = new CorePacket(msgname);
 
     // Set request contents
+    int ue_simid = ttmsg_ue->getSource();
+    core_msg->setBsSimId(NrGnbBase::sim_id);
+    core_msg->setUeSimId(ue_simid);
+    core_msg->setBsX(NrGnbBase::x_coord);
+    core_msg->setBsY(NrGnbBase::y_coord);
+    core_msg->setBsZ(NrGnbBase::z_coord);
+    core_msg->setUeX(ttmsg_ue->getX());
+    core_msg->setUeY(ttmsg_ue->getY());
+    core_msg->setUeZ(ttmsg_ue->getZ());
+    double trans_time = ttmsg_ue->getFakePropagateTime();
+    core_msg->setArriveTime(trans_time);
+    double tti_stamp = 0;
+    core_msg->setTimeStamp(tti_stamp);
 
     // Send operation
     core_msg->setType(BS_POSITION_REQ);
     EV << "Send request " << core_msg << " on BS to core network server\n";
     send(core_msg, "core_out");
+    NrGnbBase::numSent++;
 }
 
 };

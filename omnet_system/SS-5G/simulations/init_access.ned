@@ -27,9 +27,9 @@ package ss5g_dev.simulations;
 simple NrGnbBase
 {
     parameters:
-        double x_coord = default(10.0);
-    	double y_coord = default(19.0);
-    	double z_coord = default(6.0);
+        double x_coord;
+    	double y_coord;
+    	double z_coord;
     	double period_sched = default(0.0005);		// The period of 500us
         @display("i=device/antennatower;bgb=1200,600");
     gates:
@@ -42,13 +42,13 @@ simple NrGnbBase
 simple NrUeBase
 {
     parameters:
-        double x_coord = default(0.0);
-    	double y_coord = default(0.0);
-    	double z_coord = default(0.0);
+        double x_coord;
+    	double y_coord;
+    	double z_coord;
         @display("i=device/pocketpc;bgb=1200,600");
     gates:
-        input   in;
-        output out;
+        input   in[];
+        output out[];
 }
 
 simple NrServer
@@ -56,8 +56,8 @@ simple NrServer
     parameters:
     	@display("i=device/server;bgb=1200,600");
     gates:
-    	input   in;
-    	output out;
+    	input   in[];
+    	output out[];
 }
 
 network indoor
@@ -75,12 +75,12 @@ network indoor
         ue[2] : NrUeBase;
         server: NrServer;
     connections:
-        ue[0].in <-- C <-- gnb.out++;
-        ue[0].out --> C --> gnb.in++;
-        ue[1].in <-- C <-- gnb.out++;
-        ue[1].out --> C --> gnb.in++;
-        server.in <-- D <-- gnb.core_out;
-        server.out --> D --> gnb.core_in;
+        ue[0].in++ <-- C <-- gnb.out++;
+        ue[0].out++ --> C --> gnb.in++;
+        ue[1].in++ <-- C <-- gnb.out++;
+        ue[1].out++ --> C --> gnb.in++;
+        server.in++ <-- D <-- gnb.core_out;
+        server.out++ --> D --> gnb.core_in;
 }
 
 network outdoor
@@ -98,17 +98,17 @@ network outdoor
         ue[5] : NrUeBase;
         server: NrServer;
     connections:
-        ue[0].in <-- C <-- gnb.out++;
-        ue[0].out --> C --> gnb.in++;
-        ue[1].in <-- C <-- gnb.out++;
-        ue[1].out --> C --> gnb.in++;
-        ue[2].in <-- C <-- gnb.out++;
-        ue[2].out --> C --> gnb.in++;
-        ue[3].in <-- C <-- gnb.out++;
-        ue[3].out --> C --> gnb.in++;
-        ue[4].in <-- C <-- gnb.out++;
-        ue[4].out --> C --> gnb.in++;
-        server.in <-- D <-- gnb.core_out;
-        server.out --> D --> gnb.core_in;
+        ue[0].in++ <-- C <-- gnb.out++;
+        ue[0].out++ --> C --> gnb.in++;
+        ue[1].in++ <-- C <-- gnb.out++;
+        ue[1].out++ --> C --> gnb.in++;
+        ue[2].in++ <-- C <-- gnb.out++;
+        ue[2].out++ --> C --> gnb.in++;
+        ue[3].in++ <-- C <-- gnb.out++;
+        ue[3].out++ --> C --> gnb.in++;
+        ue[4].in++ <-- C <-- gnb.out++;
+        ue[4].out++ --> C --> gnb.in++;
+        server.in++ <-- D <-- gnb.core_out;
+        server.out++ --> D --> gnb.core_in;
 }
 
