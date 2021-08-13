@@ -21,7 +21,7 @@
 // SOFTWARE.
 
 #include "NrServer.h"
-#include "corepacket_m.h"
+#include "../message/corepacket_m.h"
 
 using namespace omnetpp;
 

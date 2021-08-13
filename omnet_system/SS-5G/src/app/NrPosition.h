@@ -17,49 +17,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef NRENTITY_H_
-#define NRENTITY_H_
+#ifndef APP_NRPOSITION_H_
+#define APP_NRPOSITION_H_
 
 #include <stdio.h>
 #include <string.h>
 #include <omnetpp.h>
 #include <vector>
+#include "../message/airframe_m.h"
+#include "../message/bscontrol_m.h"
+#include "../NrEntity.h"
+#include "../gnb/NrGnbBase.h"
 
 namespace ss5G {
 
 using namespace omnetpp;
 
-const double SPEED_OF_LIGHT = 299792458.0;
+class NrPosition : public NrGnbBase
+{
+  private:
+    long numSent;
+    long numReceived;
+    double period_positioning;
+    cMessage *position_request_msg;
 
-enum NrMessageType {
-    BS_BROAD,
-    BS_MSG2,
-    BS_MSG4,
-    BS_POSITION_REQ,
-    UE_MSG1,
-    UE_MSG3,
-    // COMPLETE_RRC is equal to the msg5 in the 5G NR standard
-    UE_COMPLETE_RRC,
-    UE_SRS_SIGNAL
-};
+  protected:
+    virtual void initialize();
+    virtual void handleMessage(cMessage *msg);
 
-enum NrControlSignalType {
-    INIT_BROADCAST,
-    POSITION_REQUEST,
-    POSITION_DO
-};
-
-enum GnbState {
-    SWITCH_ON_STATE,
-    READY_STATE,
-};
-
-enum UeState {
-    RRC_IDLE,
-    RRC_SETUP,
-    RRC_CONNECTED
+    // Send positioning request
+    virtual void forward2core_positioning_request(AirFrameMsg *ttmsg_ue);
 };
 
 };
 
-#endif /* NRENTITY_H_ */
+#endif /* APP_NRPOSITION_H_ */

@@ -1,3 +1,6 @@
+// MIT License
+//
+// Copyright (c) 2021 PingzhouMing
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -16,50 +19,54 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-
-#ifndef NRENTITY_H_
-#define NRENTITY_H_
+#ifndef NRSERVER_H_
+#define NRSERVER_H_
 
 #include <stdio.h>
 #include <string.h>
 #include <omnetpp.h>
 #include <vector>
+#include <map>
+#include "../message/airframe_m.h"
+#include "../message/bscontrol_m.h"
+#include "../message/corepacket_m.h"
+#include "../NrEntity.h"
+#include "../gnb/NrGnbBase.h"
 
 namespace ss5G {
 
-using namespace omnetpp;
+typedef struct ue_coordinate {
+    double x;
+    double y;
+    double z;
+} ue_coordinate_t;
 
-const double SPEED_OF_LIGHT = 299792458.0;
+typedef struct ue_position_info {
+    int sim_id;
+    // Utilize the 4 BSs data
+    ue_coordinate_t bs_from[4];
+    double arrive_time[4];
+    std::vector<ue_coordinate_t> coord_est;
+    std::vector<ue_coordinate_t> coord;
+} ue_position_info_t;
 
-enum NrMessageType {
-    BS_BROAD,
-    BS_MSG2,
-    BS_MSG4,
-    BS_POSITION_REQ,
-    UE_MSG1,
-    UE_MSG3,
-    // COMPLETE_RRC is equal to the msg5 in the 5G NR standard
-    UE_COMPLETE_RRC,
-    UE_SRS_SIGNAL
+class NrServer : public cSimpleModule
+{
+  protected:
+    cMessage *position_do_event;
+    std::map<int, ue_position_info_t> ue_position_table;
+
+  protected:
+    virtual void initialize() override;
+    virtual void handleMessage(cMessage *msg) override;
+
+    void receive_positioning_request(CorePacket *coremsg);
+    void tdoa_positioning();
+
+    // The finish() function is called by OMNeT++ at the end of the simulation:
+    virtual void finish() override;
 };
 
-enum NrControlSignalType {
-    INIT_BROADCAST,
-    POSITION_REQUEST,
-    POSITION_DO
 };
 
-enum GnbState {
-    SWITCH_ON_STATE,
-    READY_STATE,
-};
-
-enum UeState {
-    RRC_IDLE,
-    RRC_SETUP,
-    RRC_CONNECTED
-};
-
-};
-
-#endif /* NRENTITY_H_ */
+#endif /* NRSERVER_H_ */

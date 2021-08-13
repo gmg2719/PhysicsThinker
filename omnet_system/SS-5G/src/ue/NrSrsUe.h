@@ -19,51 +19,38 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
-#ifndef NRSERVER_H_
-#define NRSERVER_H_
+
+#ifndef UE_NRSRSUE_H_
+#define UE_NRSRSUE_H_
 
 #include <stdio.h>
 #include <string.h>
 #include <omnetpp.h>
 #include <vector>
-#include <map>
-#include "corepacket_m.h"
-#include "NrEntity.h"
+#include "../message/airframe_m.h"
+#include "../message/bscontrol_m.h"
+#include "../NrEntity.h"
+#include "NrUeBase.h"
 
 namespace ss5G {
 
-typedef struct ue_coordinate {
-    double x;
-    double y;
-    double z;
-} ue_coordinate_t;
+using namespace omnetpp;
 
-typedef struct ue_position_info {
-    int sim_id;
-    // Utilize the 4 BSs data
-    ue_coordinate_t bs_from[4];
-    double arrive_time[4];
-    std::vector<ue_coordinate_t> coord_est;
-    std::vector<ue_coordinate_t> coord;
-} ue_position_info_t;
-
-class NrServer : public cSimpleModule
+class NrSrsUe : public NrUeBase
 {
-  protected:
-    cMessage *position_do_event;
-    std::map<int, ue_position_info_t> ue_position_table;
+  private:
+    int bs_connected;
+    cMessage *srs_control_event;
 
   protected:
-    virtual void initialize() override;
-    virtual void handleMessage(cMessage *msg) override;
+    virtual void initialize();
+    virtual void handleMessage(cMessage *msg);
 
-    void receive_positioning_request(CorePacket *coremsg);
-    void tdoa_positioning();
+    virtual void srsPeriodForward();
 
-    // The finish() function is called by OMNeT++ at the end of the simulation:
-    virtual void finish() override;
+    bool check_state();
 };
 
 };
 
-#endif /* NRSERVER_H_ */
+#endif /* UE_NRSRSUE_H_ */

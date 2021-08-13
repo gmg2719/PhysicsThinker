@@ -31,20 +31,20 @@ O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 
 # Object files for local .cc, .msg and .sm files
 OBJS = \
-    $O/NrGnbBase.o \
-    $O/NrPosition.o \
-    $O/NrServer.o \
-    $O/NrSrsUe.o \
-    $O/NrUeBase.o \
-    $O/airframe_m.o \
-    $O/bscontrol_m.o \
-    $O/corepacket_m.o
+    $O/app/NrPosition.o \
+    $O/core/NrServer.o \
+    $O/gnb/NrGnbBase.o \
+    $O/ue/NrSrsUe.o \
+    $O/ue/NrUeBase.o \
+    $O/message/airframe_m.o \
+    $O/message/bscontrol_m.o \
+    $O/message/corepacket_m.o
 
 # Message files
 MSGFILES = \
-    airframe.msg \
-    bscontrol.msg \
-    corepacket.msg
+    message/airframe.msg \
+    message/bscontrol.msg \
+    message/corepacket.msg
 
 # SM files
 SMFILES =

@@ -20,8 +20,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "NrEntity.h"
-#include "corepacket_m.h"
+#include "NrPosition.h"
+#include "../message/corepacket_m.h"
 
 using namespace omnetpp;
 
