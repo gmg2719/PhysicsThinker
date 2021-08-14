@@ -31,14 +31,14 @@ namespace ss5G {
 
 using namespace omnetpp;
 
-class NrChannel : public cSimpleModule
+class NrChannel : public cDelayChannel
 {
 protected:
     double distance;
-    double delay;
+
 public:
-    virtual void initialize() override;
-    virtual void handleMessage(cMessage *msg) override;
+    virtual void initialize();
+
     void setDistance(double dist);
 };
 

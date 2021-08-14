@@ -17,12 +17,10 @@ package ss5g_dev.channels;
 
 @namespace(ss5G);
 
-simple NrChannel
+channel NrChannel extends ned.DelayChannel
 {
 	parameters:
     	double distance = default(1.0);
-    	double delay = default(0.000001);
-    gates:
-        input   in[];
-        output out[];
+    @display("ls=-");
+    @class(NrChannel);
 }

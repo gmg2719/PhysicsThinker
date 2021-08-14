@@ -50,29 +50,21 @@ network indoor_positioning
         gnb2  : NrPosition;
         gnb3  : NrPosition;
         gnb4  : NrPosition;
-        wireless_channel : NrChannel; 
         ue    : NrSrsUe;
         server: NrServer;
     connections:
-        ue.in++ <-- wireless_channel.out++;
-        wireless_channel.in++ <-- gnb1.out++;
-        ue.out++ --> wireless_channel.in++;
-        wireless_channel.out++ --> gnb1.in++;
+        ue.in++ <-- NrChannel <-- gnb1.out++;
+        ue.out++ --> NrChannel --> gnb1.in++;
         
-        ue.in++ <-- wireless_channel.out++;
-        wireless_channel.in++ <-- gnb2.out++;
-        ue.out++ --> wireless_channel.in++;
-        wireless_channel.out++ --> gnb2.in++;
+        ue.in++ <-- NrChannel <-- gnb2.out++;
+        ue.out++ --> NrChannel --> gnb2.in++;
         
-        ue.in++ <-- wireless_channel.out++;
-        wireless_channel.in++ <-- gnb3.out++;
-        ue.out++ --> wireless_channel.in++;
-        wireless_channel.out++ --> gnb3.in++;
+        ue.in++ <-- NrChannel <-- gnb3.out++;
+        ue.out++ --> NrChannel --> gnb3.in++;
         
-        ue.in++ <-- wireless_channel.out++;
-        wireless_channel.in++ <-- gnb4.out++;
-        ue.out++ --> wireless_channel.in++;
-        wireless_channel.out++ --> gnb4.in++;
+        ue.in++ <-- NrChannel <-- gnb4.out++;
+        ue.out++ --> NrChannel --> gnb4.in++;
+
         server.in++ <-- D <-- gnb1.core_out;
         server.out++ --> D --> gnb1.core_in;
         server.in++ <-- D <-- gnb2.core_out;

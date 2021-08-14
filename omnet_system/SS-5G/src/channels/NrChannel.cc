@@ -27,32 +27,13 @@ using namespace omnetpp;
 
 namespace ss5G {
 
-Define_Module(NrChannel);
+Define_Channel(NrChannel);
 
 void NrChannel::initialize()
 {
+    cDelayChannel::initialize();
+
     distance = par("distance");
-    delay = par("delay");
-
-#if 0
-    if (hasGUI()) {
-        EV << "Disable to show the wireless channel module !\n";
-        for (int i = 0; i < gateSize("in"); i++) {
-            cGate *gate = this->gate("in", i);
-            gate->getDisplayString().setTagArg("ls", 0, "none"); // 1 indicates argument of the Tag, 0 - width
-            gate = this->gate("out", i);
-            gate->getDisplayString().setTagArg("ls", 0, "none");
-        }
-    }
-#endif
-}
-
-void NrChannel::handleMessage(cMessage *msg)
-{
-    AirFrameMsg *ttmsg = check_and_cast<AirFrameMsg *>(msg);
-    int port = ttmsg->getArrivalGate()->getIndex();
-
-    send(msg, "out", port);
 }
 
 void NrChannel::setDistance(double dist)
