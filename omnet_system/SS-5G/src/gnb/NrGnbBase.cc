@@ -61,7 +61,9 @@ void NrGnbBase::initialize()
     WATCH(numReceived);
 
     // Other variables
-    period_sched = 0.0005;
+    period_sched = par("period_sched");
+    if (period_sched <= 0)
+        period_sched = 0.0005;
     x_coord = par("x_coord");
     y_coord = par("y_coord");
     z_coord = par("z_coord");

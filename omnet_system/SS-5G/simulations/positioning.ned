@@ -21,6 +21,8 @@
 // SOFTWARE.
 
 package ss5g_dev.simulations;
+// Import other useful NED modules
+import ss5g_dev.channels.NrChannel;
 
 @namespace(ss5G);
 
@@ -40,10 +42,6 @@ simple NrSrsUe extends NrUeBase
 network indoor_positioning
 {
     types:
-        channel C extends ned.DelayChannel {
-            delay = 10us;
-            @display("ls=-");
-        }
         channel D extends ned.DelayChannel {
             delay = 10ms;
         }
@@ -52,17 +50,29 @@ network indoor_positioning
         gnb2  : NrPosition;
         gnb3  : NrPosition;
         gnb4  : NrPosition;
+        wireless_channel : NrChannel; 
         ue    : NrSrsUe;
         server: NrServer;
     connections:
-        ue.in++ <-- C <-- gnb1.out++;
-        ue.out++ --> C --> gnb1.in++;
-        ue.in++ <-- C <-- gnb2.out++;
-        ue.out++ --> C --> gnb2.in++;
-        ue.in++ <-- C <-- gnb3.out++;
-        ue.out++ --> C --> gnb3.in++;
-         ue.in++ <-- C <-- gnb4.out++;
-        ue.out++ --> C --> gnb4.in++;
+        ue.in++ <-- wireless_channel.out++;
+        wireless_channel.in++ <-- gnb1.out++;
+        ue.out++ --> wireless_channel.in++;
+        wireless_channel.out++ --> gnb1.in++;
+        
+        ue.in++ <-- wireless_channel.out++;
+        wireless_channel.in++ <-- gnb2.out++;
+        ue.out++ --> wireless_channel.in++;
+        wireless_channel.out++ --> gnb2.in++;
+        
+        ue.in++ <-- wireless_channel.out++;
+        wireless_channel.in++ <-- gnb3.out++;
+        ue.out++ --> wireless_channel.in++;
+        wireless_channel.out++ --> gnb3.in++;
+        
+        ue.in++ <-- wireless_channel.out++;
+        wireless_channel.in++ <-- gnb4.out++;
+        ue.out++ --> wireless_channel.in++;
+        wireless_channel.out++ --> gnb4.in++;
         server.in++ <-- D <-- gnb1.core_out;
         server.out++ --> D --> gnb1.core_in;
         server.in++ <-- D <-- gnb2.core_out;

@@ -20,39 +20,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef UE_NRSRSUE_H_
-#define UE_NRSRSUE_H_
+#ifndef CHANNELS_NRCHANNEL_H_
+#define CHANNELS_NRCHANNEL_H_
 
 #include <stdio.h>
 #include <string.h>
 #include <omnetpp.h>
-#include <vector>
-#include "../message/airframe_m.h"
-#include "../message/bscontrol_m.h"
-#include "../NrEntity.h"
-#include "NrUeBase.h"
 
 namespace ss5G {
 
 using namespace omnetpp;
 
-class NrSrsUe : public NrUeBase
+class NrChannel : public cSimpleModule
 {
-  private:
-    double ue2bs_dist[4];
-    int bs_connected;
-    cMessage *srs_control_event;
-
-  protected:
-    virtual void initialize();
-    virtual void handleMessage(cMessage *msg);
-
-    void update_positions();
-    virtual void srsPeriodForward();
-
-    bool check_state();
+protected:
+    double distance;
+    double delay;
+public:
+    virtual void initialize() override;
+    virtual void handleMessage(cMessage *msg) override;
+    void setDistance(double dist);
 };
 
 };
 
-#endif /* UE_NRSRSUE_H_ */
+#endif /* CHANNELS_NRCHANNEL_H_ */

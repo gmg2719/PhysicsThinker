@@ -32,6 +32,7 @@ O = $(PROJECT_OUTPUT_DIR)/$(CONFIGNAME)/$(PROJECTRELATIVE_PATH)
 # Object files for local .cc, .msg and .sm files
 OBJS = \
     $O/app/NrPosition.o \
+    $O/channels/NrChannel.o \
     $O/core/NrServer.o \
     $O/gnb/NrGnbBase.o \
     $O/ue/NrSrsUe.o \

@@ -31,7 +31,9 @@ Define_Module(NrPosition);
 
 void NrPosition::initialize()
 {
-    period_positioning = 0.02;
+    period_positioning = par("period_positioning");
+    if (period_positioning <= 0)
+        period_positioning = 0.02;
 
     position_request_msg = nullptr;
     BsControlMsg *msg = new BsControlMsg("positiong-request");

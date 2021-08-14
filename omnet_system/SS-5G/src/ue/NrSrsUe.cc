@@ -48,6 +48,7 @@ void NrSrsUe::handleMessage(cMessage *msg)
     if (msg->isSelfMessage()) {
         if (check_state()) {
             srsPeriodForward();
+            update_positions();
 
             EV << "UE do SRS period indication, next 100 ms !\n";
             scheduleAt(simTime() + 0.01, msg);
@@ -57,6 +58,18 @@ void NrSrsUe::handleMessage(cMessage *msg)
         }
     } else {
         NrUeBase::handleMessage(msg);
+    }
+}
+
+void NrSrsUe::update_positions()
+{
+    if (bs_connected < 4) {
+        return;
+    }
+
+    for (int i = 0; i < 4; i++) {
+        ue2bs_dist[i] = sqrt((x_coord-bs_x_coord[i])*(x_coord-bs_x_coord[i])+(y_coord-bs_y_coord[i])*(y_coord-bs_y_coord[i])+
+                (z_coord-bs_z_coord[i])*(z_coord-bs_z_coord[i]));
     }
 }
 

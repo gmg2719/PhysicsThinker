@@ -20,39 +20,44 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef UE_NRSRSUE_H_
-#define UE_NRSRSUE_H_
-
-#include <stdio.h>
-#include <string.h>
-#include <omnetpp.h>
-#include <vector>
+#include "NrChannel.h"
 #include "../message/airframe_m.h"
-#include "../message/bscontrol_m.h"
-#include "../NrEntity.h"
-#include "NrUeBase.h"
-
-namespace ss5G {
 
 using namespace omnetpp;
 
-class NrSrsUe : public NrUeBase
+namespace ss5G {
+
+Define_Module(NrChannel);
+
+void NrChannel::initialize()
 {
-  private:
-    double ue2bs_dist[4];
-    int bs_connected;
-    cMessage *srs_control_event;
+    distance = par("distance");
+    delay = par("delay");
 
-  protected:
-    virtual void initialize();
-    virtual void handleMessage(cMessage *msg);
+#if 0
+    if (hasGUI()) {
+        EV << "Disable to show the wireless channel module !\n";
+        for (int i = 0; i < gateSize("in"); i++) {
+            cGate *gate = this->gate("in", i);
+            gate->getDisplayString().setTagArg("ls", 0, "none"); // 1 indicates argument of the Tag, 0 - width
+            gate = this->gate("out", i);
+            gate->getDisplayString().setTagArg("ls", 0, "none");
+        }
+    }
+#endif
+}
 
-    void update_positions();
-    virtual void srsPeriodForward();
+void NrChannel::handleMessage(cMessage *msg)
+{
+    AirFrameMsg *ttmsg = check_and_cast<AirFrameMsg *>(msg);
+    int port = ttmsg->getArrivalGate()->getIndex();
 
-    bool check_state();
+    send(msg, "out", port);
+}
+
+void NrChannel::setDistance(double dist)
+{
+    distance = dist;
+}
+
 };
-
-};
-
-#endif /* UE_NRSRSUE_H_ */
