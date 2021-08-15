@@ -26,11 +26,17 @@
  *     int type;
  *     int source;
  *     int destination;
- *     double fakePropagateTime;
+ * 	// Coordinates information
  *     double x;
  *     double y;
  *     double z;
+ *     double destX;
+ *     double destY;
+ *     double destZ;
  *     double timeStamp;
+ *     // all physical information
+ *     double txPowerUpdate;
+ *     double centerFreq;
  * }
  * </pre>
  */
@@ -40,11 +46,15 @@ class AirFrameMsg : public ::omnetpp::cMessage
     int type;
     int source;
     int destination;
-    double fakePropagateTime;
     double x;
     double y;
     double z;
+    double destX;
+    double destY;
+    double destZ;
     double timeStamp;
+    double txPowerUpdate;
+    double centerFreq;
 
   private:
     void copy(const AirFrameMsg& other);
@@ -69,16 +79,24 @@ class AirFrameMsg : public ::omnetpp::cMessage
     virtual void setSource(int source);
     virtual int getDestination() const;
     virtual void setDestination(int destination);
-    virtual double getFakePropagateTime() const;
-    virtual void setFakePropagateTime(double fakePropagateTime);
     virtual double getX() const;
     virtual void setX(double x);
     virtual double getY() const;
     virtual void setY(double y);
     virtual double getZ() const;
     virtual void setZ(double z);
+    virtual double getDestX() const;
+    virtual void setDestX(double destX);
+    virtual double getDestY() const;
+    virtual void setDestY(double destY);
+    virtual double getDestZ() const;
+    virtual void setDestZ(double destZ);
     virtual double getTimeStamp() const;
     virtual void setTimeStamp(double timeStamp);
+    virtual double getTxPowerUpdate() const;
+    virtual void setTxPowerUpdate(double txPowerUpdate);
+    virtual double getCenterFreq() const;
+    virtual void setCenterFreq(double centerFreq);
 };
 
 inline void doParsimPacking(omnetpp::cCommBuffer *b, const AirFrameMsg& obj) {obj.parsimPack(b);}

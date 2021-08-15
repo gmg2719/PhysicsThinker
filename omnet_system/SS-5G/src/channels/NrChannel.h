@@ -40,6 +40,10 @@ public:
     virtual void initialize();
 
     void setDistance(double dist);
+
+    double path_loss(double dist);
+
+    virtual void processMessage(cMessage *msg, simtime_t t, result_t& result);
 };
 
 };

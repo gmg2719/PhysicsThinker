@@ -73,6 +73,12 @@ void NrPosition::handleMessage(cMessage *msg)
     }
 }
 
+
+double NrPosition::pathLoss2Distance(double pl)
+{
+    return pow(10, pl/31.7);
+}
+
 void NrPosition::forward2core_positioning_request(AirFrameMsg *ttmsg_ue)
 {
     char msgname[64];
@@ -90,8 +96,14 @@ void NrPosition::forward2core_positioning_request(AirFrameMsg *ttmsg_ue)
     core_msg->setUeX(ttmsg_ue->getX());
     core_msg->setUeY(ttmsg_ue->getY());
     core_msg->setUeZ(ttmsg_ue->getZ());
-    double trans_time = ttmsg_ue->getFakePropagateTime();
+
+    // The pass loss, and the SRS signal in tx is always 30 dB
+    double pl_power = 30 - ttmsg_ue->getTxPowerUpdate();
+    double trans_time = pathLoss2Distance(pl_power) / SPEED_OF_LIGHT;
     core_msg->setArriveTime(trans_time);
+    EV << "After the SRS signal process, the TOA of UE(" << ue_simid << ") is " << trans_time << "\n";
+
+    // Set the time stamp
     double tti_stamp = 0;
     core_msg->setTimeStamp(tti_stamp);
 

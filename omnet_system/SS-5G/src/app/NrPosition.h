@@ -45,6 +45,8 @@ class NrPosition : public NrGnbBase
     virtual void initialize();
     virtual void handleMessage(cMessage *msg);
 
+    double pathLoss2Distance(double pl);
+
     // Send positioning request
     virtual void forward2core_positioning_request(AirFrameMsg *ttmsg_ue);
 };

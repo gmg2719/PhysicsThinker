@@ -86,14 +86,16 @@ void NrSrsUe::srsPeriodForward()
         msg->setDestination(-1);
         // Set the message type
         msg->setType(UE_SRS_SIGNAL);
-        // Set the coordinates of the UE
+        // Set the coordinates of the UE and the BS destination
         msg->setX(x_coord);
         msg->setY(y_coord);
         msg->setZ(z_coord);
+        msg->setDestX(bs_x_coord[i]);
+        msg->setDestY(bs_y_coord[i]);
+        msg->setDestZ(bs_z_coord[i]);
+        // Set the power of the SRS period signal, fixed 30 dB
+        msg->setTxPowerUpdate(30.0);
         // Set the time information
-        double distance = sqrt((x_coord-bs_x_coord[i])*(x_coord-bs_x_coord[i])+(y_coord-bs_y_coord[i])*(y_coord-bs_y_coord[i])+
-                (z_coord-bs_z_coord[i])*(z_coord-bs_z_coord[i]));
-        msg->setFakePropagateTime(distance / SPEED_OF_LIGHT);
         msg->setTimeStamp(0.0);
         EV << "Broadcasting message " << msg << " on BS out[" << i << "]\n";
         send(msg, "out", i);

@@ -184,11 +184,15 @@ AirFrameMsg::AirFrameMsg(const char *name, short kind) : ::omnetpp::cMessage(nam
     this->type = 0;
     this->source = 0;
     this->destination = 0;
-    this->fakePropagateTime = 0;
     this->x = 0;
     this->y = 0;
     this->z = 0;
+    this->destX = 0;
+    this->destY = 0;
+    this->destZ = 0;
     this->timeStamp = 0;
+    this->txPowerUpdate = 0;
+    this->centerFreq = 0;
 }
 
 AirFrameMsg::AirFrameMsg(const AirFrameMsg& other) : ::omnetpp::cMessage(other)
@@ -213,11 +217,15 @@ void AirFrameMsg::copy(const AirFrameMsg& other)
     this->type = other.type;
     this->source = other.source;
     this->destination = other.destination;
-    this->fakePropagateTime = other.fakePropagateTime;
     this->x = other.x;
     this->y = other.y;
     this->z = other.z;
+    this->destX = other.destX;
+    this->destY = other.destY;
+    this->destZ = other.destZ;
     this->timeStamp = other.timeStamp;
+    this->txPowerUpdate = other.txPowerUpdate;
+    this->centerFreq = other.centerFreq;
 }
 
 void AirFrameMsg::parsimPack(omnetpp::cCommBuffer *b) const
@@ -226,11 +234,15 @@ void AirFrameMsg::parsimPack(omnetpp::cCommBuffer *b) const
     doParsimPacking(b,this->type);
     doParsimPacking(b,this->source);
     doParsimPacking(b,this->destination);
-    doParsimPacking(b,this->fakePropagateTime);
     doParsimPacking(b,this->x);
     doParsimPacking(b,this->y);
     doParsimPacking(b,this->z);
+    doParsimPacking(b,this->destX);
+    doParsimPacking(b,this->destY);
+    doParsimPacking(b,this->destZ);
     doParsimPacking(b,this->timeStamp);
+    doParsimPacking(b,this->txPowerUpdate);
+    doParsimPacking(b,this->centerFreq);
 }
 
 void AirFrameMsg::parsimUnpack(omnetpp::cCommBuffer *b)
@@ -239,11 +251,15 @@ void AirFrameMsg::parsimUnpack(omnetpp::cCommBuffer *b)
     doParsimUnpacking(b,this->type);
     doParsimUnpacking(b,this->source);
     doParsimUnpacking(b,this->destination);
-    doParsimUnpacking(b,this->fakePropagateTime);
     doParsimUnpacking(b,this->x);
     doParsimUnpacking(b,this->y);
     doParsimUnpacking(b,this->z);
+    doParsimUnpacking(b,this->destX);
+    doParsimUnpacking(b,this->destY);
+    doParsimUnpacking(b,this->destZ);
     doParsimUnpacking(b,this->timeStamp);
+    doParsimUnpacking(b,this->txPowerUpdate);
+    doParsimUnpacking(b,this->centerFreq);
 }
 
 int AirFrameMsg::getType() const
@@ -276,16 +292,6 @@ void AirFrameMsg::setDestination(int destination)
     this->destination = destination;
 }
 
-double AirFrameMsg::getFakePropagateTime() const
-{
-    return this->fakePropagateTime;
-}
-
-void AirFrameMsg::setFakePropagateTime(double fakePropagateTime)
-{
-    this->fakePropagateTime = fakePropagateTime;
-}
-
 double AirFrameMsg::getX() const
 {
     return this->x;
@@ -316,6 +322,36 @@ void AirFrameMsg::setZ(double z)
     this->z = z;
 }
 
+double AirFrameMsg::getDestX() const
+{
+    return this->destX;
+}
+
+void AirFrameMsg::setDestX(double destX)
+{
+    this->destX = destX;
+}
+
+double AirFrameMsg::getDestY() const
+{
+    return this->destY;
+}
+
+void AirFrameMsg::setDestY(double destY)
+{
+    this->destY = destY;
+}
+
+double AirFrameMsg::getDestZ() const
+{
+    return this->destZ;
+}
+
+void AirFrameMsg::setDestZ(double destZ)
+{
+    this->destZ = destZ;
+}
+
 double AirFrameMsg::getTimeStamp() const
 {
     return this->timeStamp;
@@ -324,6 +360,26 @@ double AirFrameMsg::getTimeStamp() const
 void AirFrameMsg::setTimeStamp(double timeStamp)
 {
     this->timeStamp = timeStamp;
+}
+
+double AirFrameMsg::getTxPowerUpdate() const
+{
+    return this->txPowerUpdate;
+}
+
+void AirFrameMsg::setTxPowerUpdate(double txPowerUpdate)
+{
+    this->txPowerUpdate = txPowerUpdate;
+}
+
+double AirFrameMsg::getCenterFreq() const
+{
+    return this->centerFreq;
+}
+
+void AirFrameMsg::setCenterFreq(double centerFreq)
+{
+    this->centerFreq = centerFreq;
 }
 
 class AirFrameMsgDescriptor : public omnetpp::cClassDescriptor
@@ -391,7 +447,7 @@ const char *AirFrameMsgDescriptor::getProperty(const char *propertyname) const
 int AirFrameMsgDescriptor::getFieldCount() const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
-    return basedesc ? 8+basedesc->getFieldCount() : 8;
+    return basedesc ? 12+basedesc->getFieldCount() : 12;
 }
 
 unsigned int AirFrameMsgDescriptor::getFieldTypeFlags(int field) const
@@ -411,8 +467,12 @@ unsigned int AirFrameMsgDescriptor::getFieldTypeFlags(int field) const
         FD_ISEDITABLE,
         FD_ISEDITABLE,
         FD_ISEDITABLE,
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
     };
-    return (field>=0 && field<8) ? fieldTypeFlags[field] : 0;
+    return (field>=0 && field<12) ? fieldTypeFlags[field] : 0;
 }
 
 const char *AirFrameMsgDescriptor::getFieldName(int field) const
@@ -427,13 +487,17 @@ const char *AirFrameMsgDescriptor::getFieldName(int field) const
         "type",
         "source",
         "destination",
-        "fakePropagateTime",
         "x",
         "y",
         "z",
+        "destX",
+        "destY",
+        "destZ",
         "timeStamp",
+        "txPowerUpdate",
+        "centerFreq",
     };
-    return (field>=0 && field<8) ? fieldNames[field] : nullptr;
+    return (field>=0 && field<12) ? fieldNames[field] : nullptr;
 }
 
 int AirFrameMsgDescriptor::findField(const char *fieldName) const
@@ -443,11 +507,15 @@ int AirFrameMsgDescriptor::findField(const char *fieldName) const
     if (fieldName[0]=='t' && strcmp(fieldName, "type")==0) return base+0;
     if (fieldName[0]=='s' && strcmp(fieldName, "source")==0) return base+1;
     if (fieldName[0]=='d' && strcmp(fieldName, "destination")==0) return base+2;
-    if (fieldName[0]=='f' && strcmp(fieldName, "fakePropagateTime")==0) return base+3;
-    if (fieldName[0]=='x' && strcmp(fieldName, "x")==0) return base+4;
-    if (fieldName[0]=='y' && strcmp(fieldName, "y")==0) return base+5;
-    if (fieldName[0]=='z' && strcmp(fieldName, "z")==0) return base+6;
-    if (fieldName[0]=='t' && strcmp(fieldName, "timeStamp")==0) return base+7;
+    if (fieldName[0]=='x' && strcmp(fieldName, "x")==0) return base+3;
+    if (fieldName[0]=='y' && strcmp(fieldName, "y")==0) return base+4;
+    if (fieldName[0]=='z' && strcmp(fieldName, "z")==0) return base+5;
+    if (fieldName[0]=='d' && strcmp(fieldName, "destX")==0) return base+6;
+    if (fieldName[0]=='d' && strcmp(fieldName, "destY")==0) return base+7;
+    if (fieldName[0]=='d' && strcmp(fieldName, "destZ")==0) return base+8;
+    if (fieldName[0]=='t' && strcmp(fieldName, "timeStamp")==0) return base+9;
+    if (fieldName[0]=='t' && strcmp(fieldName, "txPowerUpdate")==0) return base+10;
+    if (fieldName[0]=='c' && strcmp(fieldName, "centerFreq")==0) return base+11;
     return basedesc ? basedesc->findField(fieldName) : -1;
 }
 
@@ -468,8 +536,12 @@ const char *AirFrameMsgDescriptor::getFieldTypeString(int field) const
         "double",
         "double",
         "double",
+        "double",
+        "double",
+        "double",
+        "double",
     };
-    return (field>=0 && field<8) ? fieldTypeStrings[field] : nullptr;
+    return (field>=0 && field<12) ? fieldTypeStrings[field] : nullptr;
 }
 
 const char **AirFrameMsgDescriptor::getFieldPropertyNames(int field) const
@@ -539,11 +611,15 @@ std::string AirFrameMsgDescriptor::getFieldValueAsString(void *object, int field
         case 0: return long2string(pp->getType());
         case 1: return long2string(pp->getSource());
         case 2: return long2string(pp->getDestination());
-        case 3: return double2string(pp->getFakePropagateTime());
-        case 4: return double2string(pp->getX());
-        case 5: return double2string(pp->getY());
-        case 6: return double2string(pp->getZ());
-        case 7: return double2string(pp->getTimeStamp());
+        case 3: return double2string(pp->getX());
+        case 4: return double2string(pp->getY());
+        case 5: return double2string(pp->getZ());
+        case 6: return double2string(pp->getDestX());
+        case 7: return double2string(pp->getDestY());
+        case 8: return double2string(pp->getDestZ());
+        case 9: return double2string(pp->getTimeStamp());
+        case 10: return double2string(pp->getTxPowerUpdate());
+        case 11: return double2string(pp->getCenterFreq());
         default: return "";
     }
 }
@@ -561,11 +637,15 @@ bool AirFrameMsgDescriptor::setFieldValueAsString(void *object, int field, int i
         case 0: pp->setType(string2long(value)); return true;
         case 1: pp->setSource(string2long(value)); return true;
         case 2: pp->setDestination(string2long(value)); return true;
-        case 3: pp->setFakePropagateTime(string2double(value)); return true;
-        case 4: pp->setX(string2double(value)); return true;
-        case 5: pp->setY(string2double(value)); return true;
-        case 6: pp->setZ(string2double(value)); return true;
-        case 7: pp->setTimeStamp(string2double(value)); return true;
+        case 3: pp->setX(string2double(value)); return true;
+        case 4: pp->setY(string2double(value)); return true;
+        case 5: pp->setZ(string2double(value)); return true;
+        case 6: pp->setDestX(string2double(value)); return true;
+        case 7: pp->setDestY(string2double(value)); return true;
+        case 8: pp->setDestZ(string2double(value)); return true;
+        case 9: pp->setTimeStamp(string2double(value)); return true;
+        case 10: pp->setTxPowerUpdate(string2double(value)); return true;
+        case 11: pp->setCenterFreq(string2double(value)); return true;
         default: return false;
     }
 }

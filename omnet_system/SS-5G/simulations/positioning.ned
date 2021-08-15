@@ -75,4 +75,40 @@ network indoor_positioning
         server.out++ --> D --> gnb4.core_in;
 }
 
+network outdoor_positioning
+{
+    types:
+        channel D extends ned.DelayChannel {
+            delay = 10ms;
+        }
+    submodules:
+        gnb1  : NrPosition;
+        gnb2  : NrPosition;
+        gnb3  : NrPosition;
+        gnb4  : NrPosition;
+        ue    : NrSrsUe;
+        server: NrServer;
+    connections:
+        ue.in++ <-- NrChannel <-- gnb1.out++;
+        ue.out++ --> NrChannel --> gnb1.in++;
+        
+        ue.in++ <-- NrChannel <-- gnb2.out++;
+        ue.out++ --> NrChannel --> gnb2.in++;
+        
+        ue.in++ <-- NrChannel <-- gnb3.out++;
+        ue.out++ --> NrChannel --> gnb3.in++;
+        
+        ue.in++ <-- NrChannel <-- gnb4.out++;
+        ue.out++ --> NrChannel --> gnb4.in++;
+
+        server.in++ <-- D <-- gnb1.core_out;
+        server.out++ --> D --> gnb1.core_in;
+        server.in++ <-- D <-- gnb2.core_out;
+        server.out++ --> D --> gnb2.core_in;
+        server.in++ <-- D <-- gnb3.core_out;
+        server.out++ --> D --> gnb3.core_in;
+        server.in++ <-- D <-- gnb4.core_out;
+        server.out++ --> D --> gnb4.core_in;
+}
+
 
