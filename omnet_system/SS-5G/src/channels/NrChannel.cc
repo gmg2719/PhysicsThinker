@@ -48,9 +48,20 @@ void NrChannel::setDistance(double dist)
 }
 
 
-double NrChannel::path_loss(double dist)
+double NrChannel::path_loss(int model, double center_freq, double dist)
 {
-    return 31.7 * log10(dist);
+    double pl = 0.;
+
+    // center_freq is GHz
+    if (model == INDOOR_ONLY_PATHLOSS) {
+        pl = 32.4 + 17.3 * log10(dist) + 20 * log10(center_freq);
+    } else if (model == OUTDOOR_ONLY_PATHLOSS) {
+        pl = 28.0 + 22 * log10(dist) + 20 * log10(center_freq);
+    } else {
+        EV << "Not supported path loss model for the wireless channel in path_loss() !\n";
+    }
+
+    return pl;
 }
 
 void NrChannel::processMessage(cMessage *msg, simtime_t t, result_t& result)
@@ -60,6 +71,8 @@ void NrChannel::processMessage(cMessage *msg, simtime_t t, result_t& result)
     if (ttmsg->getType() == UE_SRS_SIGNAL)
     {
         double tx_power = ttmsg->getTxPowerUpdate();
+        double freq = ttmsg->getCenterFreq();
+        int channel_model = ttmsg->getChannelMode();
         double x = ttmsg->getX();
         double y = ttmsg->getY();
         double z = ttmsg->getZ();
@@ -70,7 +83,7 @@ void NrChannel::processMessage(cMessage *msg, simtime_t t, result_t& result)
 
         double srs_delay = dist / SPEED_OF_LIGHT;
 
-        ttmsg->setTxPowerUpdate(tx_power - path_loss(dist));
+        ttmsg->setTxPowerUpdate(tx_power - path_loss(channel_model, freq, dist));
 
         cDelayChannel::setDelay(srs_delay);
         EV << "NrChannel makes propagate delay = " << srs_delay << "\n";
@@ -86,3 +99,4 @@ void NrChannel::processMessage(cMessage *msg, simtime_t t, result_t& result)
 }
 
 };
+

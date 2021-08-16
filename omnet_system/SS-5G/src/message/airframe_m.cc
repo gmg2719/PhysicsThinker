@@ -191,6 +191,7 @@ AirFrameMsg::AirFrameMsg(const char *name, short kind) : ::omnetpp::cMessage(nam
     this->destY = 0;
     this->destZ = 0;
     this->timeStamp = 0;
+    this->channelMode = 0;
     this->txPowerUpdate = 0;
     this->centerFreq = 0;
 }
@@ -224,8 +225,10 @@ void AirFrameMsg::copy(const AirFrameMsg& other)
     this->destY = other.destY;
     this->destZ = other.destZ;
     this->timeStamp = other.timeStamp;
+    this->channelMode = other.channelMode;
     this->txPowerUpdate = other.txPowerUpdate;
     this->centerFreq = other.centerFreq;
+    this->txGridName = other.txGridName;
 }
 
 void AirFrameMsg::parsimPack(omnetpp::cCommBuffer *b) const
@@ -241,8 +244,10 @@ void AirFrameMsg::parsimPack(omnetpp::cCommBuffer *b) const
     doParsimPacking(b,this->destY);
     doParsimPacking(b,this->destZ);
     doParsimPacking(b,this->timeStamp);
+    doParsimPacking(b,this->channelMode);
     doParsimPacking(b,this->txPowerUpdate);
     doParsimPacking(b,this->centerFreq);
+    doParsimPacking(b,this->txGridName);
 }
 
 void AirFrameMsg::parsimUnpack(omnetpp::cCommBuffer *b)
@@ -258,8 +263,10 @@ void AirFrameMsg::parsimUnpack(omnetpp::cCommBuffer *b)
     doParsimUnpacking(b,this->destY);
     doParsimUnpacking(b,this->destZ);
     doParsimUnpacking(b,this->timeStamp);
+    doParsimUnpacking(b,this->channelMode);
     doParsimUnpacking(b,this->txPowerUpdate);
     doParsimUnpacking(b,this->centerFreq);
+    doParsimUnpacking(b,this->txGridName);
 }
 
 int AirFrameMsg::getType() const
@@ -362,6 +369,16 @@ void AirFrameMsg::setTimeStamp(double timeStamp)
     this->timeStamp = timeStamp;
 }
 
+int AirFrameMsg::getChannelMode() const
+{
+    return this->channelMode;
+}
+
+void AirFrameMsg::setChannelMode(int channelMode)
+{
+    this->channelMode = channelMode;
+}
+
 double AirFrameMsg::getTxPowerUpdate() const
 {
     return this->txPowerUpdate;
@@ -380,6 +397,16 @@ double AirFrameMsg::getCenterFreq() const
 void AirFrameMsg::setCenterFreq(double centerFreq)
 {
     this->centerFreq = centerFreq;
+}
+
+const char * AirFrameMsg::getTxGridName() const
+{
+    return this->txGridName.c_str();
+}
+
+void AirFrameMsg::setTxGridName(const char * txGridName)
+{
+    this->txGridName = txGridName;
 }
 
 class AirFrameMsgDescriptor : public omnetpp::cClassDescriptor
@@ -447,7 +474,7 @@ const char *AirFrameMsgDescriptor::getProperty(const char *propertyname) const
 int AirFrameMsgDescriptor::getFieldCount() const
 {
     omnetpp::cClassDescriptor *basedesc = getBaseClassDescriptor();
-    return basedesc ? 12+basedesc->getFieldCount() : 12;
+    return basedesc ? 14+basedesc->getFieldCount() : 14;
 }
 
 unsigned int AirFrameMsgDescriptor::getFieldTypeFlags(int field) const
@@ -471,8 +498,10 @@ unsigned int AirFrameMsgDescriptor::getFieldTypeFlags(int field) const
         FD_ISEDITABLE,
         FD_ISEDITABLE,
         FD_ISEDITABLE,
+        FD_ISEDITABLE,
+        FD_ISEDITABLE,
     };
-    return (field>=0 && field<12) ? fieldTypeFlags[field] : 0;
+    return (field>=0 && field<14) ? fieldTypeFlags[field] : 0;
 }
 
 const char *AirFrameMsgDescriptor::getFieldName(int field) const
@@ -494,10 +523,12 @@ const char *AirFrameMsgDescriptor::getFieldName(int field) const
         "destY",
         "destZ",
         "timeStamp",
+        "channelMode",
         "txPowerUpdate",
         "centerFreq",
+        "txGridName",
     };
-    return (field>=0 && field<12) ? fieldNames[field] : nullptr;
+    return (field>=0 && field<14) ? fieldNames[field] : nullptr;
 }
 
 int AirFrameMsgDescriptor::findField(const char *fieldName) const
@@ -514,8 +545,10 @@ int AirFrameMsgDescriptor::findField(const char *fieldName) const
     if (fieldName[0]=='d' && strcmp(fieldName, "destY")==0) return base+7;
     if (fieldName[0]=='d' && strcmp(fieldName, "destZ")==0) return base+8;
     if (fieldName[0]=='t' && strcmp(fieldName, "timeStamp")==0) return base+9;
-    if (fieldName[0]=='t' && strcmp(fieldName, "txPowerUpdate")==0) return base+10;
-    if (fieldName[0]=='c' && strcmp(fieldName, "centerFreq")==0) return base+11;
+    if (fieldName[0]=='c' && strcmp(fieldName, "channelMode")==0) return base+10;
+    if (fieldName[0]=='t' && strcmp(fieldName, "txPowerUpdate")==0) return base+11;
+    if (fieldName[0]=='c' && strcmp(fieldName, "centerFreq")==0) return base+12;
+    if (fieldName[0]=='t' && strcmp(fieldName, "txGridName")==0) return base+13;
     return basedesc ? basedesc->findField(fieldName) : -1;
 }
 
@@ -538,10 +571,12 @@ const char *AirFrameMsgDescriptor::getFieldTypeString(int field) const
         "double",
         "double",
         "double",
+        "int",
         "double",
         "double",
+        "string",
     };
-    return (field>=0 && field<12) ? fieldTypeStrings[field] : nullptr;
+    return (field>=0 && field<14) ? fieldTypeStrings[field] : nullptr;
 }
 
 const char **AirFrameMsgDescriptor::getFieldPropertyNames(int field) const
@@ -618,8 +653,10 @@ std::string AirFrameMsgDescriptor::getFieldValueAsString(void *object, int field
         case 7: return double2string(pp->getDestY());
         case 8: return double2string(pp->getDestZ());
         case 9: return double2string(pp->getTimeStamp());
-        case 10: return double2string(pp->getTxPowerUpdate());
-        case 11: return double2string(pp->getCenterFreq());
+        case 10: return long2string(pp->getChannelMode());
+        case 11: return double2string(pp->getTxPowerUpdate());
+        case 12: return double2string(pp->getCenterFreq());
+        case 13: return oppstring2string(pp->getTxGridName());
         default: return "";
     }
 }
@@ -644,8 +681,10 @@ bool AirFrameMsgDescriptor::setFieldValueAsString(void *object, int field, int i
         case 7: pp->setDestY(string2double(value)); return true;
         case 8: pp->setDestZ(string2double(value)); return true;
         case 9: pp->setTimeStamp(string2double(value)); return true;
-        case 10: pp->setTxPowerUpdate(string2double(value)); return true;
-        case 11: pp->setCenterFreq(string2double(value)); return true;
+        case 10: pp->setChannelMode(string2long(value)); return true;
+        case 11: pp->setTxPowerUpdate(string2double(value)); return true;
+        case 12: pp->setCenterFreq(string2double(value)); return true;
+        case 13: pp->setTxGridName((value)); return true;
         default: return false;
     }
 }

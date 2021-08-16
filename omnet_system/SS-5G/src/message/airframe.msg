@@ -13,6 +13,9 @@ message AirFrameMsg
     double destZ;
     double timeStamp;
     // all physical information
+    int channelMode;
     double txPowerUpdate;
-    double centerFreq;
+    double centerFreq;		// Magnitude : GHz
+    // SRS external tx_grid filename
+    string txGridName;
 }

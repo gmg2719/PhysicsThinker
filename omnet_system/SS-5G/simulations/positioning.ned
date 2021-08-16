@@ -36,6 +36,8 @@ simple NrPosition extends NrGnbBase
 
 simple NrSrsUe extends NrUeBase
 {
+	parameters:
+	    int channel_model = default(0);
     @class(NrSrsUe);
 }
 

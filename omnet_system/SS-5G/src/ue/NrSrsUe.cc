@@ -28,11 +28,22 @@ namespace ss5G {
 
 Define_Module(NrSrsUe);
 
+NrSrsUe::~NrSrsUe()
+{
+    if (srs_control_event != NULL)
+        delete srs_control_event;
+}
+
 void NrSrsUe::initialize()
 {
     bs_connected = gateSize("out");
 
     NrUeBase::initialize();
+    tx_ants = 1;
+    srs_pdu_initialize();
+
+    // Set the channel model from the configuration file
+    channel_model = par("channel_model");
 
     char msgname[32];
     sprintf(msgname, "srs-peirod_ind");
@@ -58,6 +69,53 @@ void NrSrsUe::handleMessage(cMessage *msg)
         }
     } else {
         NrUeBase::handleMessage(msg);
+    }
+}
+
+void NrSrsUe::srs_pdu_initialize()
+{
+    srs_config.rnti = 51378;
+    srs_config.bwp_size = 273;
+    srs_config.num_ports = 1;
+    srs_config.num_symbols = 1;
+    srs_config.bandwidth_index = 0;
+    srs_config.sequence_id = 0;
+    srs_config.group_or_sequence_hopping = 0;
+    srs_config.time_start_position = 13;
+    srs_config.cyclic_shift = 0;
+    srs_config.config_index = 63;
+    srs_config.comb_size = 2;
+    srs_config.comb_offset = 0;
+    srs_config.freq_shift = 0;
+    srs_config.freq_position = 0;
+    srs_config.freq_hopping = 0;
+    srs_config.resource_type = 2;
+    srs_config.t_srs = 1;
+
+    srs_freq_position_calc();
+
+    num_srs_re = num_rb * 12 / srs_config.comb_size;
+    cs_max = srs_config.comb_size == 4 ? 8 : 12;
+
+    num_re_total = srs_config.bwp_size * 12;
+}
+
+void NrSrsUe::srs_freq_position_calc()
+{
+    int c_srs = srs_config.config_index;
+    int b_srs = srs_config.bandwidth_index;
+    int comb_size = srs_config.comb_size;
+    int comb_offset = srs_config.comb_offset;
+    int n_shift = srs_config.freq_shift;
+    int n_rrc = srs_config.freq_position;
+
+    num_rb = SRS_CONFIG_TABLE[c_srs][2*b_srs + 1];
+
+    int n = SRS_CONFIG_TABLE[c_srs][2*b_srs + 2];
+    int k0_bar = n_shift * 12 + comb_offset;
+    k0 = k0_bar;
+    for (int b = 0; b < b_srs; b++) {
+        k0 += n_shift + num_rb * comb_size * ((4 *n_rrc/num_rb) % n);
     }
 }
 
@@ -93,8 +151,10 @@ void NrSrsUe::srsPeriodForward()
         msg->setDestX(bs_x_coord[i]);
         msg->setDestY(bs_y_coord[i]);
         msg->setDestZ(bs_z_coord[i]);
-        // Set the power of the SRS period signal, fixed 30 dB
-        msg->setTxPowerUpdate(30.0);
+        // Set the power of the SRS period signal, fixed 40 dB, center_frequency = 2.6 GHz
+        msg->setTxPowerUpdate(40.0);
+        msg->setCenterFreq(2.6);
+        msg->setChannelMode(channel_model);
         // Set the time information
         msg->setTimeStamp(0.0);
         EV << "Broadcasting message " << msg << " on BS out[" << i << "]\n";

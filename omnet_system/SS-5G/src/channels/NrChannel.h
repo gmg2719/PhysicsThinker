@@ -41,7 +41,7 @@ public:
 
     void setDistance(double dist);
 
-    double path_loss(double dist);
+    double path_loss(int model, double center_freq, double dist);
 
     virtual void processMessage(cMessage *msg, simtime_t t, result_t& result);
 };

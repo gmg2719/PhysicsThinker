@@ -73,7 +73,7 @@ void NrGnbBase::initialize()
     BsControlMsg *msg = new BsControlMsg("bcast-info");
     msg->setMsgType(INIT_BROADCAST);
     control_msg = msg;
-    scheduleAt(0.0, control_msg);
+    scheduleAt(1E-9, control_msg);
     EV << "Scheduling first on the Base Station\n";
     EV << "BS schedule period is " << period_sched << " sec !\n";
     EV << "BS coordinate : " << x_coord << " " << y_coord << " " << z_coord << "\n";

@@ -35,8 +35,11 @@
  *     double destZ;
  *     double timeStamp;
  *     // all physical information
+ *     int channelMode;
  *     double txPowerUpdate;
- *     double centerFreq;
+ *     double centerFreq;		// Magnitude : GHz
+ *     // SRS external tx_grid filename
+ *     string txGridName;
  * }
  * </pre>
  */
@@ -53,8 +56,10 @@ class AirFrameMsg : public ::omnetpp::cMessage
     double destY;
     double destZ;
     double timeStamp;
+    int channelMode;
     double txPowerUpdate;
     double centerFreq;
+    ::omnetpp::opp_string txGridName;
 
   private:
     void copy(const AirFrameMsg& other);
@@ -93,10 +98,14 @@ class AirFrameMsg : public ::omnetpp::cMessage
     virtual void setDestZ(double destZ);
     virtual double getTimeStamp() const;
     virtual void setTimeStamp(double timeStamp);
+    virtual int getChannelMode() const;
+    virtual void setChannelMode(int channelMode);
     virtual double getTxPowerUpdate() const;
     virtual void setTxPowerUpdate(double txPowerUpdate);
     virtual double getCenterFreq() const;
     virtual void setCenterFreq(double centerFreq);
+    virtual const char * getTxGridName() const;
+    virtual void setTxGridName(const char * txGridName);
 };
 
 inline void doParsimPacking(omnetpp::cCommBuffer *b, const AirFrameMsg& obj) {obj.parsimPack(b);}

@@ -39,7 +39,7 @@ void NrPosition::initialize()
     BsControlMsg *msg = new BsControlMsg("positiong-request");
     msg->setMsgType(POSITION_REQUEST);
     position_request_msg = msg;
-    scheduleAt(0.0, position_request_msg);
+    scheduleAt(1E-9, position_request_msg);
     EV << "Scheduling position request on the Base Station\n";
 
     NrGnbBase::initialize();
@@ -74,9 +74,20 @@ void NrPosition::handleMessage(cMessage *msg)
 }
 
 
-double NrPosition::pathLoss2Distance(double pl)
+double NrPosition::pathLoss2Distance(int channel_model, double center_freq, double pl)
 {
-    return pow(10, pl/31.7);
+    double dist = 1.0;
+
+    // center_freq is GHz
+    if (channel_model == INDOOR_ONLY_PATHLOSS) {
+        dist = pow(10, (pl - 32.4 - 20 * log10(center_freq)) / 17.3);
+    } else if (channel_model == OUTDOOR_ONLY_PATHLOSS) {
+        dist = pow(10, (pl - 28.0 - 20 * log10(center_freq)) / 22);
+    } else {
+        EV << "Not supported path loss model for the wireless channel in pathLoss2Distance() !\n";
+    }
+
+    return dist;
 }
 
 void NrPosition::forward2core_positioning_request(AirFrameMsg *ttmsg_ue)
@@ -97,9 +108,11 @@ void NrPosition::forward2core_positioning_request(AirFrameMsg *ttmsg_ue)
     core_msg->setUeY(ttmsg_ue->getY());
     core_msg->setUeZ(ttmsg_ue->getZ());
 
-    // The pass loss, and the SRS signal in tx is always 30 dB
-    double pl_power = 30 - ttmsg_ue->getTxPowerUpdate();
-    double trans_time = pathLoss2Distance(pl_power) / SPEED_OF_LIGHT;
+    // The pass loss, and the SRS signal in tx is always 40 dB
+    double pl_power = 40 - ttmsg_ue->getTxPowerUpdate();
+    double freq = ttmsg_ue->getCenterFreq();
+    int channel_model = ttmsg_ue->getChannelMode();
+    double trans_time = pathLoss2Distance(channel_model, freq, pl_power) / SPEED_OF_LIGHT;
     core_msg->setArriveTime(trans_time);
     EV << "After the SRS signal process, the TOA of UE(" << ue_simid << ") is " << trans_time << "\n";
 
