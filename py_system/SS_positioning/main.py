@@ -3,9 +3,12 @@
 
 import os
 import sys
+import numpy as np
 
 from basic_parameters import SysParameters, SrsPdu, SrsPduFormatted, srs_pdu2formatted
 from srs_app_scheduler import srs_app_positioning_schedule
+from srs_app_scheduler import srs_app_run_indoors_sampling, srs_app_run_outdoors_sampling
+from srs_app_scheduler import srs_app_singleUe_indoors, srs_app_singleUe_outdoors
 
 print('Run simulation of the simplified contents !')
 pdu = SrsPdu()
@@ -53,4 +56,14 @@ print("*              Tx_power = 80 dB             *")
 print("*          mode = 0, distance = 10.0m       *")
 print("*             Run the simulation            *")
 print("*********************************************")
-srs_app_positioning_schedule(sys_parameters, srs_pdu, 80.0, 10.0, 0)
+np.random.seed(10)
+
+# srs_app_run_indoors_sampling(sys_parameters, srs_pdu, 80, 10.0)
+# srs_app_run_outdoors_sampling(sys_parameters, srs_pdu, 120, 650.0)
+# a1 = np.loadtxt('signal_indoor_estimation.txt')
+# a2 = np.loadtxt('signal_outdoor_estimation.txt')
+
+srs_app_singleUe_indoors(sys_parameters, srs_pdu, 100)
+
+# srs_app_singleUe_outdoors(sys_parameters, srs_pdu, 160)
+

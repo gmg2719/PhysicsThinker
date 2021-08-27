@@ -232,7 +232,7 @@ class LOWPAPRs(object):
 def basic_generate_c_sequence(cinit, c_len):
     c_seq = []
     x2 = []
-    x2_tmp = [int(x) for x in bin(cinit)[2:]]
+    x2_temp = [int(x) for x in bin(cinit)[2:]]
     if len(x2_temp) > 31:
         print('Error: cinit sequence is greater than 31 bits')
     else:

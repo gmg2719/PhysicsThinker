@@ -8,7 +8,7 @@ import numpy as np
 
 import scipy.fftpack
 import scipy as spy
-from basic_sequences import LOWPAPRs
+from basic_sequences import LOWPAPRs, basic_generate_c_sequence, basic_cinit_calc
 
 UL_REFERENCE_SEQUENCES_LEN = np.array([6, 12, 18, 24, 30, 36, 48, 54, 60, 72, 84, 
                                        90, 96, 108, 120, 132, 144, 150, 156, 162, 168,
@@ -84,6 +84,11 @@ SRS_BANDWIDTH_CONFIG_TABLE = np.array([[0, 	4,	    1,	4,	    1,	   4,	   1,	4,	1
                                     [62,	272,	1,	68, 	4,	   4,	   17,	4,	1],
                                     [63,	272,	1,	16, 	17,	   8,	   2,	4,	2]])
 
+#
+#
+#  1. The 1st method for the SRS receiver
+#
+#
 def srs_freq_start_pos(frame_number, slot_number, srs_config, ttis_per_subframe):
     k_tc_p = 0
     k_0_overbar_p = 0
@@ -409,7 +414,7 @@ def srs_demodulation(sfn_id, slot_id, sys_parameters, srs_pdu, rx_grid):
         n_srs_cs_max = 12
     elif k_tc == 2:
         n_srs_cs_max = 8
-    
+
     for p_index in range(nrof_cyclicShift):
         cycliShift[p_index] = (srs_pdu.cyclic_shift + (n_srs_cs_max * int(SRS_antenna_port[p_index] - 1000) / srs_pdu.num_ports)) % n_srs_cs_max
     
@@ -423,4 +428,245 @@ def srs_rx_proc(sfn_id, slot_id, sys_parameters, srs_pdu, rx_grid):
         sys.exit(-1)
     ta_est, sig_est = srs_demodulation(sfn_id, slot_id, sys_parameters, srs_pdu, rx_grid)
     print('Estimate SRS (TA, Sigal_strength) : %.8f %.8f' % (ta_est, sig_est))
+    return sig_est
+
+#
+#
+#  2. The 2st method for the SRS receiver
+#
+#
+
+def srs_generate_u_v(group_or_seq_hopping, n_id, n_sf_u, l, mzc):
+    c_init = n_id
+    if group_or_seq_hopping == 'neither':
+        fgh = 0
+        v = 0
+    elif group_or_seq_hopping == 'group_hopping':
+        c_len = 8 * (14 * n_sf_u + l) + 8 + 1
+        c_seq = basic_generate_c_sequence(c_init, c_len)
+        c_seq = c_seq[-8:]
+        fgh = basic_cinit_calc(c_seq, 8)
+        v = 0
+    elif group_or_seq_hopping == 'sequence_hopping':
+        fgh = 0
+        if mzc >= 72:
+            c_len = 14 * n_sf_u + l
+            c_seq = basic_generate_c_sequence(c_init, c_len)
+            v = c_seq[-1]
+        else:
+            v = 0
+    else:
+        print('Parameters of SRS group_or_seq_hopping error !')
+        return 0, 0
+    u = (fgh + n_id) % 30
+    return u, v
+
+def srs_baseseq_gen(slot_idx, group_or_seq_hopping, hopping_id, l, n_srs_re):
+    u, v = srs_generate_u_v(group_or_seq_hopping, hopping_id, slot_idx, l, n_srs_re)
+    low_p = LOWPAPRs(u, v, [], n_srs_re).gen_base()
+    return low_p
+
+def srs_cyclic_shift_func(vec_input, cyclicshift):
+    vec_len = len(vec_input)
+    vec_output = np.zeros(vec_len, dtype=complex)
+    if cyclicshift > 0:
+        vec_output[0:vec_len - cyclicshift] = vec_input[cyclicshift: vec_len]
+        vec_output[vec_len - cyclicshift: vec_len] = vec_input[0: cyclicshift]
+    elif cyclicshift < 0:
+        vec_output[0: -cyclicshift] = vec_input[vec_len + cyclicshift: vec_len]
+        vec_output[-cyclicshift: vec_len] = vec_input[0: vec_len + cyclicshift]
+    else:
+        vec_output = vec_input
+    return vec_output
+
+class SrsProc(object):
+    def __init__(self, sfn, slot, sys_parameters, srs_pdu, rx_grid):
+        
+        self.n_rx                   = sys_parameters.rx_ants
+        self.slot_idx               = slot
+        self.symb_idx               = srs_pdu.start_symbol_index
+        self.srs_parameter          = srs_pdu
+        self.rx_grid                = rx_grid
+        [self.num_rb, self.k0]      = self.srs_freq_position_calc()
+        self.n_srs_re               = int(self.num_rb * 12 / srs_pdu.comb_size)
+        self.n_cs_max               = 8 if srs_pdu.comb_size == 4 else 12
+        self.n_fft                  = sys_parameters.nfft
+        self.baseseq                = np.zeros((self.n_srs_re, self.srs_parameter.num_symbols), dtype=complex)
+
+        cs_win                  = int(self.n_srs_re / self.n_cs_max)
+        self.cyclicshift        = (self.srs_parameter.cyclic_shift + (self.n_cs_max * np.arange(self.srs_parameter.num_ports) / self.srs_parameter.num_ports).astype(int)) % self.n_cs_max
+        n_ports                     = len(self.cyclicshift)
+        
+        min_cs_diff = self.n_cs_max
+        for p_index1 in range(n_ports):
+            for p_index2 in range(n_ports):
+                cs_diff = self.cyclicshift[p_index1] - self.cyclicshift[p_index2]
+                if ((p_index1 != p_index2) and (abs(cs_diff) < min_cs_diff)):
+                    min_cs_diff = np.abs(cs_diff)
+
+        win_size = min(4, min_cs_diff) * cs_win;  #the win size for detecte peak
+        Rms = 32;
+        peak_size = int((Rms * self.num_rb * 12 - 1) / self.n_fft) + 2;  #the rms point of peak
+        if (self.num_rb * 12 * 32 < self.n_fft):
+            peak_size = int(max(win_size / 2, 3))
+        
+        self.cyclicshift_offset     = cs_win * ((self.n_cs_max - self.cyclicshift) % self.n_cs_max)
+        self.cyclicshift_winsize    = win_size
+        self.peak_winsize           = peak_size
+        
+        n_re = int(self.num_rb * 12 / self.srs_parameter.comb_size)
+        self.channel_est_freq             = np.zeros((self.n_rx, n_re), dtype=complex)
+        self.channel_est_time             = np.zeros((self.n_rx, n_re), dtype=complex)
+        self.channel_pow_time             = np.zeros(n_re, dtype = float)
+        self.channel_pow3_time            = np.zeros(n_re, dtype = float)
+        self.channel_est_cyclicshift      = np.zeros((self.n_rx, n_ports, n_re), dtype=complex)
+        self.channel_pow_freq             = np.zeros((n_ports, n_re), dtype = float)
+        
+        self.ta_est             = np.zeros(n_ports, dtype = float)
+        self.rssi               = 0
+        self.noise_pow_est      = 0
+        self.signal_pow_est     = np.zeros(n_ports, dtype = float)
+        self.sinr_est           = np.zeros(n_ports, dtype = float)
+        self.sig_est            = np.zeros(n_ports, dtype = float)
+        
+    def srs_baseseq_gen(self):
+        
+        sequence_id = self.srs_parameter.sequence_id
+        group_or_sequence_hopping = self.srs_parameter.group_or_sequence_hopping
+        
+        for symb_idx in range(self.srs_parameter.num_symbols):
+            l = symb_idx + self.srs_parameter.start_symbol_index
+            self.baseseq[:, symb_idx] = srs_baseseq_gen(self.slot_idx, group_or_sequence_hopping, sequence_id, l, self.n_srs_re)
+        
+        print('srs_baseseq_gen Done')
+
+
+    def srs_channel_ls_est(self):
+
+        n_rx        = self.n_rx
+        
+        point_offset =  int(self.symb_idx * 3276 + self.k0)
+        
+        for symb_idx in range(self.srs_parameter.num_symbols):         
+            for rx_idx in range(n_rx): # extract srs re and ls est
+                srs_extract = self.rx_grid[point_offset : point_offset + self.num_rb * 12 : self.srs_parameter.comb_size, rx_idx]
+                self.channel_est_freq[rx_idx, :]  = srs_extract / self.baseseq[:, symb_idx]
+                  
+        print('srs_channel_ls_est Done')
+    
+    def srs_channel_idft(self):
+        
+        n_rx        = self.n_rx
+        n_re        = self.num_rb * 12 / self.srs_parameter.comb_size
+                      
+        for rx_idx in range(n_rx): # extract srs re and ls est
+            channel_idft = spy.fft.ifft(self.channel_est_freq[rx_idx, :]) * n_re
+            self.channel_est_time[rx_idx, :]  = channel_idft
+            self.channel_pow_time += np.real(channel_idft * np.conj(channel_idft))
+        
+        if (n_re * 32 < self.n_fft):
+            self.channel_pow3_time = self.channel_pow_time
+        else:
+            for ii in np.array([-1, 0, 1]):
+                self.channel_pow3_time = self.channel_pow3_time + srs_cyclic_shift_func(self.channel_pow_time, ii)
+        self.rssi  = sum(self.channel_pow_time) / n_re
+        
+        # plt.plot(self.channel_pow_time)
+       
+        print('srs_channel_idft Done')
+        
+    def srs_channel_cyclicshift_proc(self):
+        
+        n_rx        = self.n_rx
+        n_srs_re = int(self.num_rb * 12 / self.srs_parameter.comb_size)
+        
+        pow_diff = self.rssi
+        peak_sc_sum = 0
+        for cs_idx in range(len(self.cyclicshift)):
+            for rx_idx in range(n_rx):
+                h_tmp = srs_cyclic_shift_func(self.channel_est_time[rx_idx, :], self.cyclicshift_offset[cs_idx])
+                pow_tmp = srs_cyclic_shift_func(self.channel_pow3_time, self.cyclicshift_offset[cs_idx])
+                
+                pow_cyclicshift = np.zeros(n_srs_re, dtype = float)
+                pow_cyclicshift[0: int(self.cyclicshift_winsize/2)] = np.real(pow_tmp[0: int(self.cyclicshift_winsize/2)])
+                pow_cyclicshift[n_srs_re - int(self.cyclicshift_winsize/2) : n_srs_re] = np.real(pow_tmp[n_srs_re - int(self.cyclicshift_winsize/2) : n_srs_re])
+                
+                max_index = np.where(pow_cyclicshift == np.max(pow_cyclicshift))
+                peak_pos = max_index[0][0]
+                
+                # get ta est
+                if peak_pos <= self.cyclicshift_winsize:
+                    self.ta_est[cs_idx] = peak_pos
+                else:
+                    self.ta_est[cs_idx] = peak_pos - n_srs_re
+                
+                peak_offset = int(peak_pos - ((self.peak_winsize - 1) / 4 + 1));
+                channel_time_cyclicshift = np.zeros(n_srs_re, dtype=complex)
+                for ii in range(self.peak_winsize):
+                    point_idx = peak_offset + ii
+                    if (point_idx < 0):
+                        point_idx += n_srs_re
+                    # Add the cyclic shift for the right boundary, Pingzhou Ming, 2021.7.28
+                    elif point_idx >= n_srs_re:
+                        point_idx -= n_srs_re
+                    channel_time_cyclicshift[point_idx] = h_tmp[point_idx]
+                    
+                channel_dft = spy.fft.fft(channel_time_cyclicshift)
+                
+                self.channel_pow_freq[cs_idx, :] += np.real(channel_dft * np.conj(channel_dft)) / n_srs_re
+ 
+                self.channel_est_cyclicshift[rx_idx, cs_idx, :] = channel_dft
+            
+            self.signal_pow_est[cs_idx] = sum(self.channel_pow_freq[cs_idx])/n_srs_re
+            pow_diff -= self.signal_pow_est[cs_idx]
+            peak_sc_sum += self.peak_winsize;
+        
+        self.noise_pow_est = pow_diff / (n_srs_re - peak_sc_sum) / n_rx
+        
+        print('srs_channel_cyclicshift_proc Done')
+
+    def srs_channel_sinr_est(self):
+        n_srs_re = int(self.num_rb * 12 / self.srs_parameter.comb_size)
+
+        sig_est = 0.
+        for cs_idx in range(len(self.cyclicshift)):
+            self.sinr_est[cs_idx] = 10* np.log10(self.signal_pow_est[cs_idx] / n_srs_re / self.noise_pow_est)
+            self.sig_est[cs_idx] = 10* np.log10(self.signal_pow_est[cs_idx] / n_srs_re)
+            print('Signal (dB) estimated is = %.6f' % (self.sig_est[cs_idx]))
+            sig_est += (1/len(self.cyclicshift)) * self.signal_pow_est[cs_idx] / n_srs_re / self.noise_pow_est
+
+        sig_est = 10.0 * math.log10(sig_est)    # dB
+        print('srs_channel_sinr_est Done')
+        return sig_est
+
+    def srs_freq_position_calc(self):
+        c_srs = self.srs_parameter.config_index
+        b_srs = self.srs_parameter.bandwidth_index
+        comb_size = self.srs_parameter.comb_size
+        comb_offset = self.srs_parameter.comb_offset
+        n_shift = self.srs_parameter.frequency_shift
+        n_rrc = self.srs_parameter.frequency_position
+        N_rb_sc = 12
+
+        m_srs = SRS_BANDWIDTH_CONFIG_TABLE[c_srs][2 * b_srs + 1]
+        N = SRS_BANDWIDTH_CONFIG_TABLE[c_srs][2 * b_srs + 2]
+
+        k0_bar = n_shift * N_rb_sc + comb_offset
+        k0 = k0_bar
+        for b in range(b_srs):
+            n_b = np.floor(4 * n_rrc / m_srs) % N # only freq hopping disable
+            k0 +=  n_shift + m_srs * comb_size * n_b
+        return [m_srs, k0]
+
+def srs_rx_proc2(sfn_id, slot_id, sys_parameters, srs_pdu, rx_grid):
+    # Initialization
+    srs_proc = SrsProc(sfn_id, slot_id, sys_parameters, srs_pdu, rx_grid)
+    # Perform the receiver operation
+    srs_proc.srs_baseseq_gen()
+    srs_proc.srs_channel_ls_est()
+    srs_proc.srs_channel_idft()
+    srs_proc.srs_channel_cyclicshift_proc()
+    # Set the estimated SINR
+    sig_est = srs_proc.srs_channel_sinr_est()
+    return sig_est
 
