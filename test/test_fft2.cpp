@@ -76,6 +76,108 @@ void test1()
     }
 }
 
+void test_3points(struct my_fft_avx_whole &handler)
+{
+    complex_t<float> x[3];
+    x[0].Re = 0.77132064; x[0].Im = 0.74880388;
+    x[1].Re = 0.02075195; x[1].Im = 0.49850701;
+    x[2].Re = 0.63364823; x[2].Im = 0.22479665;
+    handler.my_fft(3, x);
+
+    for (int k = 0; k < 3; k++) {
+        printf("%.8e, %.8e\n", x[k].Re, x[k].Im);
+    }
+
+    x[0].Re = 0.77132064; x[0].Im = 0.74880388;
+    x[1].Re = 0.02075195; x[1].Im = 0.49850701;
+    x[2].Re = 0.63364823; x[2].Im = 0.22479665;
+    handler.my_ifft(3, x);
+    for (int k = 0; k < 3; k++) {
+        printf("%.8e, %.8e\n", x[k].Re, x[k].Im);
+    }
+}
+
+void test_5points(struct my_fft_avx_whole &handler)
+{
+    complex_t<float> x[5];
+    x[0].Re = 0.77132064; x[0].Im = 0.22479665;
+    x[1].Re = 0.02075195; x[1].Im = 0.19806286;
+    x[2].Re = 0.63364823; x[2].Im = 0.76053071;
+    x[3].Re = 0.74880388; x[3].Im = 0.16911084;
+    x[4].Re = 0.49850701; x[4].Im = 0.08833981;
+    handler.my_fft(5, x);
+
+    for (int k = 0; k < 5; k++) {
+        printf("%.8e, %.8e\n", x[k].Re, x[k].Im);
+    }
+
+    x[0].Re = 0.77132064; x[0].Im = 0.22479665;
+    x[1].Re = 0.02075195; x[1].Im = 0.19806286;
+    x[2].Re = 0.63364823; x[2].Im = 0.76053071;
+    x[3].Re = 0.74880388; x[3].Im = 0.16911084;
+    x[4].Re = 0.49850701; x[4].Im = 0.08833981;
+    handler.my_ifft(5, x);
+    for (int k = 0; k < 5; k++) {
+        printf("%.8e, %.8e\n", x[k].Re, x[k].Im);
+    }
+}
+
+void test_6points(struct my_fft_avx_whole &handler)
+{
+    complex_t<float> x[6];
+    x[0].Re = 0.77132064; x[0].Im = 0.19806286;
+    x[1].Re = 0.02075195; x[1].Im = 0.76053071;
+    x[2].Re = 0.63364823; x[2].Im = 0.16911084;
+    x[3].Re = 0.74880388; x[3].Im = 0.08833981;
+    x[4].Re = 0.49850701; x[4].Im = 0.68535982;
+    x[5].Re = 0.22479665; x[5].Im = 0.95339335;
+    handler.my_fft(6, x);
+
+    for (int k = 0; k < 6; k++) {
+        printf("%.8e, %.8e\n", x[k].Re, x[k].Im);
+    }
+
+    x[0].Re = 0.77132064; x[0].Im = 0.19806286;
+    x[1].Re = 0.02075195; x[1].Im = 0.76053071;
+    x[2].Re = 0.63364823; x[2].Im = 0.16911084;
+    x[3].Re = 0.74880388; x[3].Im = 0.08833981;
+    x[4].Re = 0.49850701; x[4].Im = 0.68535982;
+    x[5].Re = 0.22479665; x[5].Im = 0.95339335;
+    handler.my_ifft(6, x);
+    for (int k = 0; k < 6; k++) {
+        printf("%.8e, %.8e\n", x[k].Re, x[k].Im);
+    }
+}
+
+void test_7points(struct my_fft_avx_whole &handler)
+{
+    complex_t<float> x[7];
+    x[0].Re = 0.77132064; x[0].Im = 0.76053071;
+    x[1].Re = 0.02075195; x[1].Im = 0.16911084;
+    x[2].Re = 0.63364823; x[2].Im = 0.08833981;
+    x[3].Re = 0.74880388; x[3].Im = 0.68535982;
+    x[4].Re = 0.49850701; x[4].Im = 0.95339335;
+    x[5].Re = 0.22479665; x[5].Im = 0.00394827;
+    x[6].Re = 0.19806286; x[6].Im = 0.51219226;
+    handler.my_fft(7, x);
+
+    for (int k = 0; k < 7; k++) {
+        printf("%.8e, %.8e\n", x[k].Re, x[k].Im);
+    }
+
+    x[0].Re = 0.77132064; x[0].Im = 0.76053071;
+    x[1].Re = 0.02075195; x[1].Im = 0.16911084;
+    x[2].Re = 0.63364823; x[2].Im = 0.08833981;
+    x[3].Re = 0.74880388; x[3].Im = 0.68535982;
+    x[4].Re = 0.49850701; x[4].Im = 0.95339335;
+    x[5].Re = 0.22479665; x[5].Im = 0.00394827;
+    x[6].Re = 0.19806286; x[6].Im = 0.51219226;
+    handler.my_ifft(7, x);
+    for (int k = 0; k < 7; k++) {
+        printf("%.8e, %.8e\n", x[k].Re, x[k].Im);
+    }
+}
+
 int main(void)
 {
     struct my_fft_avx_whole my_fft_avx_;
@@ -89,15 +191,7 @@ int main(void)
                     1620, 1632};
     my_fft_avx_.my_fft_czt_init(84, points);
 
-    complex_t<float> x[3];
-    x[0].Re = 0.77132064; x[0].Im = 0.74880388;
-    x[1].Re = 0.02075195; x[1].Im = 0.49850701;
-    x[2].Re = 0.63364823; x[2].Im = 0.22479665;
-    my_fft_avx_.my_ifft(3, x);
-
-    for (int k = 0; k < 3; k++) {
-        printf("%.8e, %.8e\n", x[k].Re, x[k].Im);
-    }
+    test_6points(my_fft_avx_);
 
     return 0;
 }

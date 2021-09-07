@@ -172,6 +172,46 @@ struct my_fft_avx_whole
     ComplexFloat *w3p_back[10];
 
     uint16_t wp_points[10] = {8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096};
+    uint16_t wp_srs_points[87] = {
+        6, 9, 12, 15, 18, 24, 30, 36, 48, 51, 54, 60, 72, 84, 90, 96, 108, 120, 132, 
+        144, 150, 156, 162, 168, 180, 192, 204, 216, 228, 240, 252, 264, 270, 276, 
+        288, 300, 312, 324, 336, 348, 360, 384, 396, 408, 432, 450, 456, 480, 486, 
+        504, 528, 540, 552, 576, 600, 624, 648, 672, 696, 720, 750, 768, 792, 810, 
+        816, 864, 900, 912, 960, 972, 1008, 1056, 1080, 1104, 1152, 1200, 1248, 1296, 
+        1344, 1350, 1440, 1458, 1500, 1536, 1584, 1620, 1632
+    };
+    uint16_t srs_points[84] = {
+        6, 12, 18, 24, 30, 36, 48, 54, 60, 72, 84, 90, 96, 108,
+        120, 132, 144, 150, 156, 162, 168, 180, 192, 204, 216,
+        228, 240, 252, 264, 270, 276, 288, 300, 312, 324, 336, 348,
+        360, 384, 396, 408, 432, 450, 456, 480, 486, 504, 528, 540,
+        552, 576, 600, 624, 648, 672, 696, 720, 750, 768, 792, 810,
+        816, 864, 900, 912, 960, 972, 1008, 1056, 1080, 1104, 1152,
+        1200, 1248, 1296, 1344, 1350, 1440, 1458, 1500, 1536, 1584,
+        1620, 1632
+    };
+    uint16_t srs_factors_num[84] = {
+        2, 2, 2, 2, 2, 3, 2, 3, 3, 3,
+        3, 3, 2, 4, 3, 3, 3, 3, 3, 5,
+        3, 4, 2, 3, 4, 3, 3, 4, 3, 4,
+        3, 3, 4, 3, 5, 3, 3, 4, 2, 4,
+        3, 4, 5, 3, 3, 6, 4, 3, 5, 3,
+        3, 4, 3, 5, 3, 3, 4, 5, 2, 4,
+        5, 3, 4, 5, 3, 3, 6, 4, 3, 5,
+        3, 3, 4, 3, 5, 3, 5, 4, 6, 5,
+        2, 4, 5, 3
+    };
+    uint16_t srs_factors_list[84][6] = {
+        {3, 2}, {3, 4}, {3, 6}, {3, 8}, {5, 6}, {3, 3, 4}, {3, 16}, {3, 3, 6}, {4, 3, 5}, {3, 3, 8},
+        {4, 3, 7}, {6, 3, 5}, {32, 3}, {4, 3, 3, 3}, {8, 3, 5}, {4, 3, 11}, {16, 3, 3}, {6, 5, 5}, {4, 3, 13}, {2, 3, 3, 3, 3},
+        {8, 3, 7}, {4, 3, 3, 5}, {64, 3}, {4, 3, 17}, {8, 3, 3, 3}, {4, 3, 19}, {3, 5, 16}, {4, 3, 3, 7}, {8, 3, 11}, {6, 3, 3, 5}, 
+        {4, 3, 23}, {32, 3, 3}, {4, 3, 5, 5}, {8, 3, 13}, {4, 3, 3, 3, 3}, {16, 3, 7}, {4, 3, 29}, {8, 3, 3, 5}, {128, 3}, {4, 3, 3, 11},
+        {8, 3, 17},{16, 3, 3, 3},{2, 3, 3, 5, 5},{8, 3, 19},{32, 3, 5},{2, 3, 3, 3, 3, 3},{8, 3, 3, 7},{16, 3, 11},{4, 3, 3, 3, 5},{8, 3, 23},
+        {64, 3, 3},{8, 3, 5, 5},{16, 3, 13},{8, 3, 3, 3, 3},{32, 3, 7},{8, 3, 29},{16, 3, 3, 5},{2, 3, 5, 5, 5},{256, 3},{8, 3, 3, 11},
+        {6, 3, 3, 3, 5},{16, 3, 17},{32, 3, 3, 3},{4, 3, 3, 5, 5},{16, 3, 19},{64, 3, 5},{4, 3, 3, 3, 3, 3},{16, 3, 3, 7},{32, 3, 11},{8, 3, 3, 3, 5},
+        {16, 3, 23},{128, 3, 3},{16, 3, 5, 5},{32, 3, 13},{16, 3, 3, 3, 3},{64, 3, 7},{6, 3, 3, 5, 5}, {32, 3, 3, 5}, {6, 3, 3, 3, 3, 3},{4, 3, 5, 5, 5},
+        {512, 3}, {16, 3, 3, 11}, {12, 3, 3, 3, 5},{3, 17, 32}
+    };
 
     // CZT usage
     int czt_init_num;
@@ -182,6 +222,9 @@ struct my_fft_avx_whole
     ComplexFloat **chirp_back;
     ComplexFloat **ichirp_back;
     ComplexFloat **czt_xp;
+    // Cooley-Tukey usage
+    ComplexFloat *ct_wp_fwd[87];
+    ComplexFloat *ct_wp_back[87];
 
     // The construct interface
     my_fft_avx_whole();
@@ -189,14 +232,10 @@ struct my_fft_avx_whole
 
     // Some basic interfaces
     void my_fft_czt_init(int n, int *points);
-    inline int index_of_czt(int points) {
-        for (int i = 0; i < czt_init_num; i++) {
-            if (n1[i] == points) {
-                return i;
-            }
-        }
-        return -1;
-    }
+    inline int index_of_czt(int points);
+    inline int index_of_srs(int points);
+    // Cooley-Tukey usage
+    inline int index_of_srsWeight(int points);
 
     // FFT forward operations
     inline void my_fft_first_butterfly(int N, int s, ComplexFloat *x, ComplexFloat *y);
@@ -215,6 +254,8 @@ struct my_fft_avx_whole
     inline void my_fft_2048points(int N, ComplexFloat *x);
     inline void my_fft_4096points(int N, ComplexFloat *x);
     inline void my_fft_czt(int N, ComplexFloat *x);
+    inline void fft_srs_inner(int N, ComplexFloat *x);
+    inline void my_fft_cooley_tukey_no2(int N, ComplexFloat *x, uint16_t list_num, uint16_t *pq_list);
     // FFT backward operations
     inline void my_ifft_first_butterfly(int N, int s, ComplexFloat *x, ComplexFloat *y);
     inline void my_ifft_butterfly_s4(int N, ComplexFloat *x, ComplexFloat *y);
@@ -232,10 +273,18 @@ struct my_fft_avx_whole
     inline void my_ifft_2048points(int N, ComplexFloat *x);
     inline void my_ifft_4096points(int N, ComplexFloat *x);
     inline void my_ifft_czt(int N, ComplexFloat *x);
+    inline void ifft_srs_inner(int N, ComplexFloat *x);
+    inline void my_ifft_cooley_tukey_no2(int N, ComplexFloat *x, uint16_t list_num, uint16_t *pq_list);
 
     // Provided wrapper interfaces
+    void fft_power2_kernel(int N, ComplexFloat *x);
+    void fft_not_power2_kernel(int N, ComplexFloat *x);
+    void ifft_power2_kernel(int N, ComplexFloat *x);
+    void ifft_not_power2_kernel(int N, ComplexFloat *x);
     void my_fft(int N, ComplexFloat *x);
+    void my_fft_compare(int N, ComplexFloat *x);
     void my_ifft(int N, ComplexFloat *x);
+    void my_ifft_compare(int N, ComplexFloat *x);
 };
 
 
@@ -261,6 +310,25 @@ my_fft_avx_whole::my_fft_avx_whole()
             w3p_back[i][p] = w1p_back[i][p] * w2p_back[i][p];
         }
     }
+
+    for (uint16_t i = 0; i < 87; i++) {
+        uint16_t points = wp_srs_points[i];
+        ct_wp_fwd[i] = new ComplexFloat[points];
+        ct_wp_back[i] = new ComplexFloat[points];
+        float theta = 2 * M_PI / points;
+        for (uint16_t p = 0; p < points; p++) {
+            ct_wp_fwd[i][p] = ComplexFloat(cos(p*theta), -sin(p*theta));
+            ct_wp_back[i][p] = ComplexFloat(cos(p*theta), sin(p*theta));
+        }
+    }
+
+    n1 = NULL;
+    n2_czt = NULL;
+    chirp = NULL;
+    ichirp = NULL;
+    chirp_back = NULL;
+    ichirp_back = NULL;
+    czt_xp = NULL;
 }
 
 void my_fft_avx_whole::my_fft_czt_init(int n, int *points)
@@ -334,6 +402,50 @@ void my_fft_avx_whole::my_fft_czt_init(int n, int *points)
             fprintf(stderr, "Error some init points for ZCT in my_fft_czt_init() !\n");
         }
     }
+}
+
+inline int my_fft_avx_whole::index_of_czt(int points)
+{
+    for (int i = 0; i < czt_init_num; i++) {
+        if (n1[i] == points) {
+            return i;
+        }
+    }
+    return -1;
+}
+inline int my_fft_avx_whole::index_of_srs(int points)
+{
+    for (int i = 0; i < 84; i++) {
+        if (srs_points[i] == points) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+inline int my_fft_avx_whole::index_of_srsWeight(int points)
+{
+    uint16_t first = 0;
+    uint16_t last = 86;
+    uint16_t middle;
+    uint16_t search = points;
+
+    while (first <= last) {
+        middle = first + (last-first)/2;
+        if (wp_srs_points[middle] < search)
+        {
+            first = middle + 1;
+        }
+        else if (wp_srs_points[middle] == search)
+        {
+            return middle;
+        }
+        else
+        {
+            last = middle - 1;
+        }
+    }
+    return 86;
 }
 
 my_fft_avx_whole::~my_fft_avx_whole()
@@ -700,12 +812,12 @@ inline void my_fft_avx_whole::my_fft_czt(int N, ComplexFloat *x)
         index += 1;
     }
 
-    my_fft(N2_CZT, pczt_xp);
+    fft_power2_kernel(N2_CZT, pczt_xp);
     for (int k = 0; k < N2_CZT; k++) {
         pczt_xp[k] *= pichirp[k];
     }
 
-    my_ifft(N2_CZT, pczt_xp);
+    ifft_power2_kernel(N2_CZT, pczt_xp);
 
     index = 0;
     for (int k = N-1; k < (2*N-1); k++) {
@@ -715,25 +827,13 @@ inline void my_fft_avx_whole::my_fft_czt(int N, ComplexFloat *x)
     }
 }
 
-// Fourier transform
-// N : sequence length
-// x : input/output sequence
-void my_fft_avx_whole::my_fft(int N, ComplexFloat *x)
+inline void my_fft_avx_whole::fft_srs_inner(int N, ComplexFloat *x)
 {
-    static const ComplexFloat j = ComplexFloat(0, 1);
-
-    switch (N)
-    {
-    case 1 : {
-        } return;
-    case 2 : {
-            // N = 2 is treated as the special situation, the type of float32_t data.
-            __m128 a = _mm_loadu_ps(&x[0].Re);
-            __m128 r = _mm_addsub_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(2, 0, 3, 1)),
-                                     _mm_shuffle_ps(a, a, _MM_SHUFFLE(0, 2, 1, 3)));
-            _mm_storeu_ps(&x[0].Re, _mm_shuffle_ps(r, r, _MM_SHUFFLE(0, 2, 1, 3)));
-        } break;
-    case 3 : {
+    if (is_power2(N) == 1) {
+        fft_power2_kernel(N, x);
+    } else {
+        if (N == 3)
+        {
             ComplexFloat w1 = ComplexFloat(cos(2*M_PI/3), -sin(2*M_PI/3));
             ComplexFloat w2 = ComplexFloat(cos(2*M_PI/3),  sin(2*M_PI/3));
             ComplexFloat tmp0 = x[0]; ComplexFloat tmp1 = x[1]; ComplexFloat tmp2 = x[2];
@@ -741,6 +841,121 @@ void my_fft_avx_whole::my_fft(int N, ComplexFloat *x)
             x[0] = tmp0 + tmp1 + tmp2;
             x[1] = tmp0 + w1 * tmp1 + w2 * tmp2;
             x[2] = tmp0 + w2 * tmp1 + w1 * tmp2;
+        } else if (N == 5)
+        {
+            ComplexFloat w1 = ComplexFloat(cos(2*M_PI/5), -sin(2*M_PI/5));
+            ComplexFloat w2 = ComplexFloat(cos(4*M_PI/5), -sin(4*M_PI/5));
+            ComplexFloat w3 = ComplexFloat(cos(6*M_PI/5), -sin(6*M_PI/5));
+            ComplexFloat w4 = ComplexFloat(cos(8*M_PI/5), -sin(8*M_PI/5));
+            ComplexFloat tmp0 = x[0]; ComplexFloat tmp1 = x[1]; ComplexFloat tmp2 = x[2];
+            ComplexFloat tmp3 = x[3]; ComplexFloat tmp4 = x[4]; 
+
+            x[0] = tmp0 + tmp1 + tmp2 + tmp3 + tmp4;
+            x[1] = tmp0 + w1 * tmp1 + w2 * tmp2 + w3 * tmp3 + w4 * tmp4;
+            x[2] = tmp0 + w2 * tmp1 + w4 * tmp2 + w1 * tmp3 + w3 * tmp4;
+            x[3] = tmp0 + w3 * tmp1 + w1 * tmp2 + w4 * tmp3 + w2 * tmp4;
+            x[4] = tmp0 + w4 * tmp1 + w3 * tmp2 + w2 * tmp3 + w1 * tmp4;
+        }
+        else if (N == 6)
+        {
+            ComplexFloat w1 = ComplexFloat(cos(2*M_PI/6), -sin(2*M_PI/6));
+            ComplexFloat w2 = ComplexFloat(cos(4*M_PI/6), -sin(4*M_PI/6));
+            ComplexFloat w4 = ComplexFloat(cos(8*M_PI/6), -sin(8*M_PI/6));
+            ComplexFloat w5 = ComplexFloat(cos(10*M_PI/6), -sin(10*M_PI/6));
+            ComplexFloat tmp0 = x[0]; ComplexFloat tmp1 = x[1]; ComplexFloat tmp2 = x[2];
+            ComplexFloat tmp3 = x[3]; ComplexFloat tmp4 = x[4]; ComplexFloat tmp5 = x[5]; 
+
+            x[0] = tmp0 + tmp1 + tmp2 + tmp3 + tmp4 + tmp5;
+            x[1] = tmp0 + w1 * tmp1 + w2 * tmp2 - tmp3 + w4 * tmp4 + w5 * tmp5;
+            x[2] = tmp0 + w2 * tmp1 + w4 * tmp2 + tmp3 + w2 * tmp4 + w4 * tmp5;
+            x[3] = tmp0 - tmp1 + tmp2 - tmp3 + tmp4 - tmp5;
+            x[4] = tmp0 + w4 * tmp1 + w2 * tmp2 + tmp3 + w4 * tmp4 + w2 * tmp5;
+            x[5] = tmp0 + w5 * tmp1 + w4 * tmp2 - tmp3 + w2 * tmp4 + w1 * tmp5;
+        } 
+        else if (N == 7) 
+        {
+            ComplexFloat w1 = ComplexFloat(cos(2*M_PI/7), -sin(2*M_PI/7));
+            ComplexFloat w2 = ComplexFloat(cos(4*M_PI/7), -sin(4*M_PI/7));
+            ComplexFloat w3 = ComplexFloat(cos(6*M_PI/7), -sin(6*M_PI/7));
+            ComplexFloat w4 = ComplexFloat(cos(8*M_PI/7), -sin(8*M_PI/7));
+            ComplexFloat w5 = ComplexFloat(cos(10*M_PI/7), -sin(10*M_PI/7));
+            ComplexFloat w6 = ComplexFloat(cos(12*M_PI/7), -sin(12*M_PI/7));
+            ComplexFloat tmp0 = x[0]; ComplexFloat tmp1 = x[1]; ComplexFloat tmp2 = x[2];
+            ComplexFloat tmp3 = x[3]; ComplexFloat tmp4 = x[4]; ComplexFloat tmp5 = x[5];
+            ComplexFloat tmp6 = x[6];
+
+            x[0] = tmp0 + tmp1 + tmp2 + tmp3 + tmp4 + tmp5 + tmp6;
+            x[1] = tmp0 + w1 * tmp1 + w2 * tmp2 + w3 * tmp3 + w4 * tmp4 + w5 * tmp5 + w6 * tmp6;
+            x[2] = tmp0 + w2 * tmp1 + w4 * tmp2 + w6 * tmp3 + w1 * tmp4 + w3 * tmp5 + w5 * tmp6;
+            x[3] = tmp0 + w3 * tmp1 + w6 * tmp2 + w2 * tmp3 + w5 * tmp4 + w1 * tmp5 + w4 * tmp6;
+            x[4] = tmp0 + w4 * tmp1 + w1 * tmp2 + w5 * tmp3 + w2 * tmp4 + w6 * tmp5 + w3 * tmp6;
+            x[5] = tmp0 + w5 * tmp1 + w3 * tmp2 + w1 * tmp3 + w6 * tmp4 + w4 * tmp5 + w2 * tmp6;
+            x[6] = tmp0 + w6 * tmp1 + w5 * tmp2 + w4 * tmp3 + w3 * tmp4 + w2 * tmp5 + w1 * tmp6;
+        }
+        else
+        {
+            my_fft_czt(N, x);
+        }
+    }
+}
+
+inline void my_fft_avx_whole::my_fft_cooley_tukey_no2(int N, ComplexFloat *x, uint16_t list_num, uint16_t *pq_list)
+{
+    uint16_t pnum = pq_list[0];
+    uint16_t qnum = pq_list[list_num-1];
+
+    for (int i = 1; i < list_num-1; i++) {
+        pnum *= pq_list[i];
+    }
+
+    ComplexFloat X1[qnum*pnum];
+
+    for (int q = 0; q < qnum; q++) {
+        for (int s = 0; s < pnum; s++) {
+            X1[q * pnum + s] = x[s*qnum + q];
+        }
+    }
+
+    if (list_num == 2) {
+        for (int q = 0; q < qnum; q++) {
+            fft_srs_inner(pnum, &(X1[q*pnum]));
+        }
+    } else {
+        for (int q = 0; q < qnum; q++) {
+            my_fft_cooley_tukey_no2(pnum, &(X1[q*pnum]), list_num-1, pq_list);
+        }
+    }
+
+    ComplexFloat *wt = ct_wp_fwd[index_of_srsWeight(N)];
+    for (int q = 0; q < qnum; q++) {
+        for (int s = 0; s < pnum; s++) {
+            int index = q * s;
+            X1[q * pnum + s] *= wt[index];
+        }
+    }
+
+    for (int s = 0; s < pnum; s++) {
+        ComplexFloat tmp[qnum];
+        for (int q = 0; q < qnum; q++) {
+            tmp[q] = X1[q * pnum +s];
+        }
+        fft_srs_inner(qnum, tmp);
+        for (int q = 0; q < qnum; q++) {
+            x[q * pnum +s] = tmp[q];
+        }
+    }
+}
+
+void my_fft_avx_whole::fft_power2_kernel(int N, ComplexFloat *x)
+{
+    switch (N)
+    {
+    case 2 : {
+            // N = 2 is treated as the special situation, the type of float32_t data.
+            __m128 a = _mm_loadu_ps(&x[0].Re);
+            __m128 r = _mm_addsub_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(2, 0, 3, 1)),
+                                     _mm_shuffle_ps(a, a, _MM_SHUFFLE(0, 2, 1, 3)));
+            _mm_storeu_ps(&x[0].Re, _mm_shuffle_ps(r, r, _MM_SHUFFLE(0, 2, 1, 3)));
         } break;
     case 4 : {
             const __m128 zm = {0.0, 0.0, 0.0, -0.0};
@@ -756,23 +971,6 @@ void my_fft_avx_whole::my_fft(int N, ComplexFloat *x)
                                         _mm_shuffle_ps(r2, r2, _MM_SHUFFLE(0, 2, 1, 3)));
             _mm_storeu_ps(&x[0].Re, _mm_shuffle_ps(res1, res2, _MM_SHUFFLE(0, 2, 1, 3)));
             _mm_storeu_ps(&x[2].Re, _mm_shuffle_ps(res1, res2, _MM_SHUFFLE(1, 3, 0, 2)));
-        } break;
-    case 5 : {
-            ComplexFloat w1 = ComplexFloat(cos(2*M_PI/5), -sin(2*M_PI/5));
-            ComplexFloat w2 = ComplexFloat(cos(4*M_PI/5), -sin(4*M_PI/5));
-            ComplexFloat w3 = ComplexFloat(cos(6*M_PI/5), -sin(6*M_PI/5));
-            ComplexFloat w4 = ComplexFloat(cos(8*M_PI/5), -sin(8*M_PI/5));
-            ComplexFloat tmp0 = x[0]; ComplexFloat tmp1 = x[1]; ComplexFloat tmp2 = x[2];
-            ComplexFloat tmp3 = x[3]; ComplexFloat tmp4 = x[4]; 
-
-            x[0] = tmp0 + tmp1 + tmp2 + tmp3 + tmp4;
-            x[1] = tmp0 + w1 * tmp1 + w2 * tmp2 + w3 * tmp3 + w4 * tmp4;
-            x[2] = tmp0 + w2 * tmp1 + w4 * tmp2 + w1 * tmp3 + w3 * tmp4;
-            x[3] = tmp0 + w3 * tmp1 + w1 * tmp2 + w4 * tmp3 + w2 * tmp4;
-            x[4] = tmp0 + w4 * tmp1 + w3 * tmp2 + w2 * tmp3 + w1 * tmp4;
-        } break;
-    case 7 : {
-
         } break;
     case 8 : {
             my_fft_8points(N, x);
@@ -814,9 +1012,51 @@ void my_fft_avx_whole::my_fft(int N, ComplexFloat *x)
             my_fft_4096points(N, x);
         } break;
     default : {
-            // The other situation
-            my_fft_czt(N, x);
+            fprintf(stderr, "Not supported points of power 2 > 4096 !\n");
         } break;
+    }
+}
+
+void my_fft_avx_whole::fft_not_power2_kernel(int N, ComplexFloat *x)
+{
+    int pos_srs = index_of_srs(N);
+
+    if (pos_srs >= 0) {
+        uint16_t num_of_list = srs_factors_num[pos_srs];
+        uint16_t *p_list = srs_factors_list[pos_srs];
+        my_fft_cooley_tukey_no2(N, x, num_of_list, p_list);
+    } else {
+        // The other situation through CZT method
+        my_fft_czt(N, x);
+    }
+}
+
+// Fourier transform
+// N : sequence length
+// x : input/output sequence
+void my_fft_avx_whole::my_fft(int N, ComplexFloat *x)
+{
+    if (N == 1)  return;
+
+    if (is_power2(N) == 0) {
+        fft_not_power2_kernel(N, x);
+    }
+    else
+    {
+        fft_power2_kernel(N, x);
+    }
+}
+
+void my_fft_avx_whole::my_fft_compare(int N, ComplexFloat *x)
+{
+    if (N == 1)  return;
+
+    if (is_power2(N) == 0) {
+        my_fft_czt(N, x);
+    }
+    else
+    {
+        fft_power2_kernel(N, x);
     }
 }
 
@@ -1114,12 +1354,12 @@ inline void my_fft_avx_whole::my_ifft_czt(int N, ComplexFloat *x)
         index += 1;
     }
 
-    my_fft(N2_CZT, pczt_xp);
+    fft_power2_kernel(N2_CZT, pczt_xp);
     for (int k = 0; k < N2_CZT; k++) {
         pczt_xp[k] *= pichirp[k];
     }
 
-    my_ifft(N2_CZT, pczt_xp);
+    ifft_power2_kernel(N2_CZT, pczt_xp);
 
     index = 0;
     for (int k = N-1; k < (2*N-1); k++) {
@@ -1129,17 +1369,134 @@ inline void my_fft_avx_whole::my_ifft_czt(int N, ComplexFloat *x)
     }
 }
 
-// Inverse Fourier transform
-// N : sequence length
-// x : input/output sequence
-void my_fft_avx_whole::my_ifft(int N, ComplexFloat *x)
+inline void my_fft_avx_whole::ifft_srs_inner(int N, ComplexFloat *x)
 {
-    static const ComplexFloat j = ComplexFloat(0, 1);
+    if (is_power2(N) == 1) {
+        ifft_power2_kernel(N, x);
 
+        for (int i = 0; i < N; i++)
+        {
+            x[i] /= N;
+        }
+    } else {
     switch (N)
     {
-    case 1 : {
-        } return;
+        case 3 : {
+                ComplexFloat w1 = ComplexFloat(cos(2*M_PI/3), sin(2*M_PI/3));
+                ComplexFloat w2 = ComplexFloat(cos(2*M_PI/3), -sin(2*M_PI/3));
+                ComplexFloat tmp0 = x[0]; ComplexFloat tmp1 = x[1]; ComplexFloat tmp2 = x[2];
+
+                x[0] = (tmp0 + tmp1 + tmp2)/3.0;
+                x[1] = (tmp0 + w1 * tmp1 + w2 * tmp2)/3.0;
+                x[2] = (tmp0 + w2 * tmp1 + w1 * tmp2)/3.0;
+            } break;
+        case 5 : {
+                ComplexFloat w1 = ComplexFloat(cos(2*M_PI/5), sin(2*M_PI/5));
+                ComplexFloat w2 = ComplexFloat(cos(4*M_PI/5), sin(4*M_PI/5));
+                ComplexFloat w3 = ComplexFloat(cos(6*M_PI/5), sin(6*M_PI/5));
+                ComplexFloat w4 = ComplexFloat(cos(8*M_PI/5), sin(8*M_PI/5));
+                ComplexFloat tmp0 = x[0]; ComplexFloat tmp1 = x[1]; ComplexFloat tmp2 = x[2];
+                ComplexFloat tmp3 = x[3]; ComplexFloat tmp4 = x[4]; 
+
+                x[0] = (tmp0 + tmp1 + tmp2 + tmp3 + tmp4) / 5.0;
+                x[1] = (tmp0 + w1 * tmp1 + w2 * tmp2 + w3 * tmp3 + w4 * tmp4) / 5.0;
+                x[2] = (tmp0 + w2 * tmp1 + w4 * tmp2 + w1 * tmp3 + w3 * tmp4) / 5.0;
+                x[3] = (tmp0 + w3 * tmp1 + w1 * tmp2 + w4 * tmp3 + w2 * tmp4) / 5.0;
+                x[4] = (tmp0 + w4 * tmp1 + w3 * tmp2 + w2 * tmp3 + w1 * tmp4) / 5.0;
+            } break;
+        case 6 : {
+                ComplexFloat w1 = ComplexFloat(cos(2*M_PI/6), sin(2*M_PI/6));
+                ComplexFloat w2 = ComplexFloat(cos(4*M_PI/6), sin(4*M_PI/6));
+                ComplexFloat w4 = ComplexFloat(cos(8*M_PI/6), sin(8*M_PI/6));
+                ComplexFloat w5 = ComplexFloat(cos(10*M_PI/6), sin(10*M_PI/6));
+                ComplexFloat tmp0 = x[0]; ComplexFloat tmp1 = x[1]; ComplexFloat tmp2 = x[2];
+                ComplexFloat tmp3 = x[3]; ComplexFloat tmp4 = x[4]; ComplexFloat tmp5 = x[5]; 
+
+                x[0] = (tmp0 + tmp1 + tmp2 + tmp3 + tmp4 + tmp5) / 6.0;
+                x[1] = (tmp0 + w1 * tmp1 + w2 * tmp2 - tmp3 + w4 * tmp4 + w5 * tmp5) / 6.0;
+                x[2] = (tmp0 + w2 * tmp1 + w4 * tmp2 + tmp3 + w2 * tmp4 + w4 * tmp5) / 6.0;
+                x[3] = (tmp0 - tmp1 + tmp2 - tmp3 + tmp4 - tmp5) / 6.0;
+                x[4] = (tmp0 + w4 * tmp1 + w2 * tmp2 + tmp3 + w4 * tmp4 + w2 * tmp5) / 6.0;
+                x[5] = (tmp0 + w5 * tmp1 + w4 * tmp2 - tmp3 + w2 * tmp4 + w1 * tmp5) / 6.0;
+            } break;
+        case 7 : {
+                ComplexFloat w1 = ComplexFloat(cos(2*M_PI/7), sin(2*M_PI/7));
+                ComplexFloat w2 = ComplexFloat(cos(4*M_PI/7), sin(4*M_PI/7));
+                ComplexFloat w3 = ComplexFloat(cos(6*M_PI/7), sin(6*M_PI/7));
+                ComplexFloat w4 = ComplexFloat(cos(8*M_PI/7), sin(8*M_PI/7));
+                ComplexFloat w5 = ComplexFloat(cos(10*M_PI/7), sin(10*M_PI/7));
+                ComplexFloat w6 = ComplexFloat(cos(12*M_PI/7), sin(12*M_PI/7));
+                ComplexFloat tmp0 = x[0]; ComplexFloat tmp1 = x[1]; ComplexFloat tmp2 = x[2];
+                ComplexFloat tmp3 = x[3]; ComplexFloat tmp4 = x[4]; ComplexFloat tmp5 = x[5];
+                ComplexFloat tmp6 = x[6];
+
+                x[0] = (tmp0 + tmp1 + tmp2 + tmp3 + tmp4 + tmp5 + tmp6) / 7.0;
+                x[1] = (tmp0 + w1 * tmp1 + w2 * tmp2 + w3 * tmp3 + w4 * tmp4 + w5 * tmp5 + w6 * tmp6) / 7.0;
+                x[2] = (tmp0 + w2 * tmp1 + w4 * tmp2 + w6 * tmp3 + w1 * tmp4 + w3 * tmp5 + w5 * tmp6) / 7.0;
+                x[3] = (tmp0 + w3 * tmp1 + w6 * tmp2 + w2 * tmp3 + w5 * tmp4 + w1 * tmp5 + w4 * tmp6) / 7.0;
+                x[4] = (tmp0 + w4 * tmp1 + w1 * tmp2 + w5 * tmp3 + w2 * tmp4 + w6 * tmp5 + w3 * tmp6) / 7.0;
+                x[5] = (tmp0 + w5 * tmp1 + w3 * tmp2 + w1 * tmp3 + w6 * tmp4 + w4 * tmp5 + w2 * tmp6) / 7.0;
+                x[6] = (tmp0 + w6 * tmp1 + w5 * tmp2 + w4 * tmp3 + w3 * tmp4 + w2 * tmp5 + w1 * tmp6) / 7.0;
+            } break;
+        default : {
+                // The other situation
+                my_ifft_czt(N, x);
+            } break;
+        }
+    }
+}
+
+inline void my_fft_avx_whole::my_ifft_cooley_tukey_no2(int N, ComplexFloat *x, uint16_t list_num, uint16_t *pq_list)
+{
+    uint16_t pnum = pq_list[0];
+    uint16_t qnum = pq_list[list_num-1];
+
+    for (int i = 1; i < list_num-1; i++) {
+        pnum *= pq_list[i];
+    }
+
+    ComplexFloat X1[qnum*pnum];
+
+    for (int q = 0; q < qnum; q++) {
+        for (int s = 0; s < pnum; s++) {
+            X1[q * pnum + s] = x[s*qnum + q];
+        }
+    }
+
+    if (list_num == 2) {
+        for (int q = 0; q < qnum; q++) {
+            ifft_srs_inner(pnum, &(X1[q*pnum]));
+        }
+    } else {
+        for (int q = 0; q < qnum; q++) {
+            my_ifft_cooley_tukey_no2(pnum, &(X1[q*pnum]), list_num-1, pq_list);
+        }
+    }
+
+    ComplexFloat *wt = ct_wp_back[index_of_srsWeight(N)];
+    for (int q = 0; q < qnum; q++) {
+        for (int s = 0; s < pnum; s++) {
+            int index = q * s;
+            X1[q * pnum + s] *= wt[index];
+        }
+    }
+
+    for (int s = 0; s < pnum; s++) {
+        ComplexFloat tmp[qnum];
+        for (int q = 0; q < qnum; q++) {
+            tmp[q] = X1[q * pnum +s];
+        }
+        ifft_srs_inner(qnum, tmp);
+        for (int q = 0; q < qnum; q++) {
+            x[q * pnum +s] = tmp[q];
+        }
+    }
+}
+
+void my_fft_avx_whole::ifft_power2_kernel(int N, ComplexFloat *x)
+{
+    switch (N)
+    {
     case 2 : {
             // N = 2 is treated as the special situation
             const __m128 two = {2.0, 2.0, 2.0, 2.0};
@@ -1148,15 +1505,6 @@ void my_fft_avx_whole::my_ifft(int N, ComplexFloat *x)
             __m128 r = _mm_addsub_ps(_mm_shuffle_ps(a, a, _MM_SHUFFLE(2, 0, 3, 1)),
                                      _mm_shuffle_ps(a, a, _MM_SHUFFLE(0, 2, 1, 3)));
             _mm_storeu_ps(&x[0].Re, _mm_shuffle_ps(r, r, _MM_SHUFFLE(0, 2, 1, 3)));
-        } break;
-    case 3 : {
-            ComplexFloat w1 = ComplexFloat(cos(2*M_PI/3), sin(2*M_PI/3));
-            ComplexFloat w2 = ComplexFloat(cos(2*M_PI/3), -sin(2*M_PI/3));
-            ComplexFloat tmp0 = x[0]; ComplexFloat tmp1 = x[1]; ComplexFloat tmp2 = x[2];
-
-            x[0] = (tmp0 + tmp1 + tmp2)/3.0;
-            x[1] = (tmp0 + w1 * tmp1 + w2 * tmp2)/3.0;
-            x[2] = (tmp0 + w2 * tmp1 + w1 * tmp2)/3.0;
         } break;
     case 4 : {
             const __m128 zm = {0.0, 0.0, 0.0, -0.0};
@@ -1173,23 +1521,6 @@ void my_fft_avx_whole::my_ifft(int N, ComplexFloat *x)
                                         _mm_shuffle_ps(r2, r2, _MM_SHUFFLE(0, 2, 1, 3)));
             _mm_storeu_ps(&x[0].Re, _mm_shuffle_ps(res1, res2, _MM_SHUFFLE(1, 3, 1, 3)));
             _mm_storeu_ps(&x[2].Re, _mm_shuffle_ps(res1, res2, _MM_SHUFFLE(0, 2, 0, 2)));
-        } break;
-    case 5 : {
-            ComplexFloat w1 = ComplexFloat(cos(2*M_PI/5), sin(2*M_PI/5));
-            ComplexFloat w2 = ComplexFloat(cos(4*M_PI/5), sin(4*M_PI/5));
-            ComplexFloat w3 = ComplexFloat(cos(6*M_PI/5), sin(6*M_PI/5));
-            ComplexFloat w4 = ComplexFloat(cos(8*M_PI/5), sin(8*M_PI/5));
-            ComplexFloat tmp0 = x[0]; ComplexFloat tmp1 = x[1]; ComplexFloat tmp2 = x[2];
-            ComplexFloat tmp3 = x[3]; ComplexFloat tmp4 = x[4]; 
-
-            x[0] = (tmp0 + tmp1 + tmp2 + tmp3 + tmp4) / 5.0;
-            x[1] = (tmp0 + w1 * tmp1 + w2 * tmp2 + w3 * tmp3 + w4 * tmp4) / 5.0;
-            x[2] = (tmp0 + w2 * tmp1 + w4 * tmp2 + w1 * tmp3 + w3 * tmp4) / 5.0;
-            x[3] = (tmp0 + w3 * tmp1 + w1 * tmp2 + w4 * tmp3 + w2 * tmp4) / 5.0;
-            x[4] = (tmp0 + w4 * tmp1 + w3 * tmp2 + w2 * tmp3 + w1 * tmp4) / 5.0;
-        } break;
-    case 7 : {
-
         } break;
     case 8 : {
             my_ifft_8points(N, x);
@@ -1232,8 +1563,51 @@ void my_fft_avx_whole::my_ifft(int N, ComplexFloat *x)
         } break;
     default : {
             // The other situation
-            my_ifft_czt(N, x);
+            fprintf(stderr, "Not supported points of power 2 > 4096 !\n");
         } break;
+    }
+}
+
+void my_fft_avx_whole::ifft_not_power2_kernel(int N, ComplexFloat *x)
+{
+    int pos_srs = index_of_srs(N);
+
+    if (pos_srs >= 0) {
+        uint16_t num_of_list = srs_factors_num[pos_srs];
+        uint16_t *p_list = srs_factors_list[pos_srs];
+        my_ifft_cooley_tukey_no2(N, x, num_of_list, p_list);
+    } else {
+        // The other situation through CZT method
+        my_ifft_czt(N, x);
+    }
+}
+
+// Inverse Fourier transform
+// N : sequence length
+// x : input/output sequence
+void my_fft_avx_whole::my_ifft(int N, ComplexFloat *x)
+{
+    if (N == 1)  return;
+
+    if (is_power2(N) == 0) {
+        ifft_not_power2_kernel(N, x);
+    }
+    else
+    {
+        ifft_power2_kernel(N, x);
+    }
+}
+
+void my_fft_avx_whole::my_ifft_compare(int N, ComplexFloat *x)
+{
+    if (N == 1)  return;
+
+    if (is_power2(N) == 0) {
+        my_ifft_czt(N, x);
+    }
+    else
+    {
+        ifft_power2_kernel(N, x);
     }
 }
 
