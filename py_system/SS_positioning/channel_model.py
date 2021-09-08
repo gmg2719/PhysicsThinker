@@ -25,22 +25,3 @@ def path_loss(dist, freq, mode):
         print("ts_link_srs_positioning() only support indoor or outdoor layout !")
     return loss
 
-def find_most_average(e_list):
-    size = np.size(e_list)
-    if size == 0:
-        return 0.
-    near_counter = np.zeros(np.size(e_list), dtype=int)
-    for i in range(size):
-        e = e_list[i]
-        for k in range(size):
-            if abs(e-e_list[k]) < 5.0:
-                near_counter[i] += 1
-    indices = near_counter.argmax()
-    basic_value = e_list[indices]
-    average = 0.
-    counter = 0
-    for i in range(size):
-        if abs(e_list[i] - basic_value) < 5.0:
-            average += e_list[i]
-            counter += 1
-    return average / counter

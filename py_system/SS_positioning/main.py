@@ -9,6 +9,8 @@ from basic_parameters import SysParameters, SrsPdu, SrsPduFormatted, srs_pdu2for
 from srs_app_scheduler import srs_app_positioning_schedule
 from srs_app_scheduler import srs_app_run_indoors_sampling, srs_app_run_outdoors_sampling
 from srs_app_scheduler import srs_app_singleUe_indoors, srs_app_singleUe_outdoors
+from srs_app_scheduler import srs_app_multipleUe_indoors, srs_app_multipleUe_outdoors
+from faked_app_scheduler import faked_app_singleUe_outdoors, faked_app_run_outdoors_sampling
 
 print('Run simulation of the simplified contents !')
 pdu = SrsPdu()
@@ -52,18 +54,21 @@ srs_pdu2formatted(pdu, srs_pdu)
 print('Start to run SRS signal send and receive')
 print('AWGN channel model (indoors | outdoors)')
 print("*********************************************")
-print("*              Tx_power = 80 dB             *")
+print("*              Tx_power = 80/120 dB         *")
 print("*          mode = 0, distance = 10.0m       *")
+print("*          mode = 1, distance = 650.0m      *")
 print("*             Run the simulation            *")
 print("*********************************************")
 np.random.seed(10)
 
-# srs_app_run_indoors_sampling(sys_parameters, srs_pdu, 80, 10.0)
-# srs_app_run_outdoors_sampling(sys_parameters, srs_pdu, 120, 650.0)
-# a1 = np.loadtxt('signal_indoor_estimation.txt')
-# a2 = np.loadtxt('signal_outdoor_estimation.txt')
+#
+# 1. UL-SRS-TDOA Positioning
+#
+srs_app_run_outdoors_sampling(sys_parameters, srs_pdu, 120, 1136.3806972916097, 1)
+t = np.loadtxt('ta_outdoor_estimation.txt')
+# srs_app_singleUe_outdoors(sys_parameters, srs_pdu, 120, 'ta')
 
-srs_app_singleUe_indoors(sys_parameters, srs_pdu, 100)
-
-# srs_app_singleUe_outdoors(sys_parameters, srs_pdu, 160)
-
+#
+# 2. Faked Positioning Test
+#
+# faked_app_singleUe_outdoors('kalman')

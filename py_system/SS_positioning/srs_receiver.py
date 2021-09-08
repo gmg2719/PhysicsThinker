@@ -241,7 +241,7 @@ def srs_ch_estimates_proc(srs_config, grid, srs_pilot, nb_re_srs, n_ap, cycliShi
                 min_cs_diff = abs(cs_diff)
     
     len_per_cs = int(nb_re_srs/n_srs_cs_max)
-    win_size = min(4, min_cs_diff) * len_per_cs
+    win_size = min(12, min_cs_diff) * len_per_cs
     rms = 32
     peak_pos = 0
     peak_size = int((rms * nb_re_srs * k_tc - 1) / nfft) + 2
@@ -260,6 +260,15 @@ def srs_ch_estimates_proc(srs_config, grid, srs_pilot, nb_re_srs, n_ap, cycliShi
         # Freq channel estimation, z = x * y.conj()
         for k in range(nb_re_srs):
             srs_ch_estimates_freq[aarx][k] = grid[aarx][k] * np.conj(srs_pilot[k])
+        
+        # Direct estimate the TA from the state of noise power has not been decreased
+        """
+        srs_TOsum_tmp = 0
+        for k in range(nb_re_srs - 1):
+            srs_TOsum_tmp += srs_ch_estimates_freq[aarx][k] * np.conj(srs_ch_estimates_freq[aarx][k + 1])
+        srs_TOest_tmp = np.arctan2(np.imag(srs_TOsum_tmp), np.real(srs_TOsum_tmp)) / (2 * np.pi * k_tc)
+        """
+
         # IDFT to get time channel estimation
         srs_ch_estimates_time[aarx] = nb_re_srs * spy.fft.ifft(srs_ch_estimates_freq[aarx])
 
@@ -325,9 +334,9 @@ def srs_ch_estimates_proc(srs_config, grid, srs_pilot, nb_re_srs, n_ap, cycliShi
                 h = 1.0/(nb_re_srs * nb_re_srs)
                 srs_ch_estimates_freq_pow[p_index][k] = srs_ch_estimates_freq_pow[p_index][k] + srs_vars_tmp1[k] * h
             
-            if nb_re_srs * k_tc * 16 < nfft:
-                for k in range(nb_re_srs - 1):
-                    srs_TOsum[p_index] += srs_ch_estimates[p_index * nb_antennas_rx + aarx][k] * np.conj(srs_ch_estimates[p_index * nb_antennas_rx + aarx][k + 1])
+            # if nb_re_srs * k_tc * 16 < nfft:
+            for k in range(nb_re_srs - 1):
+                srs_TOsum[p_index] += srs_ch_estimates[p_index * nb_antennas_rx + aarx][k] * np.conj(srs_ch_estimates[p_index * nb_antennas_rx + aarx][k + 1])
 
         srs_hpow[p_index] = 0.
         for k in range(nb_re_srs):
@@ -335,7 +344,7 @@ def srs_ch_estimates_proc(srs_config, grid, srs_pilot, nb_re_srs, n_ap, cycliShi
         rssi_sum -= srs_hpow[p_index]
         peak_sc_sum += peak_size
         # print(srs_TOsum[p_index], srs_hpow[p_index], rssi_sum, peak_sc_sum)
-    
+
     # Get the noise power
     srs_noisepow = rssi_sum / (nb_re_srs - peak_sc_sum) / nb_antennas_rx
     
@@ -344,10 +353,13 @@ def srs_ch_estimates_proc(srs_config, grid, srs_pilot, nb_re_srs, n_ap, cycliShi
     srs_wideband_snr = np.zeros(n_ap, dtype=float)
     # Get the SINR of each RB
     for p_index in range(n_ap):
-        if (nb_re_srs * k_tc * 16) < nfft:
-            srs_TOest[p_index] = np.arctan2(np.imag(srs_TOsum[p_index]), np.real(srs_TOsum[p_index])) / (2 * np.pi * nb_re_srs * k_tc)
-        else:
-            srs_TOest[p_index] /= (nb_re_srs * k_tc)
+        # All use frequency domain estimation
+        # if (nb_re_srs * k_tc * 16) < nfft:
+        srs_TOest[p_index] = np.arctan2(np.imag(srs_TOsum[p_index]), np.real(srs_TOsum[p_index])) / (2 * np.pi * k_tc)
+        # else:
+        #    srs_TOest[p_index] /= (nb_re_srs * k_tc)
+        # Change the TA value into the seconds manner
+        srs_TOest[p_index] = (srs_TOest[p_index] * 4096) / 122.88e6
 
         srs_wideband_snr[p_index] = 0
         tmp_sum = 0.
@@ -428,7 +440,7 @@ def srs_rx_proc(sfn_id, slot_id, sys_parameters, srs_pdu, rx_grid):
         sys.exit(-1)
     ta_est, sig_est = srs_demodulation(sfn_id, slot_id, sys_parameters, srs_pdu, rx_grid)
     print('Estimate SRS (TA, Sigal_strength) : %.8f %.8f' % (ta_est, sig_est))
-    return sig_est
+    return ta_est, sig_est
 
 #
 #

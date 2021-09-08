@@ -115,6 +115,31 @@ void test_backward(struct my_fft_avx_whole &handler)
     }
 }
 
+void test_avx()
+{
+    float res[8];
+    float a[6] = {5.484939e-02, 5.131352e-01, -7.251574e-01, 4.458300e-01, -9.964180e-01, 9.193458e-02};
+    float b[6] = {-7.251574e-01, 4.458300e-01, -9.964180e-01, 9.193458e-02, 5.484939e-02, 5.131352e-01};
+    float c[6] = {-9.964180e-01, 9.193458e-02, 5.484939e-02, 5.131352e-01, -7.251574e-01, 4.458300e-01};
+    __m256i idx1 = _mm256_setr_epi32(2, 3, 4, 5, 0, 1, 6, 7);
+    __m256i idx2 = _mm256_setr_epi32(4, 5, 0, 1, 2, 3, 6, 7);
+    __m256 t1 = _mm256_load_ps(a);
+    __m256 t2 = _mm256_permutevar8x32_ps(t1, idx1);
+    __m256 t3 = _mm256_permutevar8x32_ps(t1, idx2);
+    __m256 w1 = _mm256_setr_ps(1.0, 0.0, -5.000000e-01, -8.660254e-01, -5.000000e-01, -8.660254e-01, 0.0, 0.0);
+    __m256 w2 = _mm256_setr_ps(1.0, 0.0, -5.000000e-01, 8.660254e-01, 1.0, 0.0, 0.0, 0.0);
+    __m256 w3 = _mm256_setr_ps(1.0, 0.0, 1.0, 0.0, -5.000000e-01, 8.660254e-01, 0.0, 0.0);
+    t1 = mulpz2(t1, w1);
+    t2 = mulpz2(t2, w2);
+    t3 = mulpz2(t3, w3);
+    t1 = _mm256_add_ps(_mm256_add_ps(t1, t2), t3);
+
+    _mm256_store_ps(res, t1);
+    for (int i = 0; i < 6; i++) {
+        printf("%.6f ", res[i]);
+    }  
+}
+
 int main(void)
 {
     struct my_fft_avx_whole my_fft_avx_;

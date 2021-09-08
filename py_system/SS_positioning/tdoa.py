@@ -25,6 +25,71 @@ class Sim3DCord(object):
     def debug_print(self):
         print('Coordinate is : %.6f, %.6f, %.6f' % (self.x, self.y, self.z))
 
+def kalman_filter(n_iter, z):
+    sz = (n_iter, )
+    Q = 1.0
+    # allocate space for arrays
+    xhat=np.zeros(sz)      # a posteri estimate of x
+    P=np.zeros(sz)         # a posteri error estimate
+    xhatminus=np.zeros(sz) # a priori estimate of x
+    Pminus=np.zeros(sz)    # a priori error estimate
+    K=np.zeros(sz)         # gain or blending factor
+    
+    R = 0 # estimate of measurement variance, change to see effect
+    # intial guesses
+    xhat[0] = 0.0
+    P[0] = 1.0
+    
+    for k in range(1,n_iter):
+        # time update
+        xhatminus[k] = xhat[k-1]
+        Pminus[k] = P[k-1] + Q
+        # measurement update
+        K[k] = Pminus[k]/( Pminus[k]+R )
+        xhat[k] = xhatminus[k]+K[k]*(z[k]-xhatminus[k])
+        P[k] = (1-K[k])*Pminus[k]
+    return xhat
+
+def kalman_filter_protype(n_iter, z, init_guess):
+    sz = (n_iter, )
+
+    # allocate space for arrays
+    xhat=np.zeros(sz)      # a posteri estimate of x
+    P=np.zeros(sz)         # a posteri error estimate
+    K=np.zeros(sz)         # gain or blending factor
+    
+    R = 1E-2 # estimate of measurement variance, change to see effect
+    # intial guesses
+    xhat[0] = init_guess
+    P[0] = 1.0
+
+    for k in range(1,n_iter):
+        # measurement update
+        K[k] = P[k-1]/( P[k-1]+R )
+        xhat[k] = xhat[k-1] + K[k] * (z[k-1] - xhat[k-1])
+        P[k] = (1-K[k])*P[k-1]
+    return xhat
+
+def find_most_average(e_list):
+    size = np.size(e_list)
+    if size == 0:
+        return 0.
+    near_counter = np.zeros(np.size(e_list), dtype=int)
+    for i in range(size):
+        e = e_list[i]
+        for k in range(size):
+            if abs(e-e_list[k]) < 10.0:
+                near_counter[i] += 1
+    indices = near_counter.argmax()
+    basic_value = e_list[indices]
+    average = 0.
+    counter = 0
+    for i in range(size):
+        if abs(e_list[i] - basic_value) < 10.0:
+            average += e_list[i]
+            counter += 1
+    return average / counter
+
 # From : 3D TDOA Problem Solution with Four Receiving Nodes, J. D. Gonzalez, R. Alvarez, etc., 27 June, 2019.
 # dt21 : UE to bs2 and bs1 TOA difference
 # dt31 : UE to bs3 and bs1 TOA difference
@@ -276,9 +341,12 @@ def tdoa_positioning_5bs_assist(bs1, bs2, bs3, bs4, bs5, dt21, dt31, dt41, dt51,
             y_est = x[0][1]
             z_est = x[0][2]
         if (np.isnan(x_est) or np.isnan(y_est) or np.isnan(z_est)):
-            x_est, y_est, z_est = fsolve(equations_3d, (x_init, y_init, z_init), maxfev=1000)
+            x = leastsq(equations_3d, (x_init, y_init, z_init))
+            x_est = x[0][0]
+            y_est = x[0][1]
+            z_est = x[0][2]
             # print("solver() results (through modified) : (%.6f, %.6f, %.6f)" % (x_est, y_est, z_est))
-        # print("solver() results : (%.6f, %.6f, %.6f)" % (x_est, y_est, z_est))
+        print("solver() results : (%.6f, %.6f, %.6f)" % (x_est, y_est, z_est))
         return x_est, y_est, z_est
     x_est, y_est, z_est = scipy_3d_solver()
     position.x = x_est

@@ -4,6 +4,7 @@
         "random": "cpp",
         "cmath": "cpp",
         "limits": "cpp",
-        "functional": "cpp"
+        "functional": "cpp",
+        "new": "cpp"
     }
 }

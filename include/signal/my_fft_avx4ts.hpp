@@ -834,13 +834,22 @@ inline void my_fft_avx_whole::fft_srs_inner(int N, ComplexFloat *x)
     } else {
         if (N == 3)
         {
-            ComplexFloat w1 = ComplexFloat(cos(2*M_PI/3), -sin(2*M_PI/3));
-            ComplexFloat w2 = ComplexFloat(cos(2*M_PI/3),  sin(2*M_PI/3));
-            ComplexFloat tmp0 = x[0]; ComplexFloat tmp1 = x[1]; ComplexFloat tmp2 = x[2];
+            static ComplexFloat tmp[4];
+            __m256i idx1 = _mm256_setr_epi32(2, 3, 4, 5, 0, 1, 6, 7);
+            __m256i idx2 = _mm256_setr_epi32(4, 5, 0, 1, 2, 3, 6, 7);
+            __m256 t1 = _mm256_loadu_ps(&(x[0].Re));
+            __m256 t2 = _mm256_permutevar8x32_ps(t1, idx1);
+            __m256 t3 = _mm256_permutevar8x32_ps(t1, idx2);
+            __m256 w1 = _mm256_setr_ps(1.0, 0.0, -5.000000e-01, -8.6602538824e-01, -5.000000e-01, -8.6602538824e-01, 0.0, 0.0);
+            __m256 w2 = _mm256_setr_ps(1.0, 0.0, -5.000000e-01, 8.6602538824e-01, 1.0, 0.0, 0.0, 0.0);
+            __m256 w3 = _mm256_setr_ps(1.0, 0.0, 1.0, 0.0, -5.000000e-01, 8.660254e-01, 0.0, 0.0);
+            t1 = mulpz2(t1, w1);
+            t2 = mulpz2(t2, w2);
+            t3 = mulpz2(t3, w3);
+            t1 = _mm256_add_ps(_mm256_add_ps(t1, t2), t3);
 
-            x[0] = tmp0 + tmp1 + tmp2;
-            x[1] = tmp0 + w1 * tmp1 + w2 * tmp2;
-            x[2] = tmp0 + w2 * tmp1 + w1 * tmp2;
+            _mm256_storeu_ps(&(tmp[0].Re), t1);
+            x[0] = tmp[0]; x[1] = tmp[1]; x[2] = tmp[2];
         } else if (N == 5)
         {
             ComplexFloat w1 = ComplexFloat(cos(2*M_PI/5), -sin(2*M_PI/5));
@@ -1382,13 +1391,24 @@ inline void my_fft_avx_whole::ifft_srs_inner(int N, ComplexFloat *x)
     switch (N)
     {
         case 3 : {
-                ComplexFloat w1 = ComplexFloat(cos(2*M_PI/3), sin(2*M_PI/3));
-                ComplexFloat w2 = ComplexFloat(cos(2*M_PI/3), -sin(2*M_PI/3));
-                ComplexFloat tmp0 = x[0]; ComplexFloat tmp1 = x[1]; ComplexFloat tmp2 = x[2];
+                static ComplexFloat tmp[4];
+                __m256i idx1 = _mm256_setr_epi32(2, 3, 4, 5, 0, 1, 6, 7);
+                __m256i idx2 = _mm256_setr_epi32(4, 5, 0, 1, 2, 3, 6, 7);
+                __m256 t1 = _mm256_loadu_ps(&(x[0].Re));
+                __m256 t2 = _mm256_permutevar8x32_ps(t1, idx1);
+                __m256 t3 = _mm256_permutevar8x32_ps(t1, idx2);
+                __m256 w1 = _mm256_setr_ps(1.0, 0.0, -5.000000e-01, 8.6602538824e-01, -5.000000e-01, 8.6602538824e-01, 0.0, 0.0);
+                __m256 w2 = _mm256_setr_ps(1.0, 0.0, -5.000000e-01, -8.6602538824e-01, 1.0, 0.0, 0.0, 0.0);
+                __m256 w3 = _mm256_setr_ps(1.0, 0.0, 1.0, 0.0, -5.000000e-01, -8.660254e-01, 0.0, 0.0);
+                __m256 normal_coe = _mm256_set1_ps(1.0/3);
+                t1 = mulpz2(t1, w1);
+                t2 = mulpz2(t2, w2);
+                t3 = mulpz2(t3, w3);
+                t1 = _mm256_add_ps(_mm256_add_ps(t1, t2), t3);
+                t1 = _mm256_mul_ps(t1, normal_coe);
 
-                x[0] = (tmp0 + tmp1 + tmp2)/3.0;
-                x[1] = (tmp0 + w1 * tmp1 + w2 * tmp2)/3.0;
-                x[2] = (tmp0 + w2 * tmp1 + w1 * tmp2)/3.0;
+                _mm256_storeu_ps(&(tmp[0].Re), t1);
+                x[0] = tmp[0]; x[1] = tmp[1]; x[2] = tmp[2];
             } break;
         case 5 : {
                 ComplexFloat w1 = ComplexFloat(cos(2*M_PI/5), sin(2*M_PI/5));
